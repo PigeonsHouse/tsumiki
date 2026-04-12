@@ -1,0 +1,86 @@
+Table users {
+    id int [pk]
+}
+
+Table tsumikis {
+    id int [pk, increment]
+    title varchar [not null]
+    thumbnail_url varchar [not null]
+    visibility varchar  // public|limited
+    miruko_watching_duration int  // 単位は秒
+    work_id int
+    user_id int
+    created_at timestamp
+    updated_at timestamp
+}
+
+Table tsumiki_blocks {
+    id int [pk, increment]
+    message varchar  // メッセージかメディアはいずれか必須(ロジックで担保する？)
+    parcentage int
+    condition int // 1-5
+    before_block_id int
+    tsumiki_id int
+}
+
+Table tsumiki_block_medias {
+    id int [pk, increment]
+    type varchar // image|audio|video
+    url varchar
+    tsumiki_block_id int
+}
+
+Table works {
+    id int [pk,increment]
+    title varchar [not null]
+    description varchar
+    thumbnail_url varchar
+    created_at timestamp
+    updated_at timestamp
+}
+
+Table tsumiki_favorites {
+    tsumiki_id int [pk]
+    user_id int [pk]
+    counts int  // maxは10? 50? 100? ロジックで担保する？
+}
+
+Table tsumiki_comments {
+    id int [pk,increment]
+    tsumiki_id int
+    user_id int
+    message int
+}
+
+Table tsumiki_reactions {
+    id int [pk,increment]
+    tsumiki_id int
+    user_id int
+    reaction_id int
+}
+
+Table tsumiki_block_comments {
+    id int [pk,increment]
+    tsumiki_block_id int
+    user_id int
+    message int
+}
+
+Table tsumiki_block_reactions {
+    id int [pk,increment]
+    tsumiki_block_id int
+    user_id int
+    reaction_id int
+}
+
+Table reactions {
+    id int [pk,increment]
+    shortcode varchar [unique]
+    icon_url varchar
+}
+
+Ref fk_tsumiki_blocks_before_block_id_tsumiki_blocks_id : tsumiki_blocks.before_block_id - tsumiki_blocks.id
+Ref fk_tsumiki_blocks_tsumiki_id_tsumikis_id : tsumiki_blocks.tsumiki_id > tsumikis.id
+Ref fk_tsumikis_work_id_works_id : tsumikis.work_id > works.id
+Ref fk_tsumikis_user_id_users_id : tsumikis.user_id > users.id
+// TODO リレーションの定義追加する
