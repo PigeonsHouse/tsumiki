@@ -51,9 +51,14 @@ Table tsumiki_block_medias {
     id int [pk, increment]
     type media_type [not null]
     url varchar [not null]
+    order int
     tsumiki_block_id int [ref: > tsumiki_blocks.id, not null]
     created_at timestamp [default: `now()`]
     updated_at timestamp
+
+    Indexes {
+        (tsumiki_block_id, order) [unique]
+    }
 }
 
 Table works {
