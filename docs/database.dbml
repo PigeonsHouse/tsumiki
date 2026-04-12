@@ -1,86 +1,128 @@
+Enum visibility {
+    public
+    limited
+}
+
+Enum media_type {
+    image
+    audio
+    video
+}
+
 Table users {
-    id int [pk]
+    id int [pk, increment]
+    discord_user_id int [not null, unique]
+    name varchar [not null]
+    guild_id int [not null]
+    thumbnail_url varchar [not null]
+    created_at timestamp  [default: `now()`]
+    updated_at timestamp
 }
 
 Table tsumikis {
     id int [pk, increment]
     title varchar [not null]
     thumbnail_url varchar [not null]
-    visibility varchar  // public|limited
+    visibility visibility [not null]
     miruko_watching_duration int  // 単位は秒
-    work_id int
-    user_id int
-    created_at timestamp
+    work_id int [ref: > works.id, not null]
+    user_id int [ref: > users.id, not null]
+    created_at timestamp  [default: `now()`]
     updated_at timestamp
 }
 
 Table tsumiki_blocks {
     id int [pk, increment]
     message varchar  // メッセージかメディアはいずれか必須(ロジックで担保する？)
-    parcentage int
-    condition int // 1-5
-    before_block_id int
-    tsumiki_id int
+    percentage int [not null]
+    condition int [not null]  // 1-5
+    next_block_id int [unique, ref: - tsumiki_blocks.id]
+    tsumiki_id int [ref: > tsumikis.id, not null]
+    created_at timestamp [default: `now()`]
+    updated_at timestamp
+    deleted_at timestamp  // ソフトデリートとして、データは隠しつつ連結の穴抜けを解消する
+
+    Indexes {
+        (tsumiki_id, next_block_id) [name: "idx_tsumiki_blocks_tsumiki_id_next_block_id"]
+    }
 }
 
 Table tsumiki_block_medias {
     id int [pk, increment]
-    type varchar // image|audio|video
-    url varchar
-    tsumiki_block_id int
+    type media_type [not null]
+    url varchar [not null]
+    tsumiki_block_id int [ref: > tsumiki_blocks.id, not null]
+    created_at timestamp [default: `now()`]
+    updated_at timestamp
 }
 
 Table works {
-    id int [pk,increment]
+    id int [pk, increment]
     title varchar [not null]
     description varchar
     thumbnail_url varchar
-    created_at timestamp
+    owner_user_id int [ref: > users.id, not null]
+    created_at timestamp [default: `now()`]
     updated_at timestamp
 }
 
 Table tsumiki_favorites {
-    tsumiki_id int [pk]
-    user_id int [pk]
-    counts int  // maxは10? 50? 100? ロジックで担保する？
+    tsumiki_id int [pk, ref: > tsumikis.id]
+    user_id int [pk, ref: > users.id, not null]
+    counts int [not null]  // maxは10? 50? 100? ロジックで担保する？
+    created_at timestamp [default: `now()`]
+    updated_at timestamp
 }
 
 Table tsumiki_comments {
-    id int [pk,increment]
-    tsumiki_id int
-    user_id int
-    message int
+    id int [pk, increment]
+    tsumiki_id int [ref: > tsumikis.id, not null]
+    user_id int [ref: > users.id, not null]
+    message varchar [not null]
+    created_at timestamp [default: `now()`]
+    updated_at timestamp
 }
 
 Table tsumiki_reactions {
-    id int [pk,increment]
-    tsumiki_id int
-    user_id int
-    reaction_id int
+    id int [pk, increment]
+    tsumiki_id int [ref: > tsumikis.id, not null]
+    user_id int [ref: > users.id, not null]
+    reaction_id int [ref: > reactions.id, not null]
+    created_at timestamp [default: `now()`]
+    updated_at timestamp
+
+    Indexes {
+        (tsumiki_id, user_id, reaction_id) [unique]
+    }
 }
 
 Table tsumiki_block_comments {
-    id int [pk,increment]
-    tsumiki_block_id int
-    user_id int
-    message int
+    id int [pk, increment]
+    tsumiki_block_id int [ref: > tsumiki_blocks.id, not null]
+    user_id int [ref: > users.id, not null]
+    message varchar [not null]
+    created_at timestamp [default: `now()`]
+    updated_at timestamp
 }
 
 Table tsumiki_block_reactions {
-    id int [pk,increment]
-    tsumiki_block_id int
-    user_id int
-    reaction_id int
+    id int [pk, increment]
+    tsumiki_block_id int [ref: > tsumiki_blocks.id, not null]
+    user_id int [ref: > users.id, not null]
+    reaction_id int [ref: > reactions.id, not null]
+    created_at timestamp [default: `now()`]
+    updated_at timestamp
+
+    Indexes {
+        (tsumiki_block_id, user_id, reaction_id) [unique]
+    }
 }
 
 Table reactions {
-    id int [pk,increment]
-    shortcode varchar [unique]
-    icon_url varchar
+    id int [pk, increment]
+    shortcode varchar [unique, not null]
+    icon_url varchar [not null]
+    is_active boolean [not null]
+    created_at timestamp [default: `now()`]
+    updated_at timestamp
 }
-
-Ref fk_tsumiki_blocks_before_block_id_tsumiki_blocks_id : tsumiki_blocks.before_block_id - tsumiki_blocks.id
-Ref fk_tsumiki_blocks_tsumiki_id_tsumikis_id : tsumiki_blocks.tsumiki_id > tsumikis.id
-Ref fk_tsumikis_work_id_works_id : tsumikis.work_id > works.id
-Ref fk_tsumikis_user_id_users_id : tsumikis.user_id > users.id
-// TODO リレーションの定義追加する

@@ -7,68 +7,68 @@
     {
       "name": "users",
       "schemaName": "public",
-      "x": -184.75695000000002,
-      "y": 50
+      "x": -1378.4743814218623,
+      "y": 786.265267674959
     },
     {
       "name": "tsumikis",
       "schemaName": "public",
-      "x": 0,
-      "y": 50
+      "x": -668.9413707679605,
+      "y": 382.9364161849711
     },
     {
       "name": "tsumiki_blocks",
       "schemaName": "public",
-      "x": 0,
-      "y": 324
+      "x": 38.59587408391826,
+      "y": 382.9364161849711
     },
     {
       "name": "tsumiki_block_medias",
       "schemaName": "public",
-      "x": -184.75695000000002,
-      "y": 908
+      "x": 385.7911781611266,
+      "y": 382.9364161849711
     },
     {
       "name": "works",
       "schemaName": "public",
-      "x": 298.22725390625,
-      "y": 50
+      "x": -1153.191408356343,
+      "y": 103.69942196531784
     },
     {
       "name": "tsumiki_favorites",
       "schemaName": "public",
-      "x": -184.75695000000002,
-      "y": 1328
+      "x": -224.6479491742365,
+      "y": 1162.298926507019
     },
     {
       "name": "tsumiki_comments",
       "schemaName": "public",
-      "x": -173.81739375000004,
-      "y": 502
+      "x": -224.6479491742365,
+      "y": 867.1560693641618
     },
     {
       "name": "tsumiki_reactions",
       "schemaName": "public",
-      "x": -184.75695000000002,
-      "y": 1506
+      "x": -221.5794107762183,
+      "y": 1507.534269199009
     },
     {
       "name": "tsumiki_block_comments",
       "schemaName": "public",
-      "x": 77.28455390624998,
-      "y": 908
+      "x": 385.7911781611266,
+      "y": 867.1560693641618
     },
     {
       "name": "tsumiki_block_reactions",
       "schemaName": "public",
-      "x": 360.96521796875,
-      "y": 908
+      "x": 385.7911781611266,
+      "y": 1507.534269199009
     },
     {
       "name": "reactions",
       "schemaName": "public",
-      "x": -184.75695000000002,
-      "y": 1716
+      "x": 89.8772366226255,
+      "y": 1789.6449215524353
     }
   ],
   "tableGroupCollapseStates": [],
@@ -76,13 +76,43 @@
   "referencePaths": [
     {
       "firstFieldNames": [
-        "before_block_id"
+        "id"
+      ],
+      "firstTableName": "works",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "work_id"
+      ],
+      "secondTableName": "tsumikis",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "users",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "user_id"
+      ],
+      "secondTableName": "tsumikis",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
       ],
       "firstTableName": "tsumiki_blocks",
       "firstSchemaName": "public",
       "firstRelation": "1",
       "secondFieldNames": [
-        "id"
+        "next_block_id"
       ],
       "secondTableName": "tsumiki_blocks",
       "secondSchemaName": "public",
@@ -91,47 +121,227 @@
     },
     {
       "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "tsumikis",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
         "tsumiki_id"
+      ],
+      "secondTableName": "tsumiki_blocks",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
       ],
       "firstTableName": "tsumiki_blocks",
       "firstSchemaName": "public",
-      "firstRelation": "*",
+      "firstRelation": "1",
       "secondFieldNames": [
-        "id"
+        "tsumiki_block_id"
       ],
-      "secondTableName": "tsumikis",
+      "secondTableName": "tsumiki_block_medias",
       "secondSchemaName": "public",
-      "secondRelation": "1",
+      "secondRelation": "*",
       "checkPoints": []
     },
     {
       "firstFieldNames": [
-        "work_id"
-      ],
-      "firstTableName": "tsumikis",
-      "firstSchemaName": "public",
-      "firstRelation": "*",
-      "secondFieldNames": [
         "id"
+      ],
+      "firstTableName": "users",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "owner_user_id"
       ],
       "secondTableName": "works",
       "secondSchemaName": "public",
-      "secondRelation": "1",
+      "secondRelation": "*",
       "checkPoints": []
     },
     {
       "firstFieldNames": [
-        "user_id"
+        "id"
       ],
       "firstTableName": "tsumikis",
       "firstSchemaName": "public",
-      "firstRelation": "*",
+      "firstRelation": "1",
       "secondFieldNames": [
+        "tsumiki_id"
+      ],
+      "secondTableName": "tsumiki_favorites",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
         "id"
       ],
-      "secondTableName": "users",
+      "firstTableName": "users",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "user_id"
+      ],
+      "secondTableName": "tsumiki_favorites",
       "secondSchemaName": "public",
-      "secondRelation": "1",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "tsumikis",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "tsumiki_id"
+      ],
+      "secondTableName": "tsumiki_comments",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "users",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "user_id"
+      ],
+      "secondTableName": "tsumiki_comments",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "tsumikis",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "tsumiki_id"
+      ],
+      "secondTableName": "tsumiki_reactions",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "users",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "user_id"
+      ],
+      "secondTableName": "tsumiki_reactions",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "reactions",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "reaction_id"
+      ],
+      "secondTableName": "tsumiki_reactions",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "tsumiki_blocks",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "tsumiki_block_id"
+      ],
+      "secondTableName": "tsumiki_block_comments",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "users",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "user_id"
+      ],
+      "secondTableName": "tsumiki_block_comments",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "tsumiki_blocks",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "tsumiki_block_id"
+      ],
+      "secondTableName": "tsumiki_block_reactions",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "users",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "user_id"
+      ],
+      "secondTableName": "tsumiki_block_reactions",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "reactions",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "reaction_id"
+      ],
+      "secondTableName": "tsumiki_block_reactions",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
       "checkPoints": []
     }
   ]
