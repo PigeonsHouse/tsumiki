@@ -15,8 +15,18 @@ Table users {
     name varchar [not null]
     guild_id int [not null]
     thumbnail_url varchar [not null]
-    created_at timestamp  [default: `now()`]
-    updated_at timestamp
+    created_at timestamp [default: `now()`]
+    updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
+}
+
+Table refresh_token {
+    id int [pk, increment]
+    hashed_token varchar [not null]
+    user_id int [ref: > users.id, not null]
+    expired_at timestamp [not null]
+    is_revoked boolean [not null, default: false]
+    created_at timestamp [default: `now()`]
+    updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
 }
 
 Table tsumikis {
@@ -24,23 +34,23 @@ Table tsumikis {
     title varchar [not null]
     thumbnail_url varchar [not null]
     visibility visibility [not null]
-    miruko_watching_duration int  // 単位は秒
+    miruko_watching_duration int [note: '単位は秒']
     work_id int [ref: > works.id, not null]
     user_id int [ref: > users.id, not null]
-    created_at timestamp  [default: `now()`]
-    updated_at timestamp
+    created_at timestamp [default: `now()`]
+    updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
 }
 
 Table tsumiki_blocks {
     id int [pk, increment]
-    message varchar  // メッセージかメディアはいずれか必須(ロジックで担保する？)
+    message varchar [note: 'メッセージかメディアはいずれか必須(ロジックで担保)']
     percentage int [not null]
-    condition int [not null]  // 1-5
+    condition int [not null, note: '1~5の値を取る(ロジックで担保)']
     next_block_id int [unique, ref: - tsumiki_blocks.id]
     tsumiki_id int [ref: > tsumikis.id, not null]
     created_at timestamp [default: `now()`]
-    updated_at timestamp
-    deleted_at timestamp  // ソフトデリートとして、データは隠しつつ連結の穴抜けを解消する
+    updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
+    deleted_at timestamp [note: 'ソフトデリートとして、データは隠しつつ連結の穴抜けを解消する']
 
     Indexes {
         (tsumiki_id, next_block_id) [name: "idx_tsumiki_blocks_tsumiki_id_next_block_id"]
@@ -52,10 +62,9 @@ Table tsumiki_block_medias {
     type media_type [not null]
     url varchar [not null]
     order int
-    tsumiki_block_id int [ref: > tsumiki_blocks.id, not null]
+    tsumiki_block_id int [ref: > tsumiki_blocks.id]
     created_at timestamp [default: `now()`]
-    updated_at timestamp
-
+    updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
     Indexes {
         (tsumiki_block_id, order) [unique]
     }
@@ -68,24 +77,25 @@ Table works {
     thumbnail_url varchar
     owner_user_id int [ref: > users.id, not null]
     created_at timestamp [default: `now()`]
-    updated_at timestamp
+    updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
 }
 
 Table tsumiki_favorites {
     tsumiki_id int [pk, ref: > tsumikis.id]
     user_id int [pk, ref: > users.id, not null]
-    counts int [not null]  // maxは10? 50? 100? ロジックで担保する？
+    counts int [not null, note: 'maxは10(ロジックで担保)']
     created_at timestamp [default: `now()`]
-    updated_at timestamp
+    updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
 }
 
 Table tsumiki_comments {
     id int [pk, increment]
     tsumiki_id int [ref: > tsumikis.id, not null]
+    tsumiki_block_id int [ref: > tsumiki_blocks.id, note: 'ブロックに向けたコメントはこっち']
     user_id int [ref: > users.id, not null]
     message varchar [not null]
     created_at timestamp [default: `now()`]
-    updated_at timestamp
+    updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
 }
 
 Table tsumiki_reactions {
@@ -94,20 +104,11 @@ Table tsumiki_reactions {
     user_id int [ref: > users.id, not null]
     reaction_id int [ref: > reactions.id, not null]
     created_at timestamp [default: `now()`]
-    updated_at timestamp
+    updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
 
     Indexes {
         (tsumiki_id, user_id, reaction_id) [unique]
     }
-}
-
-Table tsumiki_block_comments {
-    id int [pk, increment]
-    tsumiki_block_id int [ref: > tsumiki_blocks.id, not null]
-    user_id int [ref: > users.id, not null]
-    message varchar [not null]
-    created_at timestamp [default: `now()`]
-    updated_at timestamp
 }
 
 Table tsumiki_block_reactions {
@@ -116,7 +117,7 @@ Table tsumiki_block_reactions {
     user_id int [ref: > users.id, not null]
     reaction_id int [ref: > reactions.id, not null]
     created_at timestamp [default: `now()`]
-    updated_at timestamp
+    updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
 
     Indexes {
         (tsumiki_block_id, user_id, reaction_id) [unique]
@@ -129,5 +130,5 @@ Table reactions {
     icon_url varchar [not null]
     is_active boolean [not null]
     created_at timestamp [default: `now()`]
-    updated_at timestamp
+    updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
 }

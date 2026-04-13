@@ -11,6 +11,12 @@
       "y": 786.265267674959
     },
     {
+      "name": "refresh_token",
+      "schemaName": "public",
+      "x": -1377.8840493906123,
+      "y": 1131.4593205669285
+    },
+    {
       "name": "tsumikis",
       "schemaName": "public",
       "x": -668.9413707679605,
@@ -53,12 +59,6 @@
       "y": 1507.534269199009
     },
     {
-      "name": "tsumiki_block_comments",
-      "schemaName": "public",
-      "x": 385.7911781611266,
-      "y": 867.1560693641618
-    },
-    {
       "name": "tsumiki_block_reactions",
       "schemaName": "public",
       "x": 385.7911781611266,
@@ -74,6 +74,21 @@
   "tableGroupCollapseStates": [],
   "stickyNoteLayouts": [],
   "referencePaths": [
+    {
+      "firstFieldNames": [
+        "id"
+      ],
+      "firstTableName": "users",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "user_id"
+      ],
+      "secondTableName": "refresh_token",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
     {
       "firstFieldNames": [
         "id"
@@ -213,6 +228,21 @@
       "firstFieldNames": [
         "id"
       ],
+      "firstTableName": "tsumiki_blocks",
+      "firstSchemaName": "public",
+      "firstRelation": "1",
+      "secondFieldNames": [
+        "tsumiki_block_id"
+      ],
+      "secondTableName": "tsumiki_comments",
+      "secondSchemaName": "public",
+      "secondRelation": "*",
+      "checkPoints": []
+    },
+    {
+      "firstFieldNames": [
+        "id"
+      ],
       "firstTableName": "users",
       "firstSchemaName": "public",
       "firstRelation": "1",
@@ -265,36 +295,6 @@
         "reaction_id"
       ],
       "secondTableName": "tsumiki_reactions",
-      "secondSchemaName": "public",
-      "secondRelation": "*",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "id"
-      ],
-      "firstTableName": "tsumiki_blocks",
-      "firstSchemaName": "public",
-      "firstRelation": "1",
-      "secondFieldNames": [
-        "tsumiki_block_id"
-      ],
-      "secondTableName": "tsumiki_block_comments",
-      "secondSchemaName": "public",
-      "secondRelation": "*",
-      "checkPoints": []
-    },
-    {
-      "firstFieldNames": [
-        "id"
-      ],
-      "firstTableName": "users",
-      "firstSchemaName": "public",
-      "firstRelation": "1",
-      "secondFieldNames": [
-        "user_id"
-      ],
-      "secondTableName": "tsumiki_block_comments",
       "secondSchemaName": "public",
       "secondRelation": "*",
       "checkPoints": []
