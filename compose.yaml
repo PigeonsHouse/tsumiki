@@ -10,9 +10,24 @@ services:
       TZ: Asia/Tokyo
     env_file:
       - backend/.env
+      - database/.env
     depends_on:
       db:
         condition: service_healthy
+
+  migrate:
+    profiles: [migrate]
+    build:
+      context: .
+      dockerfile: docker/migrate/Dockerfile
+    environment:
+      TZ: Asia/Tokyo
+    env_file:
+      - database/.env
+    depends_on:
+      db:
+        condition: service_healthy
+
   backend:
     profiles: [dev]
     build:
@@ -26,6 +41,7 @@ services:
       TZ: Asia/Tokyo
     env_file:
       - backend/.env
+      - database/.env
     depends_on:
       db:
         condition: service_healthy
@@ -52,7 +68,7 @@ services:
     environment:
       TZ: Asia/Tokyo
     env_file:
-      - backend/.env
+      - database/.env
     healthcheck:
       test: ["CMD", "mysqladmin" ,"ping", "-u", "root", "-p$$MYSQL_PASSWORD"]
       timeout: 10s
