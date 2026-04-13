@@ -43,7 +43,7 @@
 - GET /api/v1/tsumikis
   - 積み木一覧取得
   - フィルタ、検索機能
-- GET /api/v1/tsumikis
+- GET /api/v1/tsumikis/{tsumiki_id}
   - 積み木とそのブロック一覧取得
 
 ## v1.0までにほしいやつ
