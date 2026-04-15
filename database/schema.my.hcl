@@ -10,7 +10,7 @@ table "users" {
   }
   column "discord_user_id" {
     type = int
-    null = false
+    null = true
   }
   column "name" {
     type = varchar(255)
@@ -18,11 +18,11 @@ table "users" {
   }
   column "guild_id" {
     type = int
-    null = false
+    null = true
   }
   column "thumbnail_url" {
     type = varchar(255)
-    null = false
+    null = true
   }
   column "created_at" {
     type    = timestamp
@@ -82,6 +82,9 @@ table "refresh_token" {
   primary_key {
     columns = [column.id]
   }
+  index "fk_refresh_token_user_id" {
+    columns = [column.user_id]
+  }
   foreign_key "fk_refresh_token_user_id" {
     columns     = [column.user_id]
     ref_columns = [table.users.column.id]
@@ -126,6 +129,9 @@ table "works" {
   }
   primary_key {
     columns = [column.id]
+  }
+  index "fk_works_owner_user_id" {
+    columns = [column.owner_user_id]
   }
   foreign_key "fk_works_owner_user_id" {
     columns     = [column.owner_user_id]
@@ -179,6 +185,12 @@ table "tsumikis" {
   }
   primary_key {
     columns = [column.id]
+  }
+  index "fk_tsumikis_work_id" {
+    columns = [column.work_id]
+  }
+  index "fk_tsumikis_user_id" {
+    columns = [column.user_id]
   }
   foreign_key "fk_tsumikis_work_id" {
     columns     = [column.work_id]
@@ -337,6 +349,9 @@ table "tsumiki_favorites" {
   primary_key {
     columns = [column.tsumiki_id, column.user_id]
   }
+  index "fk_tsumiki_favorites_user_id" {
+    columns = [column.user_id]
+  }
   foreign_key "fk_tsumiki_favorites_tsumiki_id" {
     columns     = [column.tsumiki_id]
     ref_columns = [table.tsumikis.column.id]
@@ -387,6 +402,15 @@ table "tsumiki_comments" {
   }
   primary_key {
     columns = [column.id]
+  }
+  index "fk_tsumiki_comments_tsumiki_id" {
+    columns = [column.tsumiki_id]
+  }
+  index "fk_tsumiki_comments_tsumiki_block_id" {
+    columns = [column.tsumiki_block_id]
+  }
+  index "fk_tsumiki_comments_user_id" {
+    columns = [column.user_id]
   }
   foreign_key "fk_tsumiki_comments_tsumiki_id" {
     columns     = [column.tsumiki_id]
@@ -484,6 +508,12 @@ table "tsumiki_reactions" {
     columns = [column.tsumiki_id, column.user_id, column.reaction_id]
     unique  = true
   }
+  index "fk_tsumiki_reactions_user_id" {
+    columns = [column.user_id]
+  }
+  index "fk_tsumiki_reactions_reaction_id" {
+    columns = [column.reaction_id]
+  }
   foreign_key "fk_tsumiki_reactions_tsumiki_id" {
     columns     = [column.tsumiki_id]
     ref_columns = [table.tsumikis.column.id]
@@ -540,6 +570,12 @@ table "tsumiki_block_reactions" {
   index "idx_tsumiki_block_reactions_tsumiki_block_id_user_id_reaction_id" {
     columns = [column.tsumiki_block_id, column.user_id, column.reaction_id]
     unique  = true
+  }
+  index "fk_tsumiki_block_reactions_user_id" {
+    columns = [column.user_id]
+  }
+  index "fk_tsumiki_block_reactions_reaction_id" {
+    columns = [column.reaction_id]
   }
   foreign_key "fk_tsumiki_block_reactions_tsumiki_block_id" {
     columns     = [column.tsumiki_block_id]
