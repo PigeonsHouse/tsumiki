@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 )
 
 var (
 	BackendUrl  string
 	FrontendUrl string
 
-	AppPort int
+	AppPort       int
+	JwtSecret     string
+	AllowGuildIds []string
 
 	DiscordClientID string
 	DiscordSecretID string
@@ -35,6 +38,12 @@ func LoadEnv() error {
 	} else {
 		AppPort = 8000
 	}
+	JwtSecret = os.Getenv("JWT_SECRET")
+	if JwtSecret == "" {
+		return fmt.Errorf("loading env error: JWT_SECRET")
+	}
+	AllowGuildIdsStr := os.Getenv("ALLOW_GUILD_IDS")
+	AllowGuildIds = strings.Split(AllowGuildIdsStr, ",")
 
 	DiscordClientID = os.Getenv("DISCORD_CLIENT_ID")
 	if DiscordClientID == "" {

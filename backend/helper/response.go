@@ -25,11 +25,19 @@ func ResponseOk(w http.ResponseWriter, body any) error {
 	return ResponseJSON(w, body, http.StatusOK)
 }
 
-type badRequestBody struct {
+type failureBody struct {
 	Status int    `json:"status"`
 	Detail string `json:"detail"`
 }
 
 func ResponseBadRequest(w http.ResponseWriter, detail string) error {
-	return ResponseJSON(w, badRequestBody{Status: http.StatusBadRequest, Detail: detail}, http.StatusBadRequest)
+	return ResponseJSON(w, failureBody{Status: http.StatusBadRequest, Detail: detail}, http.StatusBadRequest)
+}
+
+func ResponseForbidden(w http.ResponseWriter, detail string) error {
+	return ResponseJSON(w, failureBody{Status: http.StatusForbidden, Detail: detail}, http.StatusForbidden)
+}
+
+func ResponseInternalServerError(w http.ResponseWriter, detail string) error {
+	return ResponseJSON(w, failureBody{Status: http.StatusBadRequest, Detail: detail}, http.StatusInternalServerError)
 }

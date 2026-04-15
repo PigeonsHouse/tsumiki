@@ -3,7 +3,6 @@ package external
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -11,7 +10,7 @@ import (
 )
 
 const (
-	scope       = "identify email"
+	scope       = "identify email guilds"
 	apiEndpoint = "https://discord.com/api/v10"
 )
 
@@ -23,8 +22,19 @@ type TokenResponse struct {
 	Scope        string `json:"scope"`
 }
 
+type UserInfoResponse struct {
+	ID         string  `json:"id"`
+	UserName   string  `json:"username"`
+	GlobalName *string `json:"global_name"`
+	Avatar     string  `json:"avatar"`
+}
+
+type GuildInfoResponse struct {
+	ID string `json:"id"`
+}
+
 func callbackUrl() string {
-	return fmt.Sprintf("%s/api/v1/discord/callback", env.BackendUrl)
+	return fmt.Sprintf("%s/api/v1/auth/discord/callback", env.BackendUrl)
 }
 
 func GetRedirectUrl() string {
@@ -64,22 +74,38 @@ func ValidateRedirectedCode(code string) (TokenResponse, error) {
 	return tokenRes, nil
 }
 
-func GetUserInfo(tokenRes TokenResponse) ([]byte, error) {
-	// アクセストークンを使ってユーザー情報を取得
+func GetUserInfo(tokenRes TokenResponse) (UserInfoResponse, error) {
 	userReq, _ := http.NewRequest("GET", apiEndpoint+"/users/@me", nil)
 	userReq.Header.Set("Authorization", "Bearer "+tokenRes.AccessToken)
 
 	client := &http.Client{}
 	userResp, err := client.Do(userReq)
 	if err != nil {
-		return []byte{}, err
+		return UserInfoResponse{}, err
 	}
 	defer userResp.Body.Close()
 
-	userInfo, err := io.ReadAll(userResp.Body)
-	if err != nil {
-		return []byte{}, err
+	var userInfo UserInfoResponse
+	if err := json.NewDecoder(userResp.Body).Decode(&userInfo); err != nil {
+		return UserInfoResponse{}, err
 	}
-
 	return userInfo, nil
+}
+
+func GetUserGuildsInfo(tokenRes TokenResponse) ([]GuildInfoResponse, error) {
+	userReq, _ := http.NewRequest("GET", apiEndpoint+"/users/@me/guilds", nil)
+	userReq.Header.Set("Authorization", "Bearer "+tokenRes.AccessToken)
+
+	client := &http.Client{}
+	userResp, err := client.Do(userReq)
+	if err != nil {
+		return []GuildInfoResponse{}, err
+	}
+	defer userResp.Body.Close()
+
+	var guildsInfo []GuildInfoResponse
+	if err := json.NewDecoder(userResp.Body).Decode(&guildsInfo); err != nil {
+		return []GuildInfoResponse{}, err
+	}
+	return guildsInfo, nil
 }

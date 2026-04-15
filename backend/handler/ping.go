@@ -3,13 +3,21 @@ package handler
 import (
 	"net/http"
 	"tsumiki/helper"
+	"tsumiki/schema"
 )
 
-type pingResponse struct {
-	Status string `json:"status"`
+type PingHandler interface {
+	Ping(w http.ResponseWriter, r *http.Request)
 }
 
-func Ping(w http.ResponseWriter, r *http.Request) {
-	response := pingResponse{Status: "ok"}
+type pingHandlerImpl struct {
+}
+
+func NewPingHandler() PingHandler {
+	return &pingHandlerImpl{}
+}
+
+func (ph *pingHandlerImpl) Ping(w http.ResponseWriter, r *http.Request) {
+	response := schema.PingResponse{Status: "ok"}
 	helper.ResponseOk(w, response)
 }

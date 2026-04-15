@@ -9,7 +9,7 @@ table "users" {
     auto_increment = true
   }
   column "discord_user_id" {
-    type = int
+    type = varchar(255)
     null = true
   }
   column "name" {
@@ -17,7 +17,7 @@ table "users" {
     null = false
   }
   column "guild_id" {
-    type = int
+    type = varchar(255)
     null = true
   }
   column "thumbnail_url" {

@@ -1,19 +1,36 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
+	"slices"
 	"tsumiki/env"
 	"tsumiki/external"
 	"tsumiki/helper"
+	"tsumiki/middleware"
+	"tsumiki/repository"
 )
 
-func RedirectDiscord(w http.ResponseWriter, r *http.Request) {
+type AuthHandler interface {
+	RedirectDiscord(w http.ResponseWriter, r *http.Request)
+	CallbackDiscord(w http.ResponseWriter, r *http.Request)
+}
+
+type authHandlerImpl struct {
+	repository repository.AuthRepository
+}
+
+func NewAuthHandler(authRepo repository.AuthRepository) AuthHandler {
+	return &authHandlerImpl{
+		repository: authRepo,
+	}
+}
+
+func (ah *authHandlerImpl) RedirectDiscord(w http.ResponseWriter, r *http.Request) {
 	redirectUrl := external.GetRedirectUrl()
 	http.Redirect(w, r, redirectUrl, http.StatusPermanentRedirect)
 }
 
-func CallbackDiscord(w http.ResponseWriter, r *http.Request) {
+func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Request) {
 	// エラーパラメーターのチェック（ユーザーがキャンセルした場合など）
 	if errDesc := r.URL.Query().Get("error_description"); errDesc != "" {
 		http.Redirect(w, r, env.FrontendUrl+"?error=access_denied", http.StatusTemporaryRedirect)
@@ -28,7 +45,7 @@ func CallbackDiscord(w http.ResponseWriter, r *http.Request) {
 
 	tokenRes, err := external.ValidateRedirectedCode(code)
 	if err != nil {
-		helper.ResponseBadRequest(w, "バリデーションに失敗しました")
+		helper.ResponseBadRequest(w, "認可コードのバリデーションに失敗しました")
 		return
 	}
 
@@ -38,28 +55,45 @@ func CallbackDiscord(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ==============================================================
-	// 【APIサーバーとしての重要ポイント】
-	// ここで userInfo (DiscordのIDやユーザー名) を自社のデータベースと照合します。
-	// 新規ユーザーならDBに登録、既存ならログイン処理を行います。
-	//
-	// その後、フロントエンド用の「独自のセッショントークン（JWTなど）」を生成します。
-	// 今回はモックとして単純な文字列を生成したと仮定します。
-	// ==============================================================
-	fmt.Printf("取得したDiscordユーザー情報: %s\n", string(userInfo))
+	guildsInfo, err := external.GetUserGuildsInfo(tokenRes)
+	if err != nil {
+		helper.ResponseBadRequest(w, "ギルド情報の解決に失敗しました")
+		return
+	}
 
-	myAppSessionToken := "generated_dummy_jwt_or_session_id"
+	guildID := ""
+	for _, guildInfo := range guildsInfo {
+		if slices.Contains(env.AllowGuildIds, guildInfo.ID) {
+			guildID = guildInfo.ID
+		}
+	}
+	if guildID == "" {
+		helper.ResponseForbidden(w, "このDiscordユーザのログインは許容されていません")
+		return
+	}
 
-	// HttpOnly Cookieにトークンをセットしてリダイレクトする
-	http.SetCookie(w, &http.Cookie{
-		Name:     "session_token",
-		Value:    myAppSessionToken,
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
-	})
-	redirectURL := env.FrontendUrl
+	user, err := ah.repository.FindByDiscordUserId(userInfo.ID)
+	if err != nil {
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+	if user == nil {
+		user, err = ah.repository.CreateUserByDiscord(userInfo.UserName, userInfo.Avatar, userInfo.ID, guildID)
+		if err != nil {
+			helper.ResponseInternalServerError(w, "DBエラー")
+			return
+		}
+	}
+
+	tokenPair, err := middleware.GenerateTokenPair(user.ID)
+	if err != nil {
+		helper.ResponseInternalServerError(w, "トークン生成エラー")
+		return
+	}
+
+	// TODO: redisとかもいい感じに
+
+	redirectURL := env.FrontendUrl + "?access_token=" + tokenPair.AccessToken + "&refresh_token=" + tokenPair.RefreshToken
 
 	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
