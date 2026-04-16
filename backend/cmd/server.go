@@ -1,13 +1,14 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 	"tsumiki/env"
+	"tsumiki/external"
 	"tsumiki/handler"
 	"tsumiki/repository"
 	"tsumiki/router"
+	"tsumiki/store"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -17,10 +18,17 @@ func main() {
 		panic(err)
 	}
 
-	// TODO: infraパッケージとかを切る
-	db, _ := sql.Open("mysql", "")
+	db, err := external.NewDatabase()
+	if err != nil {
+		panic(err)
+	}
+	redis, err := external.NewRedis()
+	if err != nil {
+		panic(err)
+	}
+	stores := store.NewStores(redis)
 	repos := repository.NewRepositories(db)
-	handlers := handler.NewHandlers(repos)
+	handlers := handler.NewHandlers(repos, stores)
 
 	mux := chi.NewRouter()
 	router.SetApiRouter(mux, handlers)

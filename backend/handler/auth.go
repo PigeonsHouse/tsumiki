@@ -8,6 +8,7 @@ import (
 	"tsumiki/helper"
 	"tsumiki/middleware"
 	"tsumiki/repository"
+	"tsumiki/store"
 )
 
 type AuthHandler interface {
@@ -17,11 +18,13 @@ type AuthHandler interface {
 
 type authHandlerImpl struct {
 	repository repository.AuthRepository
+	store      store.AuthStore
 }
 
-func NewAuthHandler(authRepo repository.AuthRepository) AuthHandler {
+func NewAuthHandler(authRepo repository.AuthRepository, authStore store.AuthStore) AuthHandler {
 	return &authHandlerImpl{
 		repository: authRepo,
+		store:      authStore,
 	}
 }
 
@@ -33,7 +36,7 @@ func (ah *authHandlerImpl) RedirectDiscord(w http.ResponseWriter, r *http.Reques
 func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Request) {
 	// エラーパラメーターのチェック（ユーザーがキャンセルした場合など）
 	if errDesc := r.URL.Query().Get("error_description"); errDesc != "" {
-		http.Redirect(w, r, env.FrontendUrl+"?error=access_denied", http.StatusTemporaryRedirect)
+		helper.ResponseBadRequest(w, "認証に失敗しました")
 		return
 	}
 
@@ -85,15 +88,14 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	tokenPair, err := middleware.GenerateTokenPair(user.ID)
+	// tokenPair, err := middleware.GenerateTokenPair(user.ID)
+	_, err = middleware.GenerateTokenPair(user.ID)
 	if err != nil {
 		helper.ResponseInternalServerError(w, "トークン生成エラー")
 		return
 	}
 
 	// TODO: redisとかもいい感じに
+	// ah.store.SetRefreshToken(tokenPair)
 
-	redirectURL := env.FrontendUrl + "?access_token=" + tokenPair.AccessToken + "&refresh_token=" + tokenPair.RefreshToken
-
-	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }
