@@ -2,27 +2,25 @@ package helper
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
-func ResponseJSON(w http.ResponseWriter, body any, status int) error {
-	w.Header().Set("Content-Type", "application/json")
-
-	w.WriteHeader(status)
-
+func ResponseJSON(w http.ResponseWriter, body any, status int) {
 	resp, err := json.Marshal(body)
 	if err != nil {
-		return fmt.Errorf("json marshal error: %w", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte(`{"status":500,"detail":"application error"}`))
+		return
 	}
 
-	w.Write(resp)
-
-	return nil
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_, _ = w.Write(resp)
 }
 
-func ResponseOk(w http.ResponseWriter, body any) error {
-	return ResponseJSON(w, body, http.StatusOK)
+func ResponseOk(w http.ResponseWriter, body any) {
+	ResponseJSON(w, body, http.StatusOK)
 }
 
 type failureBody struct {
@@ -30,14 +28,14 @@ type failureBody struct {
 	Detail string `json:"detail"`
 }
 
-func ResponseBadRequest(w http.ResponseWriter, detail string) error {
-	return ResponseJSON(w, failureBody{Status: http.StatusBadRequest, Detail: detail}, http.StatusBadRequest)
+func ResponseBadRequest(w http.ResponseWriter, detail string) {
+	ResponseJSON(w, failureBody{Status: http.StatusBadRequest, Detail: detail}, http.StatusBadRequest)
 }
 
-func ResponseForbidden(w http.ResponseWriter, detail string) error {
-	return ResponseJSON(w, failureBody{Status: http.StatusForbidden, Detail: detail}, http.StatusForbidden)
+func ResponseForbidden(w http.ResponseWriter, detail string) {
+	ResponseJSON(w, failureBody{Status: http.StatusForbidden, Detail: detail}, http.StatusForbidden)
 }
 
-func ResponseInternalServerError(w http.ResponseWriter, detail string) error {
-	return ResponseJSON(w, failureBody{Status: http.StatusBadRequest, Detail: detail}, http.StatusInternalServerError)
+func ResponseInternalServerError(w http.ResponseWriter, detail string) {
+	ResponseJSON(w, failureBody{Status: http.StatusInternalServerError, Detail: detail}, http.StatusInternalServerError)
 }

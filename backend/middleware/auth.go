@@ -39,13 +39,14 @@ type TokenPair struct {
 
 func GenerateTokenPair(userID int) (TokenPair, error) {
 	sessionID := snowflakeNode.Generate().String()
+	now := time.Now()
 
 	accessClaims := CustomClaims{
 		UserID:    userID,
 		SessionID: sessionID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenLiveTime)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(now.Add(AccessTokenLiveTime)),
+			IssuedAt:  jwt.NewNumericDate(now),
 		},
 	}
 	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, accessClaims)
@@ -58,8 +59,8 @@ func GenerateTokenPair(userID int) (TokenPair, error) {
 		UserID:    userID,
 		SessionID: sessionID,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(RefreshTokenLiveTime)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(now.Add(RefreshTokenLiveTime)),
+			IssuedAt:  jwt.NewNumericDate(now),
 		},
 	}
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
