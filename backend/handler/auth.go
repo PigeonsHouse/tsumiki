@@ -3,8 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"slices"
-	"time"
+"time"
 	"tsumiki/env"
 	"tsumiki/external"
 	"tsumiki/helper"
@@ -77,9 +76,15 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 	}
 
 	guildID := ""
-	for _, guildInfo := range guildsInfo {
-		if slices.Contains(env.AllowGuildIds, guildInfo.ID) {
-			guildID = guildInfo.ID
+	for _, allowedID := range env.AllowGuildIds {
+		for _, guildInfo := range guildsInfo {
+			if guildInfo.ID == allowedID {
+				guildID = allowedID
+				break
+			}
+		}
+		if guildID != "" {
+			break
 		}
 	}
 	if guildID == "" {
