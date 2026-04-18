@@ -23,18 +23,20 @@ type authHandlerImpl struct {
 	repository repository.AuthRepository
 	store      store.AuthStore
 	media      media.MediaService
+	discord    external.DiscordService
 }
 
-func NewAuthHandler(authRepo repository.AuthRepository, authStore store.AuthStore, mediaSvc media.MediaService) AuthHandler {
+func NewAuthHandler(authRepo repository.AuthRepository, authStore store.AuthStore, mediaSvc media.MediaService, discordSvc external.DiscordService) AuthHandler {
 	return &authHandlerImpl{
 		repository: authRepo,
 		store:      authStore,
 		media:      mediaSvc,
+		discord:    discordSvc,
 	}
 }
 
 func (ah *authHandlerImpl) RedirectDiscord(w http.ResponseWriter, r *http.Request) {
-	redirectUrl := external.GetRedirectUrl()
+	redirectUrl := ah.discord.GetRedirectUrl()
 	http.Redirect(w, r, redirectUrl, http.StatusPermanentRedirect)
 }
 
@@ -53,21 +55,21 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	tokenRes, err := external.ValidateRedirectedCode(code)
+	tokenRes, err := ah.discord.ValidateRedirectedCode(code)
 	if err != nil {
 		fmt.Println("validate code: ", err)
 		helper.ResponseBadRequest(w, "認可コードのバリデーションに失敗しました")
 		return
 	}
 
-	userInfo, err := external.GetUserInfo(tokenRes)
+	userInfo, err := ah.discord.GetUserInfo(tokenRes)
 	if err != nil {
 		fmt.Println("get discord user: ", err)
 		helper.ResponseBadRequest(w, "ユーザ情報の解決に失敗しました")
 		return
 	}
 
-	guildsInfo, err := external.GetUserGuildsInfo(tokenRes)
+	guildsInfo, err := ah.discord.GetUserGuildsInfo(tokenRes)
 	if err != nil {
 		fmt.Println("get guild: ", err)
 		helper.ResponseBadRequest(w, "ギルド情報の解決に失敗しました")
@@ -99,7 +101,7 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 			helper.ResponseInternalServerError(w, "DBエラー")
 			return
 		}
-		avatarBody, avatarContentType, err := external.FetchAvatar(userInfo)
+		avatarBody, avatarContentType, err := ah.discord.FetchAvatar(userInfo)
 		if err != nil {
 			fmt.Println("アバター取得エラー: ", err)
 			helper.ResponseInternalServerError(w, "アバター取得エラー")

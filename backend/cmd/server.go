@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"tsumiki/env"
+	"tsumiki/external"
 	"tsumiki/handler"
 	"tsumiki/infra"
 	"tsumiki/media"
@@ -38,7 +39,8 @@ func main() {
 	}
 	stores := store.NewStores(redis)
 	repos := repository.NewRepositories(db)
-	handlers := handler.NewHandlers(repos, stores, mediaSvc)
+	discordSvc := external.NewDiscordService()
+	handlers := handler.NewHandlers(repos, stores, mediaSvc, discordSvc)
 
 	mux := chi.NewRouter()
 	router.SetApiRouter(mux, handlers)

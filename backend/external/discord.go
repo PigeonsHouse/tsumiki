@@ -34,6 +34,20 @@ type GuildInfoResponse struct {
 	ID string `json:"id"`
 }
 
+type DiscordService interface {
+	GetRedirectUrl() string
+	ValidateRedirectedCode(code string) (TokenResponse, error)
+	GetUserInfo(tokenRes TokenResponse) (UserInfoResponse, error)
+	GetUserGuildsInfo(tokenRes TokenResponse) ([]GuildInfoResponse, error)
+	FetchAvatar(userInfo UserInfoResponse) (io.ReadCloser, string, error)
+}
+
+type discordServiceImpl struct{}
+
+func NewDiscordService() DiscordService {
+	return &discordServiceImpl{}
+}
+
 func callbackUrl() string {
 	return fmt.Sprintf("%s/api/v1/auth/discord/callback", env.BackendUrl)
 }
@@ -42,7 +56,7 @@ func getAvatarUrl(userInfo UserInfoResponse) string {
 	return fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", userInfo.ID, userInfo.Avatar)
 }
 
-func FetchAvatar(userInfo UserInfoResponse) (io.ReadCloser, string, error) {
+func (d *discordServiceImpl) FetchAvatar(userInfo UserInfoResponse) (io.ReadCloser, string, error) {
 	resp, err := http.Get(getAvatarUrl(userInfo))
 	if err != nil {
 		return nil, "", err
@@ -50,12 +64,12 @@ func FetchAvatar(userInfo UserInfoResponse) (io.ReadCloser, string, error) {
 	return resp.Body, resp.Header.Get("Content-Type"), nil
 }
 
-func GetRedirectUrl() string {
+func (d *discordServiceImpl) GetRedirectUrl() string {
 	return fmt.Sprintf("%s/oauth2/authorize?client_id=%s&redirect_uri=%s&scope=%s&response_type=code",
 		apiEndpoint, env.DiscordClientID, url.QueryEscape(callbackUrl()), scope)
 }
 
-func ValidateRedirectedCode(code string) (TokenResponse, error) {
+func (d *discordServiceImpl) ValidateRedirectedCode(code string) (TokenResponse, error) {
 	data := url.Values{}
 	data.Set("client_id", env.DiscordClientID)
 	data.Set("client_secret", env.DiscordSecretID)
@@ -87,7 +101,7 @@ func ValidateRedirectedCode(code string) (TokenResponse, error) {
 	return tokenRes, nil
 }
 
-func GetUserInfo(tokenRes TokenResponse) (UserInfoResponse, error) {
+func (d *discordServiceImpl) GetUserInfo(tokenRes TokenResponse) (UserInfoResponse, error) {
 	userReq, _ := http.NewRequest("GET", apiEndpoint+"/users/@me", nil)
 	userReq.Header.Set("Authorization", "Bearer "+tokenRes.AccessToken)
 
@@ -105,7 +119,7 @@ func GetUserInfo(tokenRes TokenResponse) (UserInfoResponse, error) {
 	return userInfo, nil
 }
 
-func GetUserGuildsInfo(tokenRes TokenResponse) ([]GuildInfoResponse, error) {
+func (d *discordServiceImpl) GetUserGuildsInfo(tokenRes TokenResponse) ([]GuildInfoResponse, error) {
 	userReq, _ := http.NewRequest("GET", apiEndpoint+"/users/@me/guilds", nil)
 	userReq.Header.Set("Authorization", "Bearer "+tokenRes.AccessToken)
 
