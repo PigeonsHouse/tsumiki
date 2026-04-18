@@ -13,6 +13,10 @@ cat > /tmp/s3.json << EOF
         }
       ],
       "actions": ["Admin", "Read", "Write", "List"]
+    },
+    {
+      "name": "anonymous",
+      "actions": ["Read:${S3_BUCKET}"]
     }
   ]
 }
