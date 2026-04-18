@@ -16,6 +16,7 @@ import (
 
 type MediaService interface {
 	UploadAvatar(ctx context.Context, discordUserID string, imageURL string) (string, error)
+	ResolveURL(path string) string
 }
 
 type mediaServiceImpl struct {
@@ -79,5 +80,9 @@ func (ms *mediaServiceImpl) UploadAvatar(ctx context.Context, discordUserID stri
 		return "", fmt.Errorf("アバター画像のアップロードに失敗しました: %w", err)
 	}
 
-	return fmt.Sprintf("%s/%s/%s", ms.publicURL, ms.bucket, key), nil
+	return fmt.Sprintf("%s/%s", ms.bucket, key), nil
+}
+
+func (ms *mediaServiceImpl) ResolveURL(path string) string {
+	return fmt.Sprintf("%s/%s", ms.publicURL, path)
 }

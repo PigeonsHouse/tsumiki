@@ -135,5 +135,7 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		MaxAge:   int(middleware.RefreshTokenLiveTime / time.Second),
 	})
 
-	helper.ResponseOk(w, user)
+	userResponse := *user
+	userResponse.AvatarUrl = ah.media.ResolveURL(user.AvatarUrl)
+	helper.ResponseOk(w, userResponse)
 }
