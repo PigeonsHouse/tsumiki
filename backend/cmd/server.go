@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"tsumiki/env"
-	"tsumiki/external"
 	"tsumiki/handler"
+	"tsumiki/infra"
 	"tsumiki/repository"
 	"tsumiki/router"
 	"tsumiki/store"
@@ -18,11 +18,11 @@ func main() {
 		panic(fmt.Errorf("env: %w", err))
 	}
 
-	db, err := external.NewDatabase()
+	db, err := infra.NewDatabase()
 	if err != nil {
 		panic(fmt.Errorf("db: %w", err))
 	}
-	redis, err := external.NewRedis()
+	redis, err := infra.NewRedis()
 	if err != nil {
 		panic(fmt.Errorf("redis: %w", err))
 	}
