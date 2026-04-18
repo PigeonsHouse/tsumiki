@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+	"tsumiki/auth"
 	"tsumiki/env"
 	"tsumiki/external"
 	"tsumiki/helper"
 	"tsumiki/media"
-	"tsumiki/middleware"
 	"tsumiki/repository"
 	"tsumiki/store"
 )
@@ -128,7 +128,7 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		user.AvatarUrl = avatarPath
 	}
 
-	tokenPair, err := middleware.GenerateTokenPair(user.ID)
+	tokenPair, err := auth.GenerateTokenPair(user.ID)
 	if err != nil {
 		fmt.Println("トークン生成エラー: ", err)
 		helper.ResponseInternalServerError(w, "トークン生成エラー")
@@ -146,7 +146,7 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		Value:    tokenPair.AccessToken,
 		Path:     "/",
 		HttpOnly: true,
-		MaxAge:   int(middleware.AccessTokenLiveTime / time.Second),
+		MaxAge:   int(auth.AccessTokenLiveTime / time.Second),
 		Secure:   true,
 	})
 	http.SetCookie(w, &http.Cookie{
@@ -154,7 +154,7 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		Value:    tokenPair.RefreshToken,
 		Path:     "/",
 		HttpOnly: true,
-		MaxAge:   int(middleware.RefreshTokenLiveTime / time.Second),
+		MaxAge:   int(auth.RefreshTokenLiveTime / time.Second),
 		Secure:   true,
 	})
 
@@ -170,7 +170,7 @@ func (ah *authHandlerImpl) RefreshToken(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	claims, err := middleware.ValidateRefreshToken(cookie.Value)
+	claims, err := auth.ValidateRefreshToken(cookie.Value)
 	if err != nil {
 		helper.ResponseUnauthorized(w, "リフレッシュトークンが無効です")
 		return
@@ -187,7 +187,7 @@ func (ah *authHandlerImpl) RefreshToken(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	tokenPair, err := middleware.GenerateTokenPair(claims.UserID)
+	tokenPair, err := auth.GenerateTokenPair(claims.UserID)
 	if err != nil {
 		fmt.Println("トークン生成エラー: ", err)
 		helper.ResponseInternalServerError(w, "トークン生成エラー")
@@ -205,7 +205,7 @@ func (ah *authHandlerImpl) RefreshToken(w http.ResponseWriter, r *http.Request) 
 		Value:    tokenPair.AccessToken,
 		Path:     "/",
 		HttpOnly: true,
-		MaxAge:   int(middleware.AccessTokenLiveTime / time.Second),
+		MaxAge:   int(auth.AccessTokenLiveTime / time.Second),
 		Secure:   true,
 	})
 	http.SetCookie(w, &http.Cookie{
@@ -213,7 +213,7 @@ func (ah *authHandlerImpl) RefreshToken(w http.ResponseWriter, r *http.Request) 
 		Value:    tokenPair.RefreshToken,
 		Path:     "/",
 		HttpOnly: true,
-		MaxAge:   int(middleware.RefreshTokenLiveTime / time.Second),
+		MaxAge:   int(auth.RefreshTokenLiveTime / time.Second),
 		Secure:   true,
 	})
 

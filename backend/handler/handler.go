@@ -12,6 +12,7 @@ type Handlers struct {
 	Auth    AuthHandler
 	User    UserHandler
 	Tsumiki TsumikiHandler
+	Work    WorkHandler
 }
 
 func NewHandlers(repos *repository.Repositories, stores *store.Stores, mediaSvc media.MediaService, discordSvc external.DiscordService) *Handlers {
@@ -19,6 +20,7 @@ func NewHandlers(repos *repository.Repositories, stores *store.Stores, mediaSvc 
 		Ping:    NewPingHandler(),
 		Auth:    NewAuthHandler(repos.User, stores.Auth, mediaSvc, discordSvc),
 		User:    NewUserHandler(repos.User, mediaSvc),
-		Tsumiki: NewTsumikiHandler(repos.Tsumiki),
+		Tsumiki: NewTsumikiHandler(repos.Tsumiki, repos.TsumikiBlock),
+		Work:    NewWorkHandler(repos.Work),
 	}
 }
