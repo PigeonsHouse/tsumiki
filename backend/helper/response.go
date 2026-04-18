@@ -36,6 +36,10 @@ func ResponseForbidden(w http.ResponseWriter, detail string) {
 	ResponseJSON(w, failureBody{Status: http.StatusForbidden, Detail: detail}, http.StatusForbidden)
 }
 
+func ResponseUnauthorized(w http.ResponseWriter, detail string) {
+	ResponseJSON(w, failureBody{Status: http.StatusUnauthorized, Detail: detail}, http.StatusUnauthorized)
+}
+
 func ResponseInternalServerError(w http.ResponseWriter, detail string) {
 	ResponseJSON(w, failureBody{Status: http.StatusInternalServerError, Detail: detail}, http.StatusInternalServerError)
 }

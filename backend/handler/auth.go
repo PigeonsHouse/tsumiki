@@ -16,6 +16,7 @@ import (
 type AuthHandler interface {
 	RedirectDiscord(w http.ResponseWriter, r *http.Request)
 	CallbackDiscord(w http.ResponseWriter, r *http.Request)
+	RefreshToken(w http.ResponseWriter, r *http.Request)
 }
 
 type authHandlerImpl struct {
@@ -146,6 +147,7 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		Path:     "/",
 		HttpOnly: true,
 		MaxAge:   int(middleware.AccessTokenLiveTime / time.Second),
+		Secure:   true,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
@@ -153,9 +155,67 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		Path:     "/",
 		HttpOnly: true,
 		MaxAge:   int(middleware.RefreshTokenLiveTime / time.Second),
+		Secure:   true,
 	})
 
 	userResponse := *user
 	userResponse.AvatarUrl = ah.media.ResolveURL(user.AvatarUrl)
 	helper.ResponseOk(w, userResponse)
+}
+
+func (ah *authHandlerImpl) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("refresh_token")
+	if err != nil {
+		helper.ResponseUnauthorized(w, "リフレッシュトークンが見つかりません")
+		return
+	}
+
+	claims, err := middleware.ValidateRefreshToken(cookie.Value)
+	if err != nil {
+		helper.ResponseUnauthorized(w, "リフレッシュトークンが無効です")
+		return
+	}
+
+	valid, err := ah.store.ValidateAndDeleteRefreshToken(r.Context(), claims.UserID, claims.SessionID)
+	if err != nil {
+		fmt.Println("セッション確認エラー: ", err)
+		helper.ResponseInternalServerError(w, "セッション確認エラー")
+		return
+	}
+	if !valid {
+		helper.ResponseUnauthorized(w, "セッションが無効です")
+		return
+	}
+
+	tokenPair, err := middleware.GenerateTokenPair(claims.UserID)
+	if err != nil {
+		fmt.Println("トークン生成エラー: ", err)
+		helper.ResponseInternalServerError(w, "トークン生成エラー")
+		return
+	}
+
+	if err := ah.store.SetRefreshToken(r.Context(), tokenPair.UserID, tokenPair.SessionID); err != nil {
+		fmt.Println("セッション保存エラー: ", err)
+		helper.ResponseInternalServerError(w, "セッション保存エラー")
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    tokenPair.AccessToken,
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   int(middleware.AccessTokenLiveTime / time.Second),
+		Secure:   true,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    tokenPair.RefreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   int(middleware.RefreshTokenLiveTime / time.Second),
+		Secure:   true,
+	})
+
+	helper.ResponseOk(w, nil)
 }

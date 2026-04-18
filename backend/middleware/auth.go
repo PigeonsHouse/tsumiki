@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	AccessTokenLiveTime  = 15 * time.Minute
+	// AccessTokenLiveTime  = 15 * time.Minute
+	AccessTokenLiveTime  = 150000 * time.Minute // 動作確認用
 	RefreshTokenLiveTime = 30 * 24 * time.Hour
 )
 
@@ -35,6 +36,23 @@ type TokenPair struct {
 	RefreshToken string
 	UserID       int
 	SessionID    string
+}
+
+func ValidateRefreshToken(tokenStr string) (*CustomClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenStr, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return env.JwtSecret, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	claims, ok := token.Claims.(*CustomClaims)
+	if !ok || !token.Valid {
+		return nil, fmt.Errorf("invalid token")
+	}
+	return claims, nil
 }
 
 func GenerateTokenPair(userID int) (TokenPair, error) {
