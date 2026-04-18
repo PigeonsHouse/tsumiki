@@ -40,6 +40,10 @@ func ResponseUnauthorized(w http.ResponseWriter, detail string) {
 	ResponseJSON(w, failureBody{Status: http.StatusUnauthorized, Detail: detail}, http.StatusUnauthorized)
 }
 
+func ResponseNotFound(w http.ResponseWriter, detail string) {
+	ResponseJSON(w, failureBody{Status: http.StatusNotFound, Detail: detail}, http.StatusNotFound)
+}
+
 func ResponseInternalServerError(w http.ResponseWriter, detail string) {
 	ResponseJSON(w, failureBody{Status: http.StatusInternalServerError, Detail: detail}, http.StatusInternalServerError)
 }

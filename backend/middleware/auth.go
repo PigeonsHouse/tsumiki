@@ -1,13 +1,55 @@
 package middleware
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"time"
 	"tsumiki/env"
+	"tsumiki/helper"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/golang-jwt/jwt/v5"
 )
+
+type contextKey string
+
+const userIDKey contextKey = "user_id"
+
+func GetUserIDFromContext(ctx context.Context) (int, bool) {
+	id, ok := ctx.Value(userIDKey).(int)
+	return id, ok
+}
+
+func AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("access_token")
+		if err != nil {
+			helper.ResponseUnauthorized(w, "アクセストークンが見つかりません")
+			return
+		}
+
+		token, err := jwt.ParseWithClaims(cookie.Value, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+			}
+			return env.JwtSecret, nil
+		})
+		if err != nil {
+			helper.ResponseUnauthorized(w, "アクセストークンが無効です")
+			return
+		}
+
+		claims, ok := token.Claims.(*CustomClaims)
+		if !ok || !token.Valid {
+			helper.ResponseUnauthorized(w, "アクセストークンが無効です")
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), userIDKey, claims.UserID)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 const (
 	// AccessTokenLiveTime  = 15 * time.Minute

@@ -17,7 +17,7 @@ services:
       db:
         condition: service_healthy
       seaweedfs:
-        condition: service_healthy
+        condition: service_started
 
   migrate:
     profiles: [migrate]
@@ -52,7 +52,7 @@ services:
       db:
         condition: service_healthy
       seaweedfs:
-        condition: service_healthy
+        condition: service_started
   frontend:
     profiles: [dev]
     build:
@@ -107,12 +107,6 @@ services:
       - s3/.env
     volumes:
       - seaweedfsdata:/data
-    healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8333/"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
 
 volumes:
   dbdata: null
