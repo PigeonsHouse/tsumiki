@@ -8,6 +8,7 @@ import (
 	"tsumiki/env"
 	"tsumiki/external"
 	"tsumiki/helper"
+	"tsumiki/media"
 	"tsumiki/middleware"
 	"tsumiki/repository"
 	"tsumiki/store"
@@ -21,12 +22,14 @@ type AuthHandler interface {
 type authHandlerImpl struct {
 	repository repository.AuthRepository
 	store      store.AuthStore
+	media      media.MediaService
 }
 
-func NewAuthHandler(authRepo repository.AuthRepository, authStore store.AuthStore) AuthHandler {
+func NewAuthHandler(authRepo repository.AuthRepository, authStore store.AuthStore, mediaSvc media.MediaService) AuthHandler {
 	return &authHandlerImpl{
 		repository: authRepo,
 		store:      authStore,
+		media:      mediaSvc,
 	}
 }
 
@@ -90,7 +93,13 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	if user == nil {
-		user, err = ah.repository.CreateUserByDiscord(userInfo.UserName, external.GetAvatarUrl(userInfo), userInfo.ID, guildID)
+		avatarURL, err := ah.media.UploadAvatar(r.Context(), userInfo.ID, external.GetAvatarUrl(userInfo))
+		if err != nil {
+			fmt.Println("アバターアップロードエラー: ", err)
+			helper.ResponseInternalServerError(w, "アバターアップロードエラー")
+			return
+		}
+		user, err = ah.repository.CreateUserByDiscord(userInfo.UserName, avatarURL, userInfo.ID, guildID)
 		if err != nil {
 			fmt.Println("DBエラー: ", err)
 			helper.ResponseInternalServerError(w, "DBエラー")

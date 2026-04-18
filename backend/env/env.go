@@ -13,6 +13,9 @@ func LoadEnv() error {
 	if err := LoadRedisEnv(); err != nil {
 		return err
 	}
+	if err := LoadS3Env(); err != nil {
+		return err
+	}
 
 	return nil
 }

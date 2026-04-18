@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"tsumiki/env"
 	"tsumiki/handler"
 	"tsumiki/infra"
+	"tsumiki/media"
 	"tsumiki/repository"
 	"tsumiki/router"
 	"tsumiki/store"
@@ -26,9 +28,17 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("redis: %w", err))
 	}
+	s3Client, err := infra.NewS3Client()
+	if err != nil {
+		panic(fmt.Errorf("s3: %w", err))
+	}
+	mediaSvc, err := media.NewMediaService(context.Background(), s3Client)
+	if err != nil {
+		panic(fmt.Errorf("media: %w", err))
+	}
 	stores := store.NewStores(redis)
 	repos := repository.NewRepositories(db)
-	handlers := handler.NewHandlers(repos, stores)
+	handlers := handler.NewHandlers(repos, stores, mediaSvc)
 
 	mux := chi.NewRouter()
 	router.SetApiRouter(mux, handlers)

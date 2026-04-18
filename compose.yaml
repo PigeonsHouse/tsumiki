@@ -12,9 +12,12 @@ services:
       - backend/.env
       - database/.env
       - redis/.env
+      - s3/.env
     depends_on:
       db:
         condition: service_healthy
+      seaweedfs:
+        condition: service_started
 
   migrate:
     profiles: [migrate]
@@ -44,9 +47,12 @@ services:
       - backend/.env.dev
       - database/.env
       - redis/.env
+      - s3/.env
     depends_on:
       db:
         condition: service_healthy
+      seaweedfs:
+        condition: service_started
   frontend:
     profiles: [dev]
     build:
@@ -91,5 +97,17 @@ services:
       retries: 3
       start_period: 10s
 
+  seaweedfs:
+    build:
+      context: .
+      dockerfile: docker/s3/Dockerfile
+    ports:
+      - "8333:8333"
+    env_file:
+      - s3/.env
+    volumes:
+      - seaweedfsdata:/data
+
 volumes:
   dbdata: null
+  seaweedfsdata: null

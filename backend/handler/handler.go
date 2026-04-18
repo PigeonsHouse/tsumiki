@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"tsumiki/media"
 	"tsumiki/repository"
 	"tsumiki/store"
 )
@@ -10,9 +11,9 @@ type Handlers struct {
 	Auth AuthHandler
 }
 
-func NewHandlers(repos *repository.Repositories, stores *store.Stores) *Handlers {
+func NewHandlers(repos *repository.Repositories, stores *store.Stores, mediaSvc media.MediaService) *Handlers {
 	return &Handlers{
 		Ping: NewPingHandler(),
-		Auth: NewAuthHandler(repos.Auth, stores.Auth),
+		Auth: NewAuthHandler(repos.Auth, stores.Auth, mediaSvc),
 	}
 }
