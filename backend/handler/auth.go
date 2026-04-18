@@ -20,15 +20,15 @@ type AuthHandler interface {
 }
 
 type authHandlerImpl struct {
-	repository repository.AuthRepository
+	repository repository.UserRepository
 	store      store.AuthStore
 	media      media.MediaService
 	discord    external.DiscordService
 }
 
-func NewAuthHandler(authRepo repository.AuthRepository, authStore store.AuthStore, mediaSvc media.MediaService, discordSvc external.DiscordService) AuthHandler {
+func NewAuthHandler(userRepo repository.UserRepository, authStore store.AuthStore, mediaSvc media.MediaService, discordSvc external.DiscordService) AuthHandler {
 	return &authHandlerImpl{
-		repository: authRepo,
+		repository: userRepo,
 		store:      authStore,
 		media:      mediaSvc,
 		discord:    discordSvc,
