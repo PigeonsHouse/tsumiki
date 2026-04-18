@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"slices"
+	"time"
 	"tsumiki/env"
 	"tsumiki/external"
 	"tsumiki/helper"
@@ -88,14 +89,31 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	// tokenPair, err := middleware.GenerateTokenPair(user.ID)
-	_, err = middleware.GenerateTokenPair(user.ID)
+	tokenPair, err := middleware.GenerateTokenPair(user.ID)
 	if err != nil {
 		helper.ResponseInternalServerError(w, "トークン生成エラー")
 		return
 	}
 
-	// TODO: redisとかもいい感じに
-	// ah.store.SetRefreshToken(tokenPair)
+	if err := ah.store.SetRefreshToken(r.Context(), tokenPair.UserID, tokenPair.SessionID); err != nil {
+		helper.ResponseInternalServerError(w, "セッション保存エラー")
+		return
+	}
 
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    tokenPair.AccessToken,
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   int(middleware.AccessTokenLiveTime / time.Second),
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    tokenPair.RefreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   int(middleware.RefreshTokenLiveTime / time.Second),
+	})
+
+	helper.ResponseOk(w, user)
 }

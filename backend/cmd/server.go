@@ -15,16 +15,16 @@ import (
 
 func main() {
 	if err := env.LoadEnv(); err != nil {
-		panic(err)
+		panic(fmt.Errorf("env: %w", err))
 	}
 
 	db, err := external.NewDatabase()
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("db: %w", err))
 	}
 	redis, err := external.NewRedis()
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("redis: %w", err))
 	}
 	stores := store.NewStores(redis)
 	repos := repository.NewRepositories(db)

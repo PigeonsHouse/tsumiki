@@ -1,30 +1,49 @@
 package middleware
 
 import (
+	"fmt"
+	"strconv"
 	"time"
 	"tsumiki/env"
 
+	"github.com/bwmarrin/snowflake"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 const (
-	AccessTokenLiveTime  = 15 * time.Minute    // 15分
-	RefreshTokenLiveTime = 30 * 24 * time.Hour // 30日間
+	AccessTokenLiveTime  = 15 * time.Minute
+	RefreshTokenLiveTime = 30 * 24 * time.Hour
 )
 
+var snowflakeNode *snowflake.Node
+
+func init() {
+	node, err := snowflake.NewNode(1)
+	if err != nil {
+		panic(fmt.Sprintf("snowflake node init failed: %v", err))
+	}
+	snowflakeNode = node
+}
+
 type CustomClaims struct {
-	UserID string `json:"user_id"`
+	UserID    string `json:"user_id"`
+	SessionID string `json:"session_id"`
 	jwt.RegisteredClaims
 }
 
 type TokenPair struct {
 	AccessToken  string
 	RefreshToken string
+	UserID       string
+	SessionID    string
 }
 
 func GenerateTokenPair(userID string) (TokenPair, error) {
+	sessionID := strconv.FormatInt(time.Now().Unix(), 10)
+
 	accessClaims := CustomClaims{
-		UserID: userID,
+		UserID:    userID,
+		SessionID: sessionID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(AccessTokenLiveTime)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -37,7 +56,8 @@ func GenerateTokenPair(userID string) (TokenPair, error) {
 	}
 
 	refreshClaims := CustomClaims{
-		UserID: userID,
+		UserID:    userID,
+		SessionID: sessionID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(RefreshTokenLiveTime)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -52,5 +72,7 @@ func GenerateTokenPair(userID string) (TokenPair, error) {
 	return TokenPair{
 		AccessToken:  accessStr,
 		RefreshToken: refreshStr,
+		UserID:       userID,
+		SessionID:    sessionID,
 	}, nil
 }

@@ -3,11 +3,14 @@ package env
 import (
 	"fmt"
 	"os"
+	"strings"
 )
 
 var (
 	DiscordClientID string
 	DiscordSecretID string
+
+	AllowGuildIds []string
 )
 
 func LoadDiscordEnv() error {
@@ -19,6 +22,8 @@ func LoadDiscordEnv() error {
 	if DiscordSecretID == "" {
 		return fmt.Errorf("loading env error: DISCORD_SECRET_ID")
 	}
+	AllowGuildIdsStr := os.Getenv("ALLOW_GUILD_IDS")
+	AllowGuildIds = strings.Split(AllowGuildIdsStr, ",")
 
 	return nil
 }

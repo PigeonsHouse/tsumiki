@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
 )
 
 var (
-	BackendUrl    string
-	AppPort       int
-	JwtSecret     string
-	AllowGuildIds []string
+	BackendUrl string
+	AppPort    int
+	JwtSecret  string
 )
 
 func LoadAppEnv() error {
@@ -32,7 +30,5 @@ func LoadAppEnv() error {
 	if JwtSecret == "" {
 		return fmt.Errorf("loading env error: JWT_SECRET")
 	}
-	AllowGuildIdsStr := os.Getenv("ALLOW_GUILD_IDS")
-	AllowGuildIds = strings.Split(AllowGuildIdsStr, ",")
 	return nil
 }

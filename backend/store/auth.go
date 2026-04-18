@@ -1,9 +1,17 @@
 package store
 
-import "github.com/redis/go-redis/v9"
+import (
+	"context"
+	"fmt"
+	"time"
+
+	"github.com/redis/go-redis/v9"
+)
+
+const refreshTokenTTL = 30 * 24 * time.Hour
 
 type AuthStore interface {
-	SetRefreshToken()
+	SetRefreshToken(ctx context.Context, userID, sessionID string) error
 }
 
 type AuthStoreImpl struct {
@@ -16,4 +24,7 @@ func NewAuthStore(store *redis.Client) AuthStore {
 	}
 }
 
-func (as *AuthStoreImpl) SetRefreshToken() {}
+func (as *AuthStoreImpl) SetRefreshToken(ctx context.Context, userID, sessionID string) error {
+	key := fmt.Sprintf("refresh_token:%s:%s", userID, sessionID)
+	return as.store.Set(ctx, key, true, refreshTokenTTL).Err()
+}
