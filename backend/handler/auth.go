@@ -57,7 +57,7 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 
 	tokenRes, err := ah.discord.ValidateRedirectedCode(code)
 	if err != nil {
-		fmt.Println("validate code: ", err)
+		fmt.Println("認可コードのバリデーションに失敗しました:", err)
 		helper.ResponseBadRequest(w, "認可コードのバリデーションに失敗しました")
 		return
 	}

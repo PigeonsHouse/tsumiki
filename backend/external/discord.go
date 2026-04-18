@@ -91,7 +91,7 @@ func (d *discordServiceImpl) ValidateRedirectedCode(code string) (TokenResponse,
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return TokenResponse{}, fmt.Errorf("todo 500")
+		return TokenResponse{}, fmt.Errorf("/oauth2/token: %v", resp.Status)
 	}
 
 	var tokenRes TokenResponse
