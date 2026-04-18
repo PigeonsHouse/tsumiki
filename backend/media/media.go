@@ -3,10 +3,10 @@ package media
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"tsumiki/env"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -15,7 +15,7 @@ import (
 )
 
 type MediaService interface {
-	UploadAvatar(ctx context.Context, discordUserID string, imageURL string) (string, error)
+	UploadAvatar(ctx context.Context, userID int, r io.Reader, contentType string) (string, error)
 	ResolveURL(path string) string
 }
 
@@ -51,24 +51,18 @@ func (ms *mediaServiceImpl) ensureBucket(ctx context.Context) error {
 	return nil
 }
 
-func (ms *mediaServiceImpl) UploadAvatar(ctx context.Context, discordUserID string, imageURL string) (string, error) {
-	resp, err := http.Get(imageURL)
-	if err != nil {
-		return "", fmt.Errorf("アバター画像の取得に失敗しました: %w", err)
-	}
-	defer resp.Body.Close()
-
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("アバター画像の読み込みに失敗しました: %w", err)
-	}
-
-	contentType := resp.Header.Get("Content-Type")
+func (ms *mediaServiceImpl) UploadAvatar(ctx context.Context, userID int, r io.Reader, contentType string) (string, error) {
 	if contentType == "" {
 		contentType = "image/png"
 	}
 
-	key := fmt.Sprintf("avatars/%s.png", discordUserID)
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return "", fmt.Errorf("アバター画像の読み込みに失敗しました: %w", err)
+	}
+
+	hash := sha256.Sum256(data)
+	key := fmt.Sprintf("avatars/%d/%x.png", userID, hash)
 
 	_, err = ms.s3Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(ms.bucket),

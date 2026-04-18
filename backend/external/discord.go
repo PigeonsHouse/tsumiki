@@ -3,6 +3,7 @@ package external
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -37,8 +38,16 @@ func callbackUrl() string {
 	return fmt.Sprintf("%s/api/v1/auth/discord/callback", env.BackendUrl)
 }
 
-func GetAvatarUrl(userInfo UserInfoResponse) string {
+func getAvatarUrl(userInfo UserInfoResponse) string {
 	return fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", userInfo.ID, userInfo.Avatar)
+}
+
+func FetchAvatar(userInfo UserInfoResponse) (io.ReadCloser, string, error) {
+	resp, err := http.Get(getAvatarUrl(userInfo))
+	if err != nil {
+		return nil, "", err
+	}
+	return resp.Body, resp.Header.Get("Content-Type"), nil
 }
 
 func GetRedirectUrl() string {

@@ -93,18 +93,31 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	if user == nil {
-		avatarURL, err := ah.media.UploadAvatar(r.Context(), userInfo.ID, external.GetAvatarUrl(userInfo))
-		if err != nil {
-			fmt.Println("アバターアップロードエラー: ", err)
-			helper.ResponseInternalServerError(w, "アバターアップロードエラー")
-			return
-		}
-		user, err = ah.repository.CreateUserByDiscord(userInfo.UserName, avatarURL, userInfo.ID, guildID)
+		user, err = ah.repository.CreateUserByDiscord(userInfo.UserName, "", userInfo.ID, guildID)
 		if err != nil {
 			fmt.Println("DBエラー: ", err)
 			helper.ResponseInternalServerError(w, "DBエラー")
 			return
 		}
+		avatarBody, avatarContentType, err := external.FetchAvatar(userInfo)
+		if err != nil {
+			fmt.Println("アバター取得エラー: ", err)
+			helper.ResponseInternalServerError(w, "アバター取得エラー")
+			return
+		}
+		defer avatarBody.Close()
+		avatarPath, err := ah.media.UploadAvatar(r.Context(), user.ID, avatarBody, avatarContentType)
+		if err != nil {
+			fmt.Println("アバターアップロードエラー: ", err)
+			helper.ResponseInternalServerError(w, "アバターアップロードエラー")
+			return
+		}
+		if err := ah.repository.UpdateAvatarUrl(user.ID, avatarPath); err != nil {
+			fmt.Println("DBエラー: ", err)
+			helper.ResponseInternalServerError(w, "DBエラー")
+			return
+		}
+		user.AvatarUrl = avatarPath
 	}
 
 	tokenPair, err := middleware.GenerateTokenPair(user.ID)

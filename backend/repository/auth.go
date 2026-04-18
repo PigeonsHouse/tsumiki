@@ -14,6 +14,7 @@ type AuthRepository interface {
 		discord_user_id string,
 		guild_id string,
 	) (*schema.User, error)
+	UpdateAvatarUrl(userID int, avatarUrl string) error
 }
 
 type authRepositoryImpl struct {
@@ -41,6 +42,14 @@ func (ar *authRepositoryImpl) FindByDiscordUserId(id string) (*schema.User, erro
 	}
 
 	return &user, nil
+}
+
+func (ar *authRepositoryImpl) UpdateAvatarUrl(userID int, avatarUrl string) error {
+	_, err := ar.db.Exec(
+		"UPDATE users SET avatar_url = ? WHERE id = ?",
+		avatarUrl, userID,
+	)
+	return err
 }
 
 func (ar *authRepositoryImpl) CreateUserByDiscord(
