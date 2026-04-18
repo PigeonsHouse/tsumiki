@@ -8,15 +8,17 @@ import (
 )
 
 type Handlers struct {
-	Ping PingHandler
-	Auth AuthHandler
-	User UserHandler
+	Ping    PingHandler
+	Auth    AuthHandler
+	User    UserHandler
+	Tsumiki TsumikiHandler
 }
 
 func NewHandlers(repos *repository.Repositories, stores *store.Stores, mediaSvc media.MediaService, discordSvc external.DiscordService) *Handlers {
 	return &Handlers{
-		Ping: NewPingHandler(),
-		Auth: NewAuthHandler(repos.User, stores.Auth, mediaSvc, discordSvc),
-		User: NewUserHandler(repos.User, mediaSvc),
+		Ping:    NewPingHandler(),
+		Auth:    NewAuthHandler(repos.User, stores.Auth, mediaSvc, discordSvc),
+		User:    NewUserHandler(repos.User, mediaSvc),
+		Tsumiki: NewTsumikiHandler(repos.Tsumiki),
 	}
 }
