@@ -14,17 +14,17 @@ type AuthStore interface {
 	SetRefreshToken(ctx context.Context, userID int, sessionID string) error
 }
 
-type AuthStoreImpl struct {
+type authStoreImpl struct {
 	store *redis.Client
 }
 
 func NewAuthStore(store *redis.Client) AuthStore {
-	return &AuthStoreImpl{
+	return &authStoreImpl{
 		store: store,
 	}
 }
 
-func (as *AuthStoreImpl) SetRefreshToken(ctx context.Context, userID int, sessionID string) error {
+func (as *authStoreImpl) SetRefreshToken(ctx context.Context, userID int, sessionID string) error {
 	key := fmt.Sprintf("refresh_token:%d:%s", userID, sessionID)
 	return as.store.Set(ctx, key, true, refreshTokenTTL).Err()
 }
