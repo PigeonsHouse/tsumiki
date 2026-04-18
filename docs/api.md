@@ -45,6 +45,14 @@
   - フィルタ、検索機能
 - GET /api/v1/tsumikis/{tsumiki_id}
   - 積み木とそのブロック一覧取得
+- GET /api/v1/users/me
+  - 自身の情報取得
+- GET /api/v1/users/{user_id}
+  - ユーザ情報取得
+- GET /api/v1/users/me/tsumikis
+  - 自身の積み木一覧取得
+- GET /api/v1/users/{user_id}/tsumikis
+  - ユーザの積み木一覧取得
 
 ## v1.0までにほしいやつ
 
