@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 	"tsumiki/env"
 
@@ -26,7 +25,7 @@ func init() {
 }
 
 type CustomClaims struct {
-	UserID    string `json:"user_id"`
+	UserID    int    `json:"user_id"`
 	SessionID string `json:"session_id"`
 	jwt.RegisteredClaims
 }
@@ -34,12 +33,12 @@ type CustomClaims struct {
 type TokenPair struct {
 	AccessToken  string
 	RefreshToken string
-	UserID       string
+	UserID       int
 	SessionID    string
 }
 
-func GenerateTokenPair(userID string) (TokenPair, error) {
-	sessionID := strconv.FormatInt(time.Now().Unix(), 10)
+func GenerateTokenPair(userID int) (TokenPair, error) {
+	sessionID := snowflakeNode.Generate().String()
 
 	accessClaims := CustomClaims{
 		UserID:    userID,

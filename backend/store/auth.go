@@ -11,7 +11,7 @@ import (
 const refreshTokenTTL = 30 * 24 * time.Hour
 
 type AuthStore interface {
-	SetRefreshToken(ctx context.Context, userID, sessionID string) error
+	SetRefreshToken(ctx context.Context, userID int, sessionID string) error
 }
 
 type AuthStoreImpl struct {
@@ -24,7 +24,7 @@ func NewAuthStore(store *redis.Client) AuthStore {
 	}
 }
 
-func (as *AuthStoreImpl) SetRefreshToken(ctx context.Context, userID, sessionID string) error {
-	key := fmt.Sprintf("refresh_token:%s:%s", userID, sessionID)
+func (as *AuthStoreImpl) SetRefreshToken(ctx context.Context, userID int, sessionID string) error {
+	key := fmt.Sprintf("refresh_token:%d:%s", userID, sessionID)
 	return as.store.Set(ctx, key, true, refreshTokenTTL).Err()
 }

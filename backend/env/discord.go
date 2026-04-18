@@ -22,8 +22,11 @@ func LoadDiscordEnv() error {
 	if DiscordSecretID == "" {
 		return fmt.Errorf("loading env error: DISCORD_SECRET_ID")
 	}
-	AllowGuildIdsStr := os.Getenv("ALLOW_GUILD_IDS")
-	AllowGuildIds = strings.Split(AllowGuildIdsStr, ",")
+	allowGuildIdsStr := os.Getenv("ALLOW_GUILD_IDS")
+	if allowGuildIdsStr == "" {
+		return fmt.Errorf("loading env error: ALLOW_GUILD_IDS")
+	}
+	AllowGuildIds = strings.Split(allowGuildIdsStr, ",")
 
 	return nil
 }

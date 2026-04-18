@@ -37,6 +37,10 @@ func callbackUrl() string {
 	return fmt.Sprintf("%s/api/v1/auth/discord/callback", env.BackendUrl)
 }
 
+func GetAvatarUrl(userInfo UserInfoResponse) string {
+	return fmt.Sprintf("https://cdn.discordapp.com/avatars/%s/%s.png", userInfo.ID, userInfo.Avatar)
+}
+
 func GetRedirectUrl() string {
 	return fmt.Sprintf("%s/oauth2/authorize?client_id=%s&redirect_uri=%s&scope=%s&response_type=code",
 		apiEndpoint, env.DiscordClientID, url.QueryEscape(callbackUrl()), scope)

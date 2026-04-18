@@ -10,7 +10,7 @@ import (
 )
 
 func NewDatabase() (*sql.DB, error) {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s", env.MysqlUser, env.MysqlPassword, env.MysqlHost, env.MysqlDatabase)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true", env.MysqlUser, env.MysqlPassword, env.MysqlHost, env.MysqlDatabase)
 
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {

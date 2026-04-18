@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 	"slices"
 	"time"
@@ -37,30 +38,35 @@ func (ah *authHandlerImpl) RedirectDiscord(w http.ResponseWriter, r *http.Reques
 func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Request) {
 	// エラーパラメーターのチェック（ユーザーがキャンセルした場合など）
 	if errDesc := r.URL.Query().Get("error_description"); errDesc != "" {
+		fmt.Println("認証に失敗しました")
 		helper.ResponseBadRequest(w, "認証に失敗しました")
 		return
 	}
 
 	code := r.URL.Query().Get("code")
 	if code == "" {
+		fmt.Println("認可コードが見つかりません")
 		helper.ResponseBadRequest(w, "認可コードが見つかりません")
 		return
 	}
 
 	tokenRes, err := external.ValidateRedirectedCode(code)
 	if err != nil {
+		fmt.Println("validate code: ", err)
 		helper.ResponseBadRequest(w, "認可コードのバリデーションに失敗しました")
 		return
 	}
 
 	userInfo, err := external.GetUserInfo(tokenRes)
 	if err != nil {
+		fmt.Println("get discord user: ", err)
 		helper.ResponseBadRequest(w, "ユーザ情報の解決に失敗しました")
 		return
 	}
 
 	guildsInfo, err := external.GetUserGuildsInfo(tokenRes)
 	if err != nil {
+		fmt.Println("get guild: ", err)
 		helper.ResponseBadRequest(w, "ギルド情報の解決に失敗しました")
 		return
 	}
@@ -72,18 +78,21 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		}
 	}
 	if guildID == "" {
+		fmt.Println("このDiscordユーザのログインは許容されていません")
 		helper.ResponseForbidden(w, "このDiscordユーザのログインは許容されていません")
 		return
 	}
 
 	user, err := ah.repository.FindByDiscordUserId(userInfo.ID)
 	if err != nil {
+		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
 		return
 	}
 	if user == nil {
-		user, err = ah.repository.CreateUserByDiscord(userInfo.UserName, userInfo.Avatar, userInfo.ID, guildID)
+		user, err = ah.repository.CreateUserByDiscord(userInfo.UserName, external.GetAvatarUrl(userInfo), userInfo.ID, guildID)
 		if err != nil {
+			fmt.Println("DBエラー: ", err)
 			helper.ResponseInternalServerError(w, "DBエラー")
 			return
 		}
@@ -91,11 +100,13 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 
 	tokenPair, err := middleware.GenerateTokenPair(user.ID)
 	if err != nil {
+		fmt.Println("トークン生成エラー: ", err)
 		helper.ResponseInternalServerError(w, "トークン生成エラー")
 		return
 	}
 
 	if err := ah.store.SetRefreshToken(r.Context(), tokenPair.UserID, tokenPair.SessionID); err != nil {
+		fmt.Println("セッション保存エラー: ", err)
 		helper.ResponseInternalServerError(w, "セッション保存エラー")
 		return
 	}

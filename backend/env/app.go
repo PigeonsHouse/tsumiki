@@ -9,7 +9,7 @@ import (
 var (
 	BackendUrl string
 	AppPort    int
-	JwtSecret  string
+	JwtSecret  []byte
 )
 
 func LoadAppEnv() error {
@@ -26,9 +26,10 @@ func LoadAppEnv() error {
 	} else {
 		AppPort = 8000
 	}
-	JwtSecret = os.Getenv("JWT_SECRET")
-	if JwtSecret == "" {
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
 		return fmt.Errorf("loading env error: JWT_SECRET")
 	}
+	JwtSecret = []byte(jwtSecret)
 	return nil
 }
