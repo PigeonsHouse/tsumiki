@@ -10,7 +10,7 @@ type AuthRepository interface {
 	FindByDiscordUserId(id string) (*schema.User, error)
 	CreateUserByDiscord(
 		name string,
-		thumbnail_url string,
+		avatar_url string,
 		discord_user_id string,
 		guild_id string,
 	) (*schema.User, error)
@@ -30,9 +30,9 @@ func (ar *authRepositoryImpl) FindByDiscordUserId(id string) (*schema.User, erro
 	var user schema.User
 
 	err := ar.db.QueryRow(
-		"SELECT id, discord_user_id, name, thumbnail_url, created_at, updated_at FROM users WHERE discord_user_id = ?",
+		"SELECT id, discord_user_id, name, avatar_url, created_at, updated_at FROM users WHERE discord_user_id = ?",
 		id,
-	).Scan(&user.ID, &user.DiscordUserID, &user.Name, &user.ThumbnailUrl, &user.CreatedAt, &user.UpdatedAt)
+	).Scan(&user.ID, &user.DiscordUserID, &user.Name, &user.AvatarUrl, &user.CreatedAt, &user.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -45,13 +45,13 @@ func (ar *authRepositoryImpl) FindByDiscordUserId(id string) (*schema.User, erro
 
 func (ar *authRepositoryImpl) CreateUserByDiscord(
 	name string,
-	thumbnail_url string,
+	avatar_url string,
 	discord_user_id string,
 	guild_id string,
 ) (*schema.User, error) {
 	result, err := ar.db.Exec(
-		"INSERT INTO users (discord_user_id, name, thumbnail_url, guild_id) VALUES (?, ?, ?, ?)",
-		discord_user_id, name, thumbnail_url, guild_id,
+		"INSERT INTO users (discord_user_id, name, avatar_url, guild_id) VALUES (?, ?, ?, ?)",
+		discord_user_id, name, avatar_url, guild_id,
 	)
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func (ar *authRepositoryImpl) CreateUserByDiscord(
 		ID:            int(insertedID),
 		DiscordUserID: discord_user_id,
 		Name:          name,
-		ThumbnailUrl:  thumbnail_url,
+		AvatarUrl:  avatar_url,
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}, nil

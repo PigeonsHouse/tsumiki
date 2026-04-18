@@ -14,7 +14,7 @@ Table users {
     discord_user_id varchar [unique]
     name varchar [not null]
     guild_id varchar
-    thumbnail_url varchar
+    avatar_url varchar
     created_at timestamp [default: `now()`]
     updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
 }

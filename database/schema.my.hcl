@@ -20,7 +20,7 @@ table "users" {
     type = varchar(255)
     null = true
   }
-  column "thumbnail_url" {
+  column "avatar_url" {
     type = varchar(255)
     null = true
   }
