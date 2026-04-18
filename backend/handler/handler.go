@@ -20,7 +20,7 @@ func NewHandlers(repos *repository.Repositories, stores *store.Stores, mediaSvc 
 		Ping:    NewPingHandler(),
 		Auth:    NewAuthHandler(repos.User, stores.Auth, mediaSvc, discordSvc),
 		User:    NewUserHandler(repos.User, mediaSvc),
-		Tsumiki: NewTsumikiHandler(repos.Tsumiki, repos.TsumikiBlock),
+		Tsumiki: NewTsumikiHandler(repos.Tsumiki, repos.TsumikiBlock, mediaSvc),
 		Work:    NewWorkHandler(repos.Work),
 	}
 }
