@@ -19,16 +19,6 @@ Table users {
     updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
 }
 
-Table refresh_token {
-    id int [pk, increment]
-    hashed_token varchar [not null]
-    user_id int [ref: > users.id, not null]
-    expired_at timestamp [not null]
-    is_revoked boolean [not null, default: false]
-    created_at timestamp [default: `now()`]
-    updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
-}
-
 Table tsumikis {
     id int [pk, increment]
     title varchar [not null]

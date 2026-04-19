@@ -44,55 +44,6 @@ table "users" {
   }
 }
 
-table "refresh_token" {
-  schema = schema.tsumiki
-  column "id" {
-    type           = int
-    null           = false
-    auto_increment = true
-  }
-  column "hashed_token" {
-    type = varchar(255)
-    null = false
-  }
-  column "user_id" {
-    type = int
-    null = false
-  }
-  column "expired_at" {
-    type = timestamp
-    null = false
-  }
-  column "is_revoked" {
-    type    = boolean
-    null    = false
-    default = false
-  }
-  column "created_at" {
-    type    = timestamp
-    null    = true
-    default = sql("CURRENT_TIMESTAMP")
-  }
-  column "updated_at" {
-    type      = timestamp
-    null      = true
-    default   = sql("CURRENT_TIMESTAMP")
-    on_update = sql("CURRENT_TIMESTAMP")
-  }
-  primary_key {
-    columns = [column.id]
-  }
-  index "fk_refresh_token_user_id" {
-    columns = [column.user_id]
-  }
-  foreign_key "fk_refresh_token_user_id" {
-    columns     = [column.user_id]
-    ref_columns = [table.users.column.id]
-    on_delete   = NO_ACTION
-    on_update   = NO_ACTION
-  }
-}
-
 table "works" {
   schema = schema.tsumiki
   column "id" {
