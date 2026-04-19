@@ -15,12 +15,17 @@ type Handlers struct {
 	Work    WorkHandler
 }
 
-func NewHandlers(repos *repository.Repositories, stores *store.Stores, mediaSvc media.MediaService, discordSvc external.DiscordService) *Handlers {
+func NewHandlers(
+	repos *repository.Repositories,
+	stores *store.Stores,
+	mediaSvc media.MediaService,
+	discordSvc external.DiscordService,
+) *Handlers {
 	return &Handlers{
 		Ping:    NewPingHandler(),
 		Auth:    NewAuthHandler(repos.User, stores.Auth, mediaSvc, discordSvc),
 		User:    NewUserHandler(repos.User, mediaSvc),
-		Tsumiki: NewTsumikiHandler(repos.Tsumiki, repos.TsumikiBlock, mediaSvc),
-		Work:    NewWorkHandler(repos.Work),
+		Tsumiki: NewTsumikiHandler(repos.Tsumiki, repos.TsumikiBlock, repos.TsumikiBlockMedia, mediaSvc),
+		Work:    NewWorkHandler(repos.Work, repos.Tsumiki),
 	}
 }

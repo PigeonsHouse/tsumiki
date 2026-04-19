@@ -16,6 +16,15 @@ func GetUserIDFromContext(ctx context.Context) (int, bool) {
 	return id, ok
 }
 
+func GetOptionalUserIDFromContext(ctx context.Context) *int {
+	id, ok := ctx.Value("user_id").(int)
+	if ok {
+		return &id
+	} else {
+		return nil
+	}
+}
+
 var RequireAuth = authMiddleware(true)
 var OptionalAuth = authMiddleware(false)
 

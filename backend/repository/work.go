@@ -8,7 +8,6 @@ import (
 type WorkRepository interface {
 	GetWorks(pageSize, page int) ([]schema.Work, error)
 	GetWork(workID int) (*schema.Work, error)
-	GetWorkTsumikis(workID int, pageSize, page int) ([]schema.Tsumiki, error)
 	CreateWork(userID int, title string, description string) (*schema.Work, error)
 	UpdateWork(workID int, title string, description string) (*schema.Work, error)
 	DeleteWork(workID int) error
