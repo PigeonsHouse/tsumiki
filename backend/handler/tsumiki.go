@@ -28,23 +28,14 @@ type TsumikiHandler interface {
 }
 
 type tsumikiHandlerImpl struct {
-	tsumikiRepo repository.TsumikiRepository
-	blockRepo   repository.TsumikiBlockRepository
-	mediaRepo   repository.TsumikiBlockMediaRepository
-	media       media.MediaService
+	repositories *repository.Repositories
+	media        media.MediaService
 }
 
-func NewTsumikiHandler(
-	tsumikiRepo repository.TsumikiRepository,
-	blockRepo repository.TsumikiBlockRepository,
-	mediaRepo repository.TsumikiBlockMediaRepository,
-	mediaSvc media.MediaService,
-) TsumikiHandler {
+func NewTsumikiHandler(repos *repository.Repositories, mediaSvc media.MediaService) TsumikiHandler {
 	return &tsumikiHandlerImpl{
-		tsumikiRepo: tsumikiRepo,
-		blockRepo:   blockRepo,
-		mediaRepo:   mediaRepo,
-		media:       mediaSvc,
+		repositories: repos,
+		media:        mediaSvc,
 	}
 }
 
@@ -76,7 +67,7 @@ func (th *tsumikiHandlerImpl) GetMyTsumikis(w http.ResponseWriter, r *http.Reque
 	}
 
 	pageSize, page, keyword := parsePaginationQuery(r)
-	tsumikis, err := th.tsumikiRepo.GetTsumikis(&userID, pageSize, page, &userID, nil, keyword)
+	tsumikis, err := th.repositories.Tsumiki.GetTsumikis(&userID, pageSize, page, &userID, nil, keyword)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -97,7 +88,7 @@ func (th *tsumikiHandlerImpl) GetUserTsumikis(w http.ResponseWriter, r *http.Req
 
 	pageSize, page, keyword := parsePaginationQuery(r)
 
-	tsumikis, err := th.tsumikiRepo.GetTsumikis(userID, pageSize, page, &authorID, nil, keyword)
+	tsumikis, err := th.repositories.Tsumiki.GetTsumikis(userID, pageSize, page, &authorID, nil, keyword)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -111,7 +102,7 @@ func (th *tsumikiHandlerImpl) GetTsumikis(w http.ResponseWriter, r *http.Request
 	userID := middleware.GetOptionalUserIDFromContext(r.Context())
 	pageSize, page, keyword := parsePaginationQuery(r)
 
-	tsumikis, err := th.tsumikiRepo.GetTsumikis(userID, pageSize, page, nil, nil, keyword)
+	tsumikis, err := th.repositories.Tsumiki.GetTsumikis(userID, pageSize, page, nil, nil, keyword)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -129,7 +120,7 @@ func (th *tsumikiHandlerImpl) GetSpecifiedTsumiki(w http.ResponseWriter, r *http
 		return
 	}
 
-	tsumiki, err := th.tsumikiRepo.GetTsumiki(userID, tsumikiID)
+	tsumiki, err := th.repositories.Tsumiki.GetTsumiki(userID, tsumikiID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -157,13 +148,13 @@ func (th *tsumikiHandlerImpl) CreateTsumiki(w http.ResponseWriter, r *http.Reque
 	}
 
 	// todo: トランザクションを貼る
-	tsumiki, err := th.tsumikiRepo.CreateTsumiki(userID, req.Title, req.Visibility, req.WorkID)
+	tsumiki, err := th.repositories.Tsumiki.CreateTsumiki(userID, req.Title, req.Visibility, req.WorkID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
 		return
 	}
-	_, err = th.blockRepo.CreateBlock(tsumiki.ID, req.Block.Message, req.Block.Percentage, req.Block.Condition, req.Block.MediaIDs)
+	_, err = th.repositories.TsumikiBlock.CreateBlock(tsumiki.ID, req.Block.Message, req.Block.Percentage, req.Block.Condition, req.Block.MediaIDs)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -191,7 +182,7 @@ func (th *tsumikiHandlerImpl) EditTsumiki(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	tsumiki, err := th.tsumikiRepo.GetTsumiki(&userID, tsumikiID)
+	tsumiki, err := th.repositories.Tsumiki.GetTsumiki(&userID, tsumikiID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -206,7 +197,7 @@ func (th *tsumikiHandlerImpl) EditTsumiki(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	updatedTsumiki, err := th.tsumikiRepo.UpdateTsumiki(tsumikiID, req.Title, req.Visibility, req.WorkID)
+	updatedTsumiki, err := th.repositories.Tsumiki.UpdateTsumiki(tsumikiID, req.Title, req.Visibility, req.WorkID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -230,7 +221,7 @@ func (th *tsumikiHandlerImpl) DeleteTsumiki(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	tsumiki, err := th.tsumikiRepo.GetTsumiki(&userID, tsumikiID)
+	tsumiki, err := th.repositories.Tsumiki.GetTsumiki(&userID, tsumikiID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -245,7 +236,7 @@ func (th *tsumikiHandlerImpl) DeleteTsumiki(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := th.tsumikiRepo.DeleteTsumiki(tsumikiID); err != nil {
+	if err := th.repositories.Tsumiki.DeleteTsumiki(tsumikiID); err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
 		return
@@ -266,7 +257,7 @@ func (th *tsumikiHandlerImpl) PostMedia(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	tsumiki, err := th.tsumikiRepo.GetTsumiki(&userID, tsumikiID)
+	tsumiki, err := th.repositories.Tsumiki.GetTsumiki(&userID, tsumikiID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -303,7 +294,7 @@ func (th *tsumikiHandlerImpl) AddBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tsumiki, err := th.tsumikiRepo.GetTsumiki(&userID, tsumikiID)
+	tsumiki, err := th.repositories.Tsumiki.GetTsumiki(&userID, tsumikiID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -318,7 +309,7 @@ func (th *tsumikiHandlerImpl) AddBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// メディア操作までトランザクションを貼る
-	block, err := th.blockRepo.CreateBlock(tsumikiID, req.Message, req.Percentage, req.Condition, req.MediaIDs)
+	block, err := th.repositories.TsumikiBlock.CreateBlock(tsumikiID, req.Message, req.Percentage, req.Condition, req.MediaIDs)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -351,7 +342,7 @@ func (th *tsumikiHandlerImpl) EditBlock(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	tsumiki, err := th.tsumikiRepo.GetTsumiki(&userID, tsumikiID)
+	tsumiki, err := th.repositories.Tsumiki.GetTsumiki(&userID, tsumikiID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -361,7 +352,7 @@ func (th *tsumikiHandlerImpl) EditBlock(w http.ResponseWriter, r *http.Request) 
 		helper.ResponseNotFound(w, "積み木が見つかりません")
 		return
 	}
-	isBelong, err := th.blockRepo.IsBelongToTsumiki(tsumikiID, blockID)
+	isBelong, err := th.repositories.TsumikiBlock.IsBelongToTsumiki(tsumikiID, blockID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -376,7 +367,7 @@ func (th *tsumikiHandlerImpl) EditBlock(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	// メディア操作までトランザクションを貼る
-	block, err := th.blockRepo.UpdateBlock(blockID, req.Message, req.Percentage, req.Condition, req.MediaIDs)
+	block, err := th.repositories.TsumikiBlock.UpdateBlock(blockID, req.Message, req.Percentage, req.Condition, req.MediaIDs)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -408,7 +399,7 @@ func (th *tsumikiHandlerImpl) OmitBlock(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	tsumiki, err := th.tsumikiRepo.GetTsumiki(&userID, tsumikiID)
+	tsumiki, err := th.repositories.Tsumiki.GetTsumiki(&userID, tsumikiID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -418,7 +409,7 @@ func (th *tsumikiHandlerImpl) OmitBlock(w http.ResponseWriter, r *http.Request) 
 		helper.ResponseNotFound(w, "積み木が見つかりません")
 		return
 	}
-	isBelong, err := th.blockRepo.IsBelongToTsumiki(tsumikiID, blockID)
+	isBelong, err := th.repositories.TsumikiBlock.IsBelongToTsumiki(tsumikiID, blockID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -433,7 +424,7 @@ func (th *tsumikiHandlerImpl) OmitBlock(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	if err := th.blockRepo.SoftDeleteBlock(blockID); err != nil {
+	if err := th.repositories.TsumikiBlock.SoftDeleteBlock(blockID); err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
 		return

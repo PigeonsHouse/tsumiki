@@ -22,17 +22,12 @@ type WorkHandler interface {
 }
 
 type workHandlerImpl struct {
-	workRepo    repository.WorkRepository
-	tsumikiRepo repository.TsumikiRepository
+	repositories *repository.Repositories
 }
 
-func NewWorkHandler(
-	workRepo repository.WorkRepository,
-	tsumikiRepo repository.TsumikiRepository,
-) WorkHandler {
+func NewWorkHandler(repos *repository.Repositories) WorkHandler {
 	return &workHandlerImpl{
-		workRepo:    workRepo,
-		tsumikiRepo: tsumikiRepo,
+		repositories: repos,
 	}
 }
 
@@ -44,7 +39,7 @@ type workRequest struct {
 func (wh *workHandlerImpl) GetWorks(w http.ResponseWriter, r *http.Request) {
 	pageSize, page, _ := parsePaginationQuery(r)
 
-	works, err := wh.workRepo.GetWorks(pageSize, page)
+	works, err := wh.repositories.Work.GetWorks(pageSize, page)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -61,7 +56,7 @@ func (wh *workHandlerImpl) GetSpecifiedWork(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	work, err := wh.workRepo.GetWork(workID)
+	work, err := wh.repositories.Work.GetWork(workID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -85,7 +80,7 @@ func (wh *workHandlerImpl) GetWorkTsumiki(w http.ResponseWriter, r *http.Request
 
 	pageSize, page, _ := parsePaginationQuery(r)
 
-	tsumikis, err := wh.tsumikiRepo.GetTsumikis(userID, pageSize, page, nil, &workID, "")
+	tsumikis, err := wh.repositories.Tsumiki.GetTsumikis(userID, pageSize, page, nil, &workID, "")
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -108,7 +103,7 @@ func (wh *workHandlerImpl) CreateWork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	work, err := wh.workRepo.CreateWork(userID, req.Title, req.Description)
+	work, err := wh.repositories.Work.CreateWork(userID, req.Title, req.Description)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -124,21 +119,18 @@ func (wh *workHandlerImpl) EditWork(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseUnauthorized(w, "認証情報が見つかりません")
 		return
 	}
-	_ = userID
-
 	workID, err := parseWorkID(r)
 	if err != nil {
 		helper.ResponseBadRequest(w, "作品IDが不正です")
 		return
 	}
-
 	var req workRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
 	}
 
-	work, err := wh.workRepo.UpdateWork(workID, req.Title, req.Description)
+	work, err := wh.repositories.Work.GetWork(workID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -148,8 +140,18 @@ func (wh *workHandlerImpl) EditWork(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseNotFound(w, "作品が見つかりません")
 		return
 	}
+	if work.Owner.ID != userID {
+		helper.ResponseForbidden(w, "この作品の作成者ではありません")
+		return
+	}
+	updatedWork, err := wh.repositories.Work.UpdateWork(workID, req.Title, req.Description)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
 
-	helper.ResponseOk(w, work)
+	helper.ResponseOk(w, updatedWork)
 }
 
 func (wh *workHandlerImpl) DeleteWork(w http.ResponseWriter, r *http.Request) {
@@ -158,15 +160,27 @@ func (wh *workHandlerImpl) DeleteWork(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseUnauthorized(w, "認証情報が見つかりません")
 		return
 	}
-	_ = userID
-
 	workID, err := parseWorkID(r)
 	if err != nil {
 		helper.ResponseBadRequest(w, "作品IDが不正です")
 		return
 	}
 
-	if err := wh.workRepo.DeleteWork(workID); err != nil {
+	work, err := wh.repositories.Work.GetWork(workID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+	if work == nil {
+		helper.ResponseNotFound(w, "作品が見つかりません")
+		return
+	}
+	if work.Owner.ID != userID {
+		helper.ResponseForbidden(w, "この作品の作成者ではありません")
+		return
+	}
+	if err := wh.repositories.Work.DeleteWork(workID); err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
 		return
