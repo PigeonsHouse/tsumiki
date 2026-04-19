@@ -19,10 +19,10 @@ type UserRepository interface {
 }
 
 type userRepositoryImpl struct {
-	db *sql.DB
+	db DBTX
 }
 
-func NewUserRepository(db *sql.DB) UserRepository {
+func NewUserRepository(db DBTX) UserRepository {
 	return &userRepositoryImpl{
 		db: db,
 	}

@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"tsumiki/schema"
 )
 
@@ -16,10 +15,10 @@ type TsumikiRepository interface {
 }
 
 type tsumikiRepositoryImpl struct {
-	db *sql.DB
+	db DBTX
 }
 
-func NewTsumikiRepository(db *sql.DB) TsumikiRepository {
+func NewTsumikiRepository(db DBTX) TsumikiRepository {
 	return &tsumikiRepositoryImpl{db: db}
 }
 

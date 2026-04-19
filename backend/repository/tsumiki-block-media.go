@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"database/sql"
 	"tsumiki/schema"
 )
 
@@ -11,10 +10,10 @@ type TsumikiBlockMediaRepository interface {
 }
 
 type tsumikiBlockMediaRepositoryImpl struct {
-	db *sql.DB
+	db DBTX
 }
 
-func NewTsumikiBlockMediaRepository(db *sql.DB) TsumikiBlockMediaRepository {
+func NewTsumikiBlockMediaRepository(db DBTX) TsumikiBlockMediaRepository {
 	return &tsumikiBlockMediaRepositoryImpl{db: db}
 }
 
