@@ -166,7 +166,7 @@ table "tsumikis" {
   }
   column "work_id" {
     type = int
-    null = false
+    null = true
   }
   column "user_id" {
     type = int

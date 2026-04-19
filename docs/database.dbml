@@ -35,7 +35,7 @@ Table tsumikis {
     thumbnail_url varchar [not null]
     visibility visibility [not null]
     miruko_watching_duration int [note: '単位は秒']
-    work_id int [ref: > works.id, not null]
+    work_id int [ref: > works.id]
     user_id int [ref: > users.id, not null]
     created_at timestamp [default: `now()`]
     updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']
