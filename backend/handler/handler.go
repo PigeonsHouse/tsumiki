@@ -23,9 +23,9 @@ func NewHandlers(
 ) *Handlers {
 	return &Handlers{
 		Ping:    NewPingHandler(),
-		Auth:    NewAuthHandler(repos.User, stores.Auth, mediaSvc, discordSvc),
-		User:    NewUserHandler(repos.User, mediaSvc),
-		Tsumiki: NewTsumikiHandler(repos.Tsumiki, repos.TsumikiBlock, repos.TsumikiBlockMedia, mediaSvc),
-		Work:    NewWorkHandler(repos.Work, repos.Tsumiki),
+		Auth:    NewAuthHandler(repos, stores.Auth, mediaSvc, discordSvc),
+		User:    NewUserHandler(repos, mediaSvc),
+		Tsumiki: NewTsumikiHandler(repos, mediaSvc),
+		Work:    NewWorkHandler(repos),
 	}
 }

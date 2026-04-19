@@ -18,14 +18,14 @@ type UserHandler interface {
 }
 
 type userHandlerImpl struct {
-	repository repository.UserRepository
-	media      media.MediaService
+	repositories *repository.Repositories
+	media        media.MediaService
 }
 
-func NewUserHandler(userRepo repository.UserRepository, mediaSvc media.MediaService) UserHandler {
+func NewUserHandler(repos *repository.Repositories, mediaSvc media.MediaService) UserHandler {
 	return &userHandlerImpl{
-		repository: userRepo,
-		media:      mediaSvc,
+		repositories: repos,
+		media:        mediaSvc,
 	}
 }
 
@@ -36,7 +36,7 @@ func (uh *userHandlerImpl) GetMyInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := uh.repository.FindByID(userID)
+	user, err := uh.repositories.User.FindByID(userID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -60,7 +60,7 @@ func (uh *userHandlerImpl) GetUserInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := uh.repository.FindByID(userID)
+	user, err := uh.repositories.User.FindByID(userID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")

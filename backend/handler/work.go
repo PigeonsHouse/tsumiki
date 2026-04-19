@@ -22,17 +22,12 @@ type WorkHandler interface {
 }
 
 type workHandlerImpl struct {
-	workRepo    repository.WorkRepository
-	tsumikiRepo repository.TsumikiRepository
+	repositories *repository.Repositories
 }
 
-func NewWorkHandler(
-	workRepo repository.WorkRepository,
-	tsumikiRepo repository.TsumikiRepository,
-) WorkHandler {
+func NewWorkHandler(repos *repository.Repositories) WorkHandler {
 	return &workHandlerImpl{
-		workRepo:    workRepo,
-		tsumikiRepo: tsumikiRepo,
+		repositories: repos,
 	}
 }
 
@@ -44,7 +39,7 @@ type workRequest struct {
 func (wh *workHandlerImpl) GetWorks(w http.ResponseWriter, r *http.Request) {
 	pageSize, page, _ := parsePaginationQuery(r)
 
-	works, err := wh.workRepo.GetWorks(pageSize, page)
+	works, err := wh.repositories.Work.GetWorks(pageSize, page)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -61,7 +56,7 @@ func (wh *workHandlerImpl) GetSpecifiedWork(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	work, err := wh.workRepo.GetWork(workID)
+	work, err := wh.repositories.Work.GetWork(workID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -85,7 +80,7 @@ func (wh *workHandlerImpl) GetWorkTsumiki(w http.ResponseWriter, r *http.Request
 
 	pageSize, page, _ := parsePaginationQuery(r)
 
-	tsumikis, err := wh.tsumikiRepo.GetTsumikis(userID, pageSize, page, nil, &workID, "")
+	tsumikis, err := wh.repositories.Tsumiki.GetTsumikis(userID, pageSize, page, nil, &workID, "")
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -108,7 +103,7 @@ func (wh *workHandlerImpl) CreateWork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	work, err := wh.workRepo.CreateWork(userID, req.Title, req.Description)
+	work, err := wh.repositories.Work.CreateWork(userID, req.Title, req.Description)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -138,7 +133,7 @@ func (wh *workHandlerImpl) EditWork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	work, err := wh.workRepo.UpdateWork(workID, req.Title, req.Description)
+	work, err := wh.repositories.Work.UpdateWork(workID, req.Title, req.Description)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -166,7 +161,7 @@ func (wh *workHandlerImpl) DeleteWork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := wh.workRepo.DeleteWork(workID); err != nil {
+	if err := wh.repositories.Work.DeleteWork(workID); err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
 		return

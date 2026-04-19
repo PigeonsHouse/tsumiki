@@ -20,18 +20,18 @@ type AuthHandler interface {
 }
 
 type authHandlerImpl struct {
-	repository repository.UserRepository
-	store      store.AuthStore
-	media      media.MediaService
-	discord    external.DiscordService
+	repositories *repository.Repositories
+	store        store.AuthStore
+	media        media.MediaService
+	discord      external.DiscordService
 }
 
-func NewAuthHandler(userRepo repository.UserRepository, authStore store.AuthStore, mediaSvc media.MediaService, discordSvc external.DiscordService) AuthHandler {
+func NewAuthHandler(repos *repository.Repositories, authStore store.AuthStore, mediaSvc media.MediaService, discordSvc external.DiscordService) AuthHandler {
 	return &authHandlerImpl{
-		repository: userRepo,
-		store:      authStore,
-		media:      mediaSvc,
-		discord:    discordSvc,
+		repositories: repos,
+		store:        authStore,
+		media:        mediaSvc,
+		discord:      discordSvc,
 	}
 }
 
@@ -94,38 +94,36 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	user, err := ah.repository.FindByDiscordUserId(userInfo.ID)
+	user, err := ah.repositories.User.FindByDiscordUserId(userInfo.ID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
 		return
 	}
 	if user == nil {
-		user, err = ah.repository.CreateUserByDiscord(userInfo.UserName, "", userInfo.ID, guildID)
+		err := ah.repositories.RunInTx(func(txRepos *repository.Repositories) error {
+			user, err = txRepos.User.CreateUserByDiscord(userInfo.UserName, "", userInfo.ID, guildID)
+			if err != nil {
+				return err
+			}
+			avatarBody, avatarContentType, err := ah.discord.FetchAvatar(userInfo)
+			if err != nil {
+				return err
+			}
+			defer avatarBody.Close()
+			avatarPath, err := ah.media.UploadAvatar(r.Context(), user.ID, avatarBody, avatarContentType)
+			if err != nil {
+				return err
+			}
+			if err := ah.repositories.User.UpdateAvatarUrl(user.ID, avatarPath); err != nil {
+				return err
+			}
+			user.AvatarUrl = avatarPath
+			return nil
+		})
 		if err != nil {
-			fmt.Println("DBエラー: ", err)
-			helper.ResponseInternalServerError(w, "DBエラー")
-			return
+			helper.ResponseInternalServerError(w, "ユーザの新規登録時にエラーが発生しました")
 		}
-		avatarBody, avatarContentType, err := ah.discord.FetchAvatar(userInfo)
-		if err != nil {
-			fmt.Println("アバター取得エラー: ", err)
-			helper.ResponseInternalServerError(w, "アバター取得エラー")
-			return
-		}
-		defer avatarBody.Close()
-		avatarPath, err := ah.media.UploadAvatar(r.Context(), user.ID, avatarBody, avatarContentType)
-		if err != nil {
-			fmt.Println("アバターアップロードエラー: ", err)
-			helper.ResponseInternalServerError(w, "アバターアップロードエラー")
-			return
-		}
-		if err := ah.repository.UpdateAvatarUrl(user.ID, avatarPath); err != nil {
-			fmt.Println("DBエラー: ", err)
-			helper.ResponseInternalServerError(w, "DBエラー")
-			return
-		}
-		user.AvatarUrl = avatarPath
 	}
 
 	tokenPair, err := auth.GenerateTokenPair(user.ID)
