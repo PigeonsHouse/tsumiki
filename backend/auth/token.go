@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 	"tsumiki/env"
+	"tsumiki/helper"
 
-	"github.com/bwmarrin/snowflake"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -14,16 +14,6 @@ const (
 	AccessTokenLiveTime  = 150000 * time.Minute // 動作確認用
 	RefreshTokenLiveTime = 30 * 24 * time.Hour
 )
-
-var snowflakeNode *snowflake.Node
-
-func init() {
-	node, err := snowflake.NewNode(1)
-	if err != nil {
-		panic(fmt.Sprintf("snowflake node init failed: %v", err))
-	}
-	snowflakeNode = node
-}
 
 type CustomClaims struct {
 	UserID    int    `json:"user_id"`
@@ -56,7 +46,7 @@ func ValidateRefreshToken(tokenStr string) (*CustomClaims, error) {
 }
 
 func GenerateTokenPair(userID int) (TokenPair, error) {
-	sessionID := snowflakeNode.Generate().String()
+	sessionID := helper.GenerateSnowflake().String()
 	now := time.Now()
 
 	accessClaims := CustomClaims{
