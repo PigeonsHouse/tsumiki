@@ -9,6 +9,7 @@ import (
 	"tsumiki/media"
 	"tsumiki/middleware"
 	"tsumiki/repository"
+	"tsumiki/schema"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -51,6 +52,11 @@ type createTsumikiRequest struct {
 	Visibility string       `json:"visibility"`
 	WorkID     *int         `json:"work_id"`
 	Block      blockRequest `json:"block"`
+}
+
+type createTsumikiResponse struct {
+	Tsumiki  *schema.Tsumiki      `json:"tsumiki"`
+	NewBlock *schema.TsumikiBlock `json:"new_block"`
 }
 
 type editTsumikiRequest struct {
@@ -147,22 +153,35 @@ func (th *tsumikiHandlerImpl) CreateTsumiki(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// todo: トランザクションを貼る
-	tsumiki, err := th.repositories.Tsumiki.CreateTsumiki(userID, req.Title, req.Visibility, req.WorkID)
+	var tsumiki *schema.Tsumiki
+	var newBlock *schema.TsumikiBlock
+	err := th.repositories.RunInTx(func(txRepos *repository.Repositories) error {
+		var err error
+		tsumiki, err = th.repositories.Tsumiki.CreateTsumiki(userID, req.Title, req.Visibility, req.WorkID)
+		if err != nil {
+			return err
+		}
+		newBlock, err = th.repositories.TsumikiBlock.CreateBlock(tsumiki.ID, req.Block.Message, req.Block.Percentage, req.Block.Condition)
+		if err != nil {
+			return err
+		}
+		medias, err := th.repositories.TsumikiBlockMedia.SetMediaRelation(newBlock.ID, req.Block.MediaIDs)
+		if err != nil {
+			return err
+		}
+		newBlock.Medias = medias
+		return nil
+	})
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
 		return
 	}
-	_, err = th.repositories.TsumikiBlock.CreateBlock(tsumiki.ID, req.Block.Message, req.Block.Percentage, req.Block.Condition, req.Block.MediaIDs)
-	if err != nil {
-		fmt.Println("DBエラー: ", err)
-		helper.ResponseInternalServerError(w, "DBエラー")
-		return
-	}
-	// メディアとブロックを紐付ける
 
-	helper.ResponseOk(w, tsumiki)
+	helper.ResponseOk(w, createTsumikiResponse{
+		Tsumiki:  tsumiki,
+		NewBlock: newBlock,
+	})
 }
 
 func (th *tsumikiHandlerImpl) EditTsumiki(w http.ResponseWriter, r *http.Request) {
@@ -309,13 +328,24 @@ func (th *tsumikiHandlerImpl) AddBlock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// メディア操作までトランザクションを貼る
-	block, err := th.repositories.TsumikiBlock.CreateBlock(tsumikiID, req.Message, req.Percentage, req.Condition, req.MediaIDs)
+	var block *schema.TsumikiBlock
+	err = th.repositories.RunInTx(func(txRepos *repository.Repositories) error {
+		block, err = txRepos.TsumikiBlock.CreateBlock(tsumikiID, req.Message, req.Percentage, req.Condition)
+		if err != nil {
+			return err
+		}
+		medias, err := txRepos.TsumikiBlockMedia.SetMediaRelation(block.ID, req.MediaIDs)
+		if err != nil {
+			return err
+		}
+		block.Medias = medias
+		return nil
+	})
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
 		return
 	}
-	// メディアの紐付け
 
 	helper.ResponseOk(w, block)
 }
@@ -366,8 +396,23 @@ func (th *tsumikiHandlerImpl) EditBlock(w http.ResponseWriter, r *http.Request) 
 		helper.ResponseForbidden(w, "この積み木の作成者ではありません")
 		return
 	}
-	// メディア操作までトランザクションを貼る
-	block, err := th.repositories.TsumikiBlock.UpdateBlock(blockID, req.Message, req.Percentage, req.Condition, req.MediaIDs)
+
+	var block *schema.TsumikiBlock
+	err = th.repositories.RunInTx(func(txRepos *repository.Repositories) error {
+		block, err = th.repositories.TsumikiBlock.UpdateBlock(blockID, req.Message, req.Percentage, req.Condition)
+		if err != nil {
+			return err
+		}
+		if block == nil {
+			return nil
+		}
+		medias, err := th.repositories.TsumikiBlockMedia.SetMediaRelation(block.ID, req.MediaIDs)
+		if err != nil {
+			return err
+		}
+		block.Medias = medias
+		return nil
+	})
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -377,7 +422,6 @@ func (th *tsumikiHandlerImpl) EditBlock(w http.ResponseWriter, r *http.Request) 
 		helper.ResponseNotFound(w, "ブロックが見つかりません")
 		return
 	}
-	// メディアの紐付け切り離しの整理
 
 	helper.ResponseOk(w, block)
 }

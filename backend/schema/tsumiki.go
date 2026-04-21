@@ -14,15 +14,15 @@ type Tsumiki struct {
 }
 
 type TsumikiBlock struct {
-	ID          int               `db:"id" json:"id"`
-	Message     *string           `db:"message" json:"message"`
-	Medias      TsumikiBlockMedia `json:"medias"`
-	Percentage  int               `db:"percentage" json:"percentage"`
-	Condition   int               `db:"condition" json:"condition"`
-	NextBlockId *int              `db:"next_block_id" json:"-"`
-	TsumikiId   int               `db:"tsumiki_id" json:"-"`
-	CreatedAt   time.Time         `db:"created_at" json:"created_at"`
-	UpdatedAt   time.Time         `db:"updated_at" json:"updated_at"`
+	ID          int                 `db:"id" json:"id"`
+	Message     *string             `db:"message" json:"message"`
+	Medias      []TsumikiBlockMedia `json:"medias"`
+	Percentage  int                 `db:"percentage" json:"percentage"`
+	Condition   int                 `db:"condition" json:"condition"`
+	NextBlockId *int                `db:"next_block_id" json:"-"`
+	TsumikiId   int                 `db:"tsumiki_id" json:"-"`
+	CreatedAt   time.Time           `db:"created_at" json:"created_at"`
+	UpdatedAt   time.Time           `db:"updated_at" json:"updated_at"`
 }
 
 type TsumikiBlockMedia struct {

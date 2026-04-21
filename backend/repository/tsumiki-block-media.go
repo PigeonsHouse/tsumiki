@@ -6,7 +6,7 @@ import (
 
 type TsumikiBlockMediaRepository interface {
 	CreateMedia(url string, mediaType string) (*schema.TsumikiBlockMedia, error)
-	SetMediaRelation(blockID int, updatedMediaIDs []int) error
+	SetMediaRelation(blockID int, updatedMediaIDs []int) ([]schema.TsumikiBlockMedia, error)
 }
 
 type tsumikiBlockMediaRepositoryImpl struct {
@@ -20,6 +20,6 @@ func NewTsumikiBlockMediaRepository(db DBTX) TsumikiBlockMediaRepository {
 func (tbmr *tsumikiBlockMediaRepositoryImpl) CreateMedia(url string, mediaType string) (*schema.TsumikiBlockMedia, error) {
 	return nil, nil
 }
-func (tbmr *tsumikiBlockMediaRepositoryImpl) SetMediaRelation(blockID int, updatedMediaIDs []int) error {
-	return nil
+func (tbmr *tsumikiBlockMediaRepositoryImpl) SetMediaRelation(blockID int, updatedMediaIDs []int) ([]schema.TsumikiBlockMedia, error) {
+	return []schema.TsumikiBlockMedia{}, nil
 }
