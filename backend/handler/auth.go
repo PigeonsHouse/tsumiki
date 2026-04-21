@@ -115,14 +115,16 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 			if err != nil {
 				return err
 			}
-			if err := ah.repositories.User.UpdateAvatarUrl(user.ID, avatarPath); err != nil {
+			if err := txRepos.User.UpdateAvatarUrl(user.ID, avatarPath); err != nil {
 				return err
 			}
 			user.AvatarUrl = avatarPath
 			return nil
 		})
 		if err != nil {
+			fmt.Println("DBエラー:", err)
 			helper.ResponseInternalServerError(w, "ユーザの新規登録時にエラーが発生しました")
+			return
 		}
 	}
 

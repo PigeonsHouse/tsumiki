@@ -169,15 +169,15 @@ func (th *tsumikiHandlerImpl) CreateTsumiki(w http.ResponseWriter, r *http.Reque
 	var newBlock *schema.TsumikiBlock
 	err := th.repositories.RunInTx(func(txRepos *repository.Repositories) error {
 		var err error
-		tsumiki, err = th.repositories.Tsumiki.CreateTsumiki(userID, req.Title, req.Visibility, req.WorkID)
+		tsumiki, err = txRepos.Tsumiki.CreateTsumiki(userID, req.Title, req.Visibility, req.WorkID)
 		if err != nil {
 			return err
 		}
-		newBlock, err = th.repositories.TsumikiBlock.CreateBlock(tsumiki.ID, req.Block.Message, req.Block.Percentage, req.Block.Condition)
+		newBlock, err = txRepos.TsumikiBlock.CreateBlock(tsumiki.ID, req.Block.Message, req.Block.Percentage, req.Block.Condition)
 		if err != nil {
 			return err
 		}
-		medias, err := th.repositories.TsumikiBlockMedia.SetMediaRelation(newBlock.ID, req.Block.MediaIDs)
+		medias, err := txRepos.TsumikiBlockMedia.SetMediaRelation(newBlock.ID, req.Block.MediaIDs)
 		if err != nil {
 			return err
 		}
@@ -499,14 +499,14 @@ func (th *tsumikiHandlerImpl) EditBlock(w http.ResponseWriter, r *http.Request) 
 
 	var block *schema.TsumikiBlock
 	err = th.repositories.RunInTx(func(txRepos *repository.Repositories) error {
-		block, err = th.repositories.TsumikiBlock.UpdateBlock(blockID, req.Message, req.Percentage, req.Condition)
+		block, err = txRepos.TsumikiBlock.UpdateBlock(blockID, req.Message, req.Percentage, req.Condition)
 		if err != nil {
 			return err
 		}
 		if block == nil {
 			return nil
 		}
-		medias, err := th.repositories.TsumikiBlockMedia.SetMediaRelation(block.ID, req.MediaIDs)
+		medias, err := txRepos.TsumikiBlockMedia.SetMediaRelation(block.ID, req.MediaIDs)
 		if err != nil {
 			return err
 		}
