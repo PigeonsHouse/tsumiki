@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"tsumiki/schema"
 )
 
@@ -19,15 +20,65 @@ func NewTsumikiBlockRepository(db DBTX) TsumikiBlockRepository {
 	return &tsumikiBlockRepositoryImpl{db: db}
 }
 
+func (tbr *tsumikiBlockRepositoryImpl) fetchBlock(blockID int) (*schema.TsumikiBlock, error) {
+	var b schema.TsumikiBlock
+	err := tbr.db.QueryRow(
+		"SELECT id, message, percentage, condition, next_block_id, tsumiki_id, created_at, updated_at "+
+			"FROM tsumiki_blocks WHERE id = ? AND deleted_at IS NULL",
+		blockID,
+	).Scan(&b.ID, &b.Message, &b.Percentage, &b.Condition, &b.NextBlockId, &b.TsumikiId, &b.CreatedAt, &b.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	b.Medias = []schema.TsumikiBlockMedia{}
+	return &b, nil
+}
+
 func (tbr *tsumikiBlockRepositoryImpl) IsBelongToTsumiki(tsumikiID int, blockID int) (bool, error) {
-	return false, nil
+	var count int
+	err := tbr.db.QueryRow(
+		"SELECT COUNT(*) FROM tsumiki_blocks WHERE id = ? AND tsumiki_id = ? AND deleted_at IS NULL",
+		blockID, tsumikiID,
+	).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
+
 func (tbr *tsumikiBlockRepositoryImpl) CreateBlock(tsumikiID int, message *string, percentage int, condition int) (*schema.TsumikiBlock, error) {
-	return nil, nil
+	result, err := tbr.db.Exec(
+		"INSERT INTO tsumiki_blocks (tsumiki_id, message, percentage, condition) VALUES (?, ?, ?, ?)",
+		tsumikiID, message, percentage, condition,
+	)
+	if err != nil {
+		return nil, err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+	return tbr.fetchBlock(int(id))
 }
+
 func (tbr *tsumikiBlockRepositoryImpl) UpdateBlock(blockID int, message *string, percentage int, condition int) (*schema.TsumikiBlock, error) {
-	return nil, nil
+	_, err := tbr.db.Exec(
+		"UPDATE tsumiki_blocks SET message = ?, percentage = ?, condition = ? WHERE id = ? AND deleted_at IS NULL",
+		message, percentage, condition, blockID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return tbr.fetchBlock(blockID)
 }
+
 func (tbr *tsumikiBlockRepositoryImpl) SoftDeleteBlock(blockID int) error {
-	return nil
+	_, err := tbr.db.Exec(
+		"UPDATE tsumiki_blocks SET deleted_at = NOW() WHERE id = ?",
+		blockID,
+	)
+	return err
 }
