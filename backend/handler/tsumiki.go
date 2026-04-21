@@ -1,8 +1,15 @@
 package handler
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+	"io"
+	"mime"
 	"net/http"
 	"strconv"
 	"tsumiki/helper"
@@ -12,6 +19,11 @@ import (
 	"tsumiki/schema"
 
 	"github.com/go-chi/chi/v5"
+)
+
+const (
+	mediaMaxBytes5MB   int64 = 5 << 20
+	mediaMaxBytes100MB int64 = 100 << 20
 )
 
 type TsumikiHandler interface {
@@ -291,8 +303,96 @@ func (th *tsumikiHandlerImpl) PostMedia(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	// TODO: ファイルタイプ・サイズ検証、S3アップロード、DBレコード作成
-	helper.ResponseOk(w, nil)
+	// 一番大きい上限で一度制限をかける
+	if err := r.ParseMultipartForm(mediaMaxBytes100MB); err != nil {
+		helper.ResponseBadRequest(w, "マルチパートフォームの解析に失敗しました")
+		return
+	}
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		helper.ResponseBadRequest(w, "ファイルが見つかりません")
+		return
+	}
+	defer file.Close()
+
+	rawContentType := header.Header.Get("Content-Type")
+	mediaType, maxBytes, ext, err := resolveMediaType(rawContentType)
+	if err != nil {
+		helper.ResponseBadRequest(w, err.Error())
+		return
+	}
+
+	data, err := io.ReadAll(io.LimitReader(file, maxBytes+1))
+	if err != nil {
+		helper.ResponseInternalServerError(w, "ファイルの読み込みに失敗しました")
+		return
+	}
+	if int64(len(data)) > maxBytes {
+		helper.ResponseBadRequest(w, "ファイルサイズが上限を超えています")
+		return
+	}
+
+	if mediaType == "image" {
+		cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
+		if err != nil {
+			helper.ResponseBadRequest(w, "画像の解析に失敗しました")
+			return
+		}
+		if cfg.Width > 4096 || cfg.Height > 4096 {
+			helper.ResponseBadRequest(w, "画像サイズは4096x4096以内にしてください")
+			return
+		}
+	}
+
+	// TODO: audio/videoの制限もかける
+	// video 3分以内
+	// audio 5分以内
+
+	storedPath, err := th.media.UploadTsumikiMedia(r.Context(), tsumikiID, bytes.NewReader(data), rawContentType, ext)
+	if err != nil {
+		fmt.Println("S3アップロードエラー: ", err)
+		helper.ResponseInternalServerError(w, "ファイルのアップロードに失敗しました")
+		return
+	}
+
+	createdMedia, err := th.repositories.TsumikiBlockMedia.CreateMedia(storedPath, mediaType)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+	createdMedia.Url = th.media.ResolveURL(createdMedia.Url)
+
+	helper.ResponseOk(w, createdMedia)
+}
+
+var mediaContentTypes = map[string]struct {
+	mediaType string
+	maxBytes  int64
+	ext       string
+}{
+	"image/jpeg":      {"image", mediaMaxBytes5MB, ".jpg"},
+	"image/png":       {"image", mediaMaxBytes5MB, ".png"},
+	"image/gif":       {"image", mediaMaxBytes5MB, ".gif"},
+	"audio/mpeg":      {"audio", mediaMaxBytes5MB, ".mp3"},
+	"audio/wav":       {"audio", mediaMaxBytes5MB, ".wav"},
+	"audio/ogg":       {"audio", mediaMaxBytes5MB, ".ogg"},
+	"audio/aac":       {"audio", mediaMaxBytes5MB, ".aac"},
+	"video/mp4":       {"video", mediaMaxBytes100MB, ".mp4"},
+	"video/webm":      {"video", mediaMaxBytes100MB, ".webm"},
+	"video/quicktime": {"video", mediaMaxBytes100MB, ".mov"},
+}
+
+func resolveMediaType(contentType string) (mediaType string, maxBytes int64, ext string, err error) {
+	mimeType, _, parseErr := mime.ParseMediaType(contentType)
+	if parseErr != nil {
+		return "", 0, "", fmt.Errorf("Content-Typeが不正です")
+	}
+	info, ok := mediaContentTypes[mimeType]
+	if !ok {
+		return "", 0, "", fmt.Errorf("対応していないファイル形式です")
+	}
+	return info.mediaType, info.maxBytes, info.ext, nil
 }
 
 func (th *tsumikiHandlerImpl) AddBlock(w http.ResponseWriter, r *http.Request) {
