@@ -19,11 +19,11 @@ func SetApiRouter(mux *chi.Mux, handlers *handler.Handlers) {
 		r.Route("/users", func(r chi.Router) {
 			r.Route("/me", func(r chi.Router) {
 				r.Use(middleware.RequireAuth)
-				r.Get("", handlers.User.GetMyInfo)
+				r.Get("/", handlers.User.GetMyInfo)
 				r.Get("/tsumikis", handlers.Tsumiki.GetMyTsumikis)
 			})
 			r.Route("/{userId}", func(r chi.Router) {
-				r.Get("", handlers.User.GetUserInfo)
+				r.Get("/", handlers.User.GetUserInfo)
 				r.With(middleware.OptionalAuth).
 					Get("/tsumikis", handlers.Tsumiki.GetUserTsumikis)
 			})
@@ -32,17 +32,17 @@ func SetApiRouter(mux *chi.Mux, handlers *handler.Handlers) {
 		r.Route("/tsumikis", func(r chi.Router) {
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.OptionalAuth)
-				r.Get("", handlers.Tsumiki.GetTsumikis)
+				r.Get("/", handlers.Tsumiki.GetTsumikis)
 				r.Get("/{tsumikiID}", handlers.Tsumiki.GetSpecifiedTsumiki)
 			})
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.RequireAuth)
-				r.Post("", handlers.Tsumiki.CreateTsumiki)
+				r.Post("/", handlers.Tsumiki.CreateTsumiki)
 				r.Put("/{tsumikiID}", handlers.Tsumiki.EditTsumiki)
 				r.Delete("/{tsumikiID}", handlers.Tsumiki.DeleteTsumiki)
 				r.Post("/{tsumikiID}/medias", handlers.Tsumiki.PostMedia)
 				r.Route("/{tsumikiID}/blocks", func(r chi.Router) {
-					r.Post("", handlers.Tsumiki.AddBlock)
+					r.Post("/", handlers.Tsumiki.AddBlock)
 					r.Put("/{blockID}", handlers.Tsumiki.EditBlock)
 					r.Delete("/{blockID}", handlers.Tsumiki.OmitBlock)
 				})
@@ -52,13 +52,13 @@ func SetApiRouter(mux *chi.Mux, handlers *handler.Handlers) {
 		r.Route("/works", func(r chi.Router) {
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.OptionalAuth)
-				r.Get("", handlers.Work.GetWorks)
+				r.Get("/", handlers.Work.GetWorks)
 				r.Get("/{workId}", handlers.Work.GetSpecifiedWork)
 				r.Get("/{workId}/tsumikis", handlers.Work.GetWorkTsumiki)
 			})
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.RequireAuth)
-				r.Post("", handlers.Work.CreateWork)
+				r.Post("/", handlers.Work.CreateWork)
 				r.Put("/{workId}", handlers.Work.EditWork)
 				r.Delete("/{workId}", handlers.Work.DeleteWork)
 			})
