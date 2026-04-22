@@ -31,6 +31,7 @@ type TsumikiHandler interface {
 	GetUserTsumikis(w http.ResponseWriter, r *http.Request)
 	GetTsumikis(w http.ResponseWriter, r *http.Request)
 	GetSpecifiedTsumiki(w http.ResponseWriter, r *http.Request)
+	GetBlocks(w http.ResponseWriter, r *http.Request)
 	CreateTsumiki(w http.ResponseWriter, r *http.Request)
 	EditTsumiki(w http.ResponseWriter, r *http.Request)
 	DeleteTsumiki(w http.ResponseWriter, r *http.Request)
@@ -149,6 +150,36 @@ func (th *tsumikiHandlerImpl) GetSpecifiedTsumiki(w http.ResponseWriter, r *http
 	}
 
 	helper.ResponseOk(w, tsumiki)
+}
+
+func (th *tsumikiHandlerImpl) GetBlocks(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetOptionalUserIDFromContext(r.Context())
+	tsumikiID, err := parseTsumikiID(r)
+	if err != nil {
+		helper.ResponseBadRequest(w, "積み木IDが不正です")
+		return
+	}
+
+	tsumiki, err := th.repositories.Tsumiki.GetTsumiki(userID, tsumikiID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+	if tsumiki == nil {
+		helper.ResponseNotFound(w, "積み木が見つかりません")
+		return
+	}
+
+	pageSize, page, _ := parsePaginationQuery(r)
+	blocks, err := th.repositories.Tsumiki.GetTsumikiBlocks(tsumikiID, pageSize, page)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+
+	helper.ResponseOk(w, blocks)
 }
 
 func (th *tsumikiHandlerImpl) CreateTsumiki(w http.ResponseWriter, r *http.Request) {

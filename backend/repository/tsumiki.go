@@ -7,7 +7,7 @@ import (
 
 type TsumikiRepository interface {
 	GetTsumiki(watchUserID *int, tsumikiID int) (*schema.Tsumiki, error)
-	GetTsumikiBlocks(watchUserID *int, tsumikiID int) ([]schema.TsumikiBlock, error)
+	GetTsumikiBlocks(tsumikiID int, pageSize, page int) ([]schema.TsumikiBlockView, error)
 	GetTsumikis(watchUserID *int, pageSize, page int, authorID *int, workID *int, keyword string) ([]schema.Tsumiki, error)
 	CreateTsumiki(userID int, title string, visibility string, workID *int) (*schema.Tsumiki, error)
 	UpdateTsumiki(tsumikiID int, title string, visibility string, workID *int) (*schema.Tsumiki, error)
@@ -112,46 +112,64 @@ func (tr *tsumikiRepositoryImpl) GetTsumiki(watchUserID *int, tsumikiID int) (*s
 	return t, err
 }
 
-func (tr *tsumikiRepositoryImpl) GetTsumikiBlocks(watchUserID *int, tsumikiID int) ([]schema.TsumikiBlock, error) {
+func (tr *tsumikiRepositoryImpl) GetTsumikiBlocks(tsumikiID int, pageSize, page int) ([]schema.TsumikiBlockView, error) {
+	// deleted_at IS NULL の条件をJOIN側に置くことで、削除済みブロックのメディアは取得しない
 	rows, err := tr.db.Query(
-		"SELECT b.id, b.message, b.percentage, b.condition, b.next_block_id, b.tsumiki_id, b.created_at, b.updated_at, "+
+		"SELECT b.id, b.deleted_at, b.message, b.percentage, b.condition, b.created_at, b.updated_at, "+
 			"m.id, m.type, m.url, m.`order`, m.created_at, m.updated_at "+
 			"FROM tsumiki_blocks b "+
-			"LEFT JOIN tsumiki_block_medias m ON b.id = m.tsumiki_block_id "+
-			"WHERE b.tsumiki_id = ? AND b.deleted_at IS NULL "+
-			"ORDER BY b.id, m.`order`",
-		tsumikiID,
+			"LEFT JOIN tsumiki_block_medias m ON b.id = m.tsumiki_block_id AND b.deleted_at IS NULL "+
+			"WHERE b.tsumiki_id = ? "+
+			"ORDER BY b.id ASC, m.`order` "+
+			"LIMIT ? OFFSET ?",
+		tsumikiID, pageSize, (page-1)*pageSize,
 	)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	blockMap := make(map[int]*schema.TsumikiBlock)
+	blockMap := make(map[int]*schema.TsumikiBlockView)
 	var blockOrder []int
 
 	for rows.Next() {
-		var b schema.TsumikiBlock
+		var id int
+		var deletedAt sql.NullTime
+		var message sql.NullString
+		var percentage, condition sql.NullInt64
+		var createdAt, updatedAt sql.NullTime
 		var mediaID sql.NullInt64
 		var mediaType, mediaUrl sql.NullString
 		var mediaOrder sql.NullInt64
 		var mediaCreatedAt, mediaUpdatedAt sql.NullTime
 
 		if err := rows.Scan(
-			&b.ID, &b.Message, &b.Percentage, &b.Condition, &b.NextBlockId, &b.TsumikiId, &b.CreatedAt, &b.UpdatedAt,
+			&id, &deletedAt, &message, &percentage, &condition, &createdAt, &updatedAt,
 			&mediaID, &mediaType, &mediaUrl, &mediaOrder, &mediaCreatedAt, &mediaUpdatedAt,
 		); err != nil {
 			return nil, err
 		}
 
-		if _, exists := blockMap[b.ID]; !exists {
-			b.Medias = []schema.TsumikiBlockMedia{}
-			blockMap[b.ID] = &b
-			blockOrder = append(blockOrder, b.ID)
+		if _, exists := blockMap[id]; !exists {
+			b := &schema.TsumikiBlockView{ID: id, IsDeleted: deletedAt.Valid}
+			if !deletedAt.Valid {
+				if message.Valid {
+					b.Message = &message.String
+				}
+				b.Medias = []schema.TsumikiBlockMedia{}
+				p := int(percentage.Int64)
+				c := int(condition.Int64)
+				b.Percentage = &p
+				b.Condition = &c
+				b.CreatedAt = &createdAt.Time
+				b.UpdatedAt = &updatedAt.Time
+			}
+			blockMap[id] = b
+			blockOrder = append(blockOrder, id)
 		}
 
 		if mediaID.Valid {
-			blockMap[b.ID].Medias = append(blockMap[b.ID].Medias, schema.TsumikiBlockMedia{
+			blockMap[id].Medias = append(blockMap[id].Medias, schema.TsumikiBlockMedia{
 				ID:        int(mediaID.Int64),
 				Type:      mediaType.String,
 				Url:       mediaUrl.String,
@@ -165,7 +183,7 @@ func (tr *tsumikiRepositoryImpl) GetTsumikiBlocks(watchUserID *int, tsumikiID in
 		return nil, err
 	}
 
-	blocks := make([]schema.TsumikiBlock, 0, len(blockOrder))
+	blocks := make([]schema.TsumikiBlockView, 0, len(blockOrder))
 	for _, id := range blockOrder {
 		blocks = append(blocks, *blockMap[id])
 	}

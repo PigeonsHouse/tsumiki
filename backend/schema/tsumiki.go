@@ -25,6 +25,18 @@ type TsumikiBlock struct {
 	UpdatedAt   time.Time           `db:"updated_at" json:"updated_at"`
 }
 
+// ブロック一覧取得用。削除済みブロックは is_deleted のみ返す
+type TsumikiBlockView struct {
+	ID         int                 `json:"id"`
+	IsDeleted  bool                `json:"is_deleted"`
+	Message    *string             `json:"message,omitempty"`
+	Medias     []TsumikiBlockMedia `json:"medias,omitempty"`
+	Percentage *int                `json:"percentage,omitempty"`
+	Condition  *int                `json:"condition,omitempty"`
+	CreatedAt  *time.Time          `json:"created_at,omitempty"`
+	UpdatedAt  *time.Time          `json:"updated_at,omitempty"`
+}
+
 type TsumikiBlockMedia struct {
 	ID        int       `db:"id" json:"id"`
 	Type      string    `db:"type" json:"type"`

@@ -34,6 +34,7 @@ func SetApiRouter(mux *chi.Mux, handlers *handler.Handlers) {
 				r.Use(middleware.OptionalAuth)
 				r.Get("/", handlers.Tsumiki.GetTsumikis)
 				r.Get("/{tsumikiID}", handlers.Tsumiki.GetSpecifiedTsumiki)
+				r.Get("/{tsumikiID}/blocks", handlers.Tsumiki.GetBlocks)
 			})
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.RequireAuth)
