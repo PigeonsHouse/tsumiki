@@ -99,7 +99,7 @@ table "works" {
     type = varchar(255)
     null = true
   }
-  column "thumbnail_upload_id" {
+  column "thumbnail_id" {
     type = int
     null = true
   }
@@ -124,8 +124,8 @@ table "works" {
   index "fk_works_owner_user_id" {
     columns = [column.owner_user_id]
   }
-  index "fk_works_thumbnail_upload_id" {
-    columns = [column.thumbnail_upload_id]
+  index "fk_works_thumbnail_id" {
+    columns = [column.thumbnail_id]
     unique  = true
   }
   foreign_key "fk_works_owner_user_id" {
@@ -134,8 +134,8 @@ table "works" {
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
-  foreign_key "fk_works_thumbnail_upload_id" {
-    columns     = [column.thumbnail_upload_id]
+  foreign_key "fk_works_thumbnail_id" {
+    columns     = [column.thumbnail_id]
     ref_columns = [table.thumbnails.column.id]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
@@ -153,7 +153,7 @@ table "tsumikis" {
     type = varchar(255)
     null = false
   }
-  column "thumbnail_upload_id" {
+  column "thumbnail_id" {
     type = int
     null = true
   }
@@ -187,8 +187,8 @@ table "tsumikis" {
   primary_key {
     columns = [column.id]
   }
-  index "fk_tsumikis_thumbnail_upload_id" {
-    columns = [column.thumbnail_upload_id]
+  index "fk_tsumikis_thumbnail_id" {
+    columns = [column.thumbnail_id]
     unique  = true
   }
   index "fk_tsumikis_work_id" {
@@ -197,8 +197,8 @@ table "tsumikis" {
   index "fk_tsumikis_user_id" {
     columns = [column.user_id]
   }
-  foreign_key "fk_tsumikis_thumbnail_upload_id" {
-    columns     = [column.thumbnail_upload_id]
+  foreign_key "fk_tsumikis_thumbnail_id" {
+    columns     = [column.thumbnail_id]
     ref_columns = [table.thumbnails.column.id]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION

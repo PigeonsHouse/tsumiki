@@ -37,7 +37,7 @@ func (r *thumbnailRepositoryImpl) Create(userID int, path string) (*schema.Thumb
 func (r *thumbnailRepositoryImpl) IsInUse(thumbnailID int) (bool, error) {
 	var exists int
 	err := r.db.QueryRow(
-		"SELECT 1 FROM tsumikis WHERE thumbnail_upload_id = ? UNION SELECT 1 FROM works WHERE thumbnail_upload_id = ? LIMIT 1",
+		"SELECT 1 FROM tsumikis WHERE thumbnail_id = ? UNION SELECT 1 FROM works WHERE thumbnail_id = ? LIMIT 1",
 		thumbnailID, thumbnailID,
 	).Scan(&exists)
 	if err == sql.ErrNoRows {

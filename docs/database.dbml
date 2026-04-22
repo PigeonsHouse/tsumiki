@@ -30,7 +30,7 @@ Table thumbnails {
 Table tsumikis {
     id int [pk, increment]
     title varchar [not null]
-    thumbnail_upload_id int [unique, ref: > thumbnails.id, note: 'アプリ側でnot nullを担保']
+    thumbnail_id int [unique, ref: > thumbnails.id, note: 'アプリ側でnot nullを担保']
     visibility visibility [not null]
     miruko_watching_duration int [note: '単位は秒']
     work_id int [ref: > works.id]
@@ -72,7 +72,7 @@ Table works {
     id int [pk, increment]
     title varchar [not null]
     description varchar
-    thumbnail_upload_id int [unique, ref: > thumbnails.id]
+    thumbnail_id int [unique, ref: > thumbnails.id]
     owner_user_id int [ref: > users.id, not null]
     created_at timestamp [default: `now()`]
     updated_at timestamp [default: `now()`, note: 'ON UPDATE CURRENT_TIMESTAMP']

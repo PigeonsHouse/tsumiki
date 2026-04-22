@@ -27,7 +27,7 @@ const workSelectQuery = "SELECT w.id, w.title, w.description, w.created_at, w.up
 	"th.id, th.path, th.created_at, th.updated_at " +
 	"FROM works w " +
 	"JOIN users u ON w.owner_user_id = u.id " +
-	"LEFT JOIN thumbnails th ON w.thumbnail_upload_id = th.id"
+	"LEFT JOIN thumbnails th ON w.thumbnail_id = th.id"
 
 func scanWork(scan func(...any) error) (*schema.Work, error) {
 	var w schema.Work
@@ -89,7 +89,7 @@ func (wr *workRepositoryImpl) GetWorkTsumikis(workID int, pageSize, page int) ([
 
 func (wr *workRepositoryImpl) CreateWork(userID int, title string, description string, thumbnailID *int) (*schema.Work, error) {
 	result, err := wr.db.Exec(
-		"INSERT INTO works (owner_user_id, title, description, thumbnail_upload_id) VALUES (?, ?, ?, ?)",
+		"INSERT INTO works (owner_user_id, title, description, thumbnail_id) VALUES (?, ?, ?, ?)",
 		userID, title, description, thumbnailID,
 	)
 	if err != nil {
@@ -104,7 +104,7 @@ func (wr *workRepositoryImpl) CreateWork(userID int, title string, description s
 
 func (wr *workRepositoryImpl) UpdateWorkThumbnail(workID int, thumbnailID int) error {
 	_, err := wr.db.Exec(
-		"UPDATE works SET thumbnail_upload_id = ? WHERE id = ?",
+		"UPDATE works SET thumbnail_id = ? WHERE id = ?",
 		thumbnailID, workID,
 	)
 	return err

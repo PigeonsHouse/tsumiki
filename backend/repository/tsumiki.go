@@ -34,8 +34,8 @@ const tsumikiSelectQuery = "SELECT t.id, t.title, t.visibility, t.created_at, t.
 	"JOIN users u ON t.user_id = u.id " +
 	"LEFT JOIN works w ON t.work_id = w.id " +
 	"LEFT JOIN users wu ON w.owner_user_id = wu.id " +
-	"LEFT JOIN thumbnails wth ON w.thumbnail_upload_id = wth.id " +
-	"LEFT JOIN thumbnails tth ON t.thumbnail_upload_id = tth.id"
+	"LEFT JOIN thumbnails wth ON w.thumbnail_id = wth.id " +
+	"LEFT JOIN thumbnails tth ON t.thumbnail_id = tth.id"
 
 func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 	var t schema.Tsumiki
@@ -259,7 +259,7 @@ func (tr *tsumikiRepositoryImpl) GetTsumikis(watchUserID *int, pageSize, page in
 
 func (tr *tsumikiRepositoryImpl) CreateTsumiki(userID int, title string, visibility string, workID *int, thumbnailID int) (*schema.Tsumiki, error) {
 	result, err := tr.db.Exec(
-		"INSERT INTO tsumikis (user_id, title, visibility, work_id, thumbnail_upload_id) VALUES (?, ?, ?, ?, ?)",
+		"INSERT INTO tsumikis (user_id, title, visibility, work_id, thumbnail_id) VALUES (?, ?, ?, ?, ?)",
 		userID, title, visibility, workID, thumbnailID,
 	)
 	if err != nil {
@@ -274,7 +274,7 @@ func (tr *tsumikiRepositoryImpl) CreateTsumiki(userID int, title string, visibil
 
 func (tr *tsumikiRepositoryImpl) UpdateTsumikiThumbnail(tsumikiID int, thumbnailID int) error {
 	_, err := tr.db.Exec(
-		"UPDATE tsumikis SET thumbnail_upload_id = ? WHERE id = ?",
+		"UPDATE tsumikis SET thumbnail_id = ? WHERE id = ?",
 		thumbnailID, tsumikiID,
 	)
 	return err
