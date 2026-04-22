@@ -22,7 +22,7 @@ func SetApiRouter(mux *chi.Mux, handlers *handler.Handlers) {
 				r.Get("/", handlers.User.GetMyInfo)
 				r.Get("/tsumikis", handlers.Tsumiki.GetMyTsumikis)
 			})
-			r.Route("/{userId}", func(r chi.Router) {
+			r.Route("/{userID}", func(r chi.Router) {
 				r.Get("/", handlers.User.GetUserInfo)
 				r.With(middleware.OptionalAuth).
 					Get("/tsumikis", handlers.Tsumiki.GetUserTsumikis)
@@ -53,14 +53,14 @@ func SetApiRouter(mux *chi.Mux, handlers *handler.Handlers) {
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.OptionalAuth)
 				r.Get("/", handlers.Work.GetWorks)
-				r.Get("/{workId}", handlers.Work.GetSpecifiedWork)
-				r.Get("/{workId}/tsumikis", handlers.Work.GetWorkTsumiki)
+				r.Get("/{workID}", handlers.Work.GetSpecifiedWork)
+				r.Get("/{workID}/tsumikis", handlers.Work.GetWorkTsumiki)
 			})
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.RequireAuth)
 				r.Post("/", handlers.Work.CreateWork)
-				r.Put("/{workId}", handlers.Work.EditWork)
-				r.Delete("/{workId}", handlers.Work.DeleteWork)
+				r.Put("/{workID}", handlers.Work.EditWork)
+				r.Delete("/{workID}", handlers.Work.DeleteWork)
 			})
 		})
 	})

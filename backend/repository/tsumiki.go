@@ -30,7 +30,7 @@ const tsumikiSelectQuery = "SELECT t.id, t.title, t.thumbnail_url, t.visibility,
 	"FROM tsumikis t " +
 	"JOIN users u ON t.user_id = u.id " +
 	"LEFT JOIN works w ON t.work_id = w.id " +
-	"LEFT JOIN users wu ON w.user_id = wu.id"
+	"LEFT JOIN users wu ON w.owner_user_id = wu.id"
 
 func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 	var t schema.Tsumiki

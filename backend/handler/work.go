@@ -190,5 +190,5 @@ func (wh *workHandlerImpl) DeleteWork(w http.ResponseWriter, r *http.Request) {
 }
 
 func parseWorkID(r *http.Request) (int, error) {
-	return strconv.Atoi(chi.URLParam(r, "workId"))
+	return strconv.Atoi(chi.URLParam(r, "workID"))
 }
