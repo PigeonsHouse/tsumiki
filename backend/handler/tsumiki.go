@@ -52,23 +52,22 @@ func NewTsumikiHandler(repos *repository.Repositories, mediaSvc media.MediaServi
 	}
 }
 
-type blockRequest struct {
+type writeBlockRequest struct {
 	Message    *string `json:"message"`
 	Percentage int     `json:"percentage"`
 	Condition  int     `json:"condition"`
 	MediaIDs   []int   `json:"media_ids"`
 }
 
-type createTsumikiRequest struct {
-	Title      string       `json:"title"`
-	Visibility string       `json:"visibility"`
-	WorkID     *int         `json:"work_id"`
-	Block      blockRequest `json:"block"`
+type addBlockRequest struct {
+	writeBlockRequest
+	LatestBlockID *int `json:"latest_block_id"`
 }
 
-type createTsumikiResponse struct {
-	Tsumiki  *schema.Tsumiki      `json:"tsumiki"`
-	NewBlock *schema.TsumikiBlock `json:"new_block"`
+type createTsumikiRequest struct {
+	Title      string `json:"title"`
+	Visibility string `json:"visibility"`
+	WorkID     *int   `json:"work_id"`
 }
 
 type editTsumikiRequest struct {
@@ -166,23 +165,10 @@ func (th *tsumikiHandlerImpl) CreateTsumiki(w http.ResponseWriter, r *http.Reque
 	}
 
 	var tsumiki *schema.Tsumiki
-	var newBlock *schema.TsumikiBlock
 	err := th.repositories.RunInTx(func(txRepos *repository.Repositories) error {
 		var err error
 		tsumiki, err = txRepos.Tsumiki.CreateTsumiki(userID, req.Title, req.Visibility, req.WorkID)
-		if err != nil {
-			return err
-		}
-		newBlock, err = txRepos.TsumikiBlock.CreateBlock(tsumiki.ID, req.Block.Message, req.Block.Percentage, req.Block.Condition)
-		if err != nil {
-			return err
-		}
-		medias, err := txRepos.TsumikiBlockMedia.SetMediaRelation(newBlock.ID, req.Block.MediaIDs)
-		if err != nil {
-			return err
-		}
-		newBlock.Medias = medias
-		return nil
+		return err
 	})
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
@@ -190,10 +176,7 @@ func (th *tsumikiHandlerImpl) CreateTsumiki(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	helper.ResponseOk(w, createTsumikiResponse{
-		Tsumiki:  tsumiki,
-		NewBlock: newBlock,
-	})
+	helper.ResponseOk(w, tsumiki)
 }
 
 func (th *tsumikiHandlerImpl) EditTsumiki(w http.ResponseWriter, r *http.Request) {
@@ -407,7 +390,7 @@ func (th *tsumikiHandlerImpl) AddBlock(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseBadRequest(w, "積み木IDが不正です")
 		return
 	}
-	var req blockRequest
+	var req addBlockRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
@@ -427,6 +410,20 @@ func (th *tsumikiHandlerImpl) AddBlock(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseForbidden(w, "この積み木の作成者ではありません")
 		return
 	}
+
+	latestBlockID, err := th.repositories.TsumikiBlock.GetLatestBlockID(tsumikiID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+	neitherSet := latestBlockID == nil && req.LatestBlockID == nil
+	bothMatch := latestBlockID != nil && req.LatestBlockID != nil && *latestBlockID == *req.LatestBlockID
+	if !neitherSet && !bothMatch {
+		helper.ResponseConflict(w, "最新ブロックIDが一致しません")
+		return
+	}
+
 	// メディア操作までトランザクションを貼る
 	var block *schema.TsumikiBlock
 	err = th.repositories.RunInTx(func(txRepos *repository.Repositories) error {
@@ -466,7 +463,7 @@ func (th *tsumikiHandlerImpl) EditBlock(w http.ResponseWriter, r *http.Request) 
 		helper.ResponseBadRequest(w, "ブロックIDが不正です")
 		return
 	}
-	var req blockRequest
+	var req writeBlockRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return

@@ -44,6 +44,10 @@ func ResponseNotFound(w http.ResponseWriter, detail string) {
 	ResponseJSON(w, failureBody{Status: http.StatusNotFound, Detail: detail}, http.StatusNotFound)
 }
 
+func ResponseConflict(w http.ResponseWriter, detail string) {
+	ResponseJSON(w, failureBody{Status: http.StatusConflict, Detail: detail}, http.StatusConflict)
+}
+
 func ResponseInternalServerError(w http.ResponseWriter, detail string) {
 	ResponseJSON(w, failureBody{Status: http.StatusInternalServerError, Detail: detail}, http.StatusInternalServerError)
 }

@@ -7,6 +7,7 @@ import (
 
 type TsumikiBlockRepository interface {
 	IsBelongToTsumiki(tsumikiID int, blockID int) (bool, error)
+	GetLatestBlockID(tsumikiID int) (*int, error)
 	CreateBlock(tsumikiID int, message *string, percentage int, condition int) (*schema.TsumikiBlock, error)
 	UpdateBlock(blockID int, message *string, percentage int, condition int) (*schema.TsumikiBlock, error)
 	SoftDeleteBlock(blockID int) error
@@ -37,6 +38,10 @@ func (tbr *tsumikiBlockRepositoryImpl) fetchBlock(blockID int) (*schema.TsumikiB
 	return &b, nil
 }
 
+func (tbr *tsumikiBlockRepositoryImpl) GetLatestBlockID(tsumikiID int) (*int, error) {
+	return tbr.fetchTailBlockID(tsumikiID)
+}
+
 func (tbr *tsumikiBlockRepositoryImpl) IsBelongToTsumiki(tsumikiID int, blockID int) (bool, error) {
 	var count int
 	err := tbr.db.QueryRow(
@@ -49,7 +54,27 @@ func (tbr *tsumikiBlockRepositoryImpl) IsBelongToTsumiki(tsumikiID int, blockID 
 	return count > 0, nil
 }
 
+func (tbr *tsumikiBlockRepositoryImpl) fetchTailBlockID(tsumikiID int) (*int, error) {
+	var id int
+	err := tbr.db.QueryRow(
+		"SELECT id FROM tsumiki_blocks WHERE tsumiki_id = ? AND next_block_id IS NULL",
+		tsumikiID,
+	).Scan(&id)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &id, nil
+}
+
 func (tbr *tsumikiBlockRepositoryImpl) CreateBlock(tsumikiID int, message *string, percentage int, condition int) (*schema.TsumikiBlock, error) {
+	prevTailID, err := tbr.fetchTailBlockID(tsumikiID)
+	if err != nil {
+		return nil, err
+	}
+
 	result, err := tbr.db.Exec(
 		"INSERT INTO tsumiki_blocks (tsumiki_id, message, percentage, condition) VALUES (?, ?, ?, ?)",
 		tsumikiID, message, percentage, condition,
@@ -61,6 +86,17 @@ func (tbr *tsumikiBlockRepositoryImpl) CreateBlock(tsumikiID int, message *strin
 	if err != nil {
 		return nil, err
 	}
+
+	if prevTailID != nil {
+		_, err = tbr.db.Exec(
+			"UPDATE tsumiki_blocks SET next_block_id = ? WHERE id = ?",
+			id, *prevTailID,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return tbr.fetchBlock(int(id))
 }
 
