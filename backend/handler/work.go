@@ -114,14 +114,7 @@ func (wh *workHandlerImpl) CreateWork(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if req.ThumbnailID != nil {
-		thumbnail, err := wh.repositories.Thumbnail.Get(*req.ThumbnailID)
-		if err != nil {
-			fmt.Println("DBエラー: ", err)
-			helper.ResponseInternalServerError(w, "DBエラー")
-			return
-		}
-		if thumbnail == nil {
-			helper.ResponseBadRequest(w, "サムネイルが見つかりません")
+		if err := validateThumbnailAvailable(wh.repositories, *req.ThumbnailID, w); err != nil {
 			return
 		}
 	}
@@ -212,14 +205,7 @@ func (wh *workHandlerImpl) UpdateWorkThumbnail(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	thumbnail, err := wh.repositories.Thumbnail.Get(req.ThumbnailID)
-	if err != nil {
-		fmt.Println("DBエラー: ", err)
-		helper.ResponseInternalServerError(w, "DBエラー")
-		return
-	}
-	if thumbnail == nil {
-		helper.ResponseBadRequest(w, "サムネイルが見つかりません")
+	if err := validateThumbnailAvailable(wh.repositories, req.ThumbnailID, w); err != nil {
 		return
 	}
 

@@ -64,6 +64,30 @@ func (th *thumbnailHandlerImpl) PostThumbnail(w http.ResponseWriter, r *http.Req
 	helper.ResponseOk(w, thumbnail)
 }
 
+func validateThumbnailAvailable(repos *repository.Repositories, thumbnailID int, w http.ResponseWriter) error {
+	thumbnail, err := repos.Thumbnail.Get(thumbnailID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return err
+	}
+	if thumbnail == nil {
+		helper.ResponseBadRequest(w, "サムネイルが見つかりません")
+		return fmt.Errorf("not found")
+	}
+	inUse, err := repos.Thumbnail.IsInUse(thumbnailID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return err
+	}
+	if inUse {
+		helper.ResponseConflict(w, "このサムネイルは既に使用されています")
+		return fmt.Errorf("in use")
+	}
+	return nil
+}
+
 func parseThumbnailFile(r *http.Request) (data []byte, rawContentType, ext string, err error) {
 	file, header, formErr := r.FormFile("thumbnail")
 	if formErr != nil {

@@ -126,6 +126,7 @@ table "works" {
   }
   index "fk_works_thumbnail_upload_id" {
     columns = [column.thumbnail_upload_id]
+    unique  = true
   }
   foreign_key "fk_works_owner_user_id" {
     columns     = [column.owner_user_id]
@@ -188,6 +189,7 @@ table "tsumikis" {
   }
   index "fk_tsumikis_thumbnail_upload_id" {
     columns = [column.thumbnail_upload_id]
+    unique  = true
   }
   index "fk_tsumikis_work_id" {
     columns = [column.work_id]

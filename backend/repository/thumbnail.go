@@ -8,6 +8,7 @@ import (
 type ThumbnailRepository interface {
 	Create(userID int, path string) (*schema.ThumbnailUpload, error)
 	Get(thumbnailID int) (*schema.ThumbnailUpload, error)
+	IsInUse(thumbnailID int) (bool, error)
 }
 
 type thumbnailRepositoryImpl struct {
@@ -31,6 +32,21 @@ func (r *thumbnailRepositoryImpl) Create(userID int, path string) (*schema.Thumb
 		return nil, err
 	}
 	return r.Get(int(id))
+}
+
+func (r *thumbnailRepositoryImpl) IsInUse(thumbnailID int) (bool, error) {
+	var exists int
+	err := r.db.QueryRow(
+		"SELECT 1 FROM tsumikis WHERE thumbnail_upload_id = ? UNION SELECT 1 FROM works WHERE thumbnail_upload_id = ? LIMIT 1",
+		thumbnailID, thumbnailID,
+	).Scan(&exists)
+	if err == sql.ErrNoRows {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 func (r *thumbnailRepositoryImpl) Get(thumbnailID int) (*schema.ThumbnailUpload, error) {

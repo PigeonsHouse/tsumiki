@@ -197,18 +197,12 @@ func (th *tsumikiHandlerImpl) CreateTsumiki(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	thumbnail, err := th.repositories.Thumbnail.Get(req.ThumbnailID)
-	if err != nil {
-		fmt.Println("DBエラー: ", err)
-		helper.ResponseInternalServerError(w, "DBエラー")
-		return
-	}
-	if thumbnail == nil {
-		helper.ResponseBadRequest(w, "サムネイルが見つかりません")
+	if err := validateThumbnailAvailable(th.repositories, req.ThumbnailID, w); err != nil {
 		return
 	}
 
 	var tsumiki *schema.Tsumiki
+	var err error
 	err = th.repositories.RunInTx(func(txRepos *repository.Repositories) error {
 		var err error
 		tsumiki, err = txRepos.Tsumiki.CreateTsumiki(userID, req.Title, req.Visibility, req.WorkID, req.ThumbnailID)
@@ -258,14 +252,7 @@ func (th *tsumikiHandlerImpl) UpdateTsumikiThumbnail(w http.ResponseWriter, r *h
 		return
 	}
 
-	thumbnail, err := th.repositories.Thumbnail.Get(req.ThumbnailID)
-	if err != nil {
-		fmt.Println("DBエラー: ", err)
-		helper.ResponseInternalServerError(w, "DBエラー")
-		return
-	}
-	if thumbnail == nil {
-		helper.ResponseBadRequest(w, "サムネイルが見つかりません")
+	if err := validateThumbnailAvailable(th.repositories, req.ThumbnailID, w); err != nil {
 		return
 	}
 
