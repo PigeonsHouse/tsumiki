@@ -34,6 +34,7 @@ type TsumikiHandler interface {
 	GetBlocks(w http.ResponseWriter, r *http.Request)
 	CreateTsumiki(w http.ResponseWriter, r *http.Request)
 	EditTsumiki(w http.ResponseWriter, r *http.Request)
+	UpdateTsumikiThumbnail(w http.ResponseWriter, r *http.Request)
 	DeleteTsumiki(w http.ResponseWriter, r *http.Request)
 	PostMedia(w http.ResponseWriter, r *http.Request)
 	AddBlock(w http.ResponseWriter, r *http.Request)
@@ -66,9 +67,10 @@ type addBlockRequest struct {
 }
 
 type createTsumikiRequest struct {
-	Title      string `json:"title"`
-	Visibility string `json:"visibility"`
-	WorkID     *int   `json:"work_id"`
+	Title       string `json:"title"`
+	Visibility  string `json:"visibility"`
+	WorkID      *int   `json:"work_id"`
+	ThumbnailID int    `json:"thumbnail_id"`
 }
 
 type editTsumikiRequest struct {
@@ -195,10 +197,21 @@ func (th *tsumikiHandlerImpl) CreateTsumiki(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	thumbnail, err := th.repositories.Thumbnail.Get(req.ThumbnailID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+	if thumbnail == nil {
+		helper.ResponseBadRequest(w, "サムネイルが見つかりません")
+		return
+	}
+
 	var tsumiki *schema.Tsumiki
-	err := th.repositories.RunInTx(func(txRepos *repository.Repositories) error {
+	err = th.repositories.RunInTx(func(txRepos *repository.Repositories) error {
 		var err error
-		tsumiki, err = txRepos.Tsumiki.CreateTsumiki(userID, req.Title, req.Visibility, req.WorkID)
+		tsumiki, err = txRepos.Tsumiki.CreateTsumiki(userID, req.Title, req.Visibility, req.WorkID, req.ThumbnailID)
 		return err
 	})
 	if err != nil {
@@ -208,6 +221,61 @@ func (th *tsumikiHandlerImpl) CreateTsumiki(w http.ResponseWriter, r *http.Reque
 	}
 
 	helper.ResponseOk(w, tsumiki)
+}
+
+func (th *tsumikiHandlerImpl) UpdateTsumikiThumbnail(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		helper.ResponseUnauthorized(w, "認証情報が見つかりません")
+		return
+	}
+	tsumikiID, err := parseTsumikiID(r)
+	if err != nil {
+		helper.ResponseBadRequest(w, "積み木IDが不正です")
+		return
+	}
+
+	var req struct {
+		ThumbnailID int `json:"thumbnail_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		helper.ResponseBadRequest(w, "リクエストボディが不正です")
+		return
+	}
+
+	tsumiki, err := th.repositories.Tsumiki.GetTsumiki(&userID, tsumikiID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+	if tsumiki == nil {
+		helper.ResponseNotFound(w, "積み木が見つかりません")
+		return
+	}
+	if tsumiki.User.ID != userID {
+		helper.ResponseForbidden(w, "この積み木の作成者ではありません")
+		return
+	}
+
+	thumbnail, err := th.repositories.Thumbnail.Get(req.ThumbnailID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+	if thumbnail == nil {
+		helper.ResponseBadRequest(w, "サムネイルが見つかりません")
+		return
+	}
+
+	if err := th.repositories.Tsumiki.UpdateTsumikiThumbnail(tsumikiID, req.ThumbnailID); err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+
+	helper.ResponseOk(w, nil)
 }
 
 func (th *tsumikiHandlerImpl) EditTsumiki(w http.ResponseWriter, r *http.Request) {

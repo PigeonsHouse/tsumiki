@@ -2,15 +2,22 @@ package schema
 
 import "time"
 
+type ThumbnailUpload struct {
+	ID        int       `json:"id"`
+	Url       string    `json:"url"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type Tsumiki struct {
-	ID           int       `db:"id" json:"id"`
-	Title        string    `db:"title" json:"title"`
-	ThumbnailUrl *string   `db:"thumbnail_url" json:"thumbnail_url"`
-	Visibility   string    `db:"visibility" json:"visibility"`
-	User         User      `json:"user"`
-	Work         *Work     `json:"work"`
-	CreatedAt    time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt    time.Time `db:"updated_at" json:"updated_at"`
+	ID         int              `json:"id"`
+	Title      string           `json:"title"`
+	Thumbnail  *ThumbnailUpload `json:"thumbnail"`
+	Visibility string           `json:"visibility"`
+	User       User             `json:"user"`
+	Work       *Work            `json:"work"`
+	CreatedAt  time.Time        `json:"created_at"`
+	UpdatedAt  time.Time        `json:"updated_at"`
 }
 
 type TsumikiBlock struct {

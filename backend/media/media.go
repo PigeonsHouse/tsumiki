@@ -17,6 +17,7 @@ import (
 type MediaService interface {
 	UploadAvatar(ctx context.Context, userID int, r io.Reader, contentType string) (string, error)
 	UploadTsumikiMedia(ctx context.Context, tsumikiID int, r io.Reader, contentType string, ext string) (string, error)
+	UploadThumbnail(ctx context.Context, userID int, r io.Reader, contentType string, ext string) (string, error)
 	ResolveURL(path string) string
 }
 
@@ -97,6 +98,25 @@ func (ms *mediaServiceImpl) UploadTsumikiMedia(ctx context.Context, tsumikiID in
 		return "", fmt.Errorf("ファイルのアップロードに失敗しました: %w", err)
 	}
 
+	return fmt.Sprintf("%s/%s", ms.bucket, key), nil
+}
+
+func (ms *mediaServiceImpl) UploadThumbnail(ctx context.Context, userID int, r io.Reader, contentType string, ext string) (string, error) {
+	data, err := io.ReadAll(r)
+	if err != nil {
+		return "", fmt.Errorf("サムネイルの読み込みに失敗しました: %w", err)
+	}
+	hash := sha256.Sum256(data)
+	key := fmt.Sprintf("thumbnails/%d/%x%s", userID, hash, ext)
+	_, err = ms.s3Client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:      aws.String(ms.bucket),
+		Key:         aws.String(key),
+		Body:        bytes.NewReader(data),
+		ContentType: aws.String(contentType),
+	})
+	if err != nil {
+		return "", fmt.Errorf("サムネイルのアップロードに失敗しました: %w", err)
+	}
 	return fmt.Sprintf("%s/%s", ms.bucket, key), nil
 }
 

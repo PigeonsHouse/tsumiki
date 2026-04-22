@@ -15,6 +15,7 @@ type Repositories struct {
 	TsumikiBlock      TsumikiBlockRepository
 	TsumikiBlockMedia TsumikiBlockMediaRepository
 	Work              WorkRepository
+	Thumbnail         ThumbnailRepository
 }
 
 func NewRepositories(db *sql.DB) *Repositories {
@@ -25,6 +26,7 @@ func NewRepositories(db *sql.DB) *Repositories {
 		TsumikiBlock:      NewTsumikiBlockRepository(db),
 		TsumikiBlockMedia: NewTsumikiBlockMediaRepository(db),
 		Work:              NewWorkRepository(db),
+		Thumbnail:         NewThumbnailRepository(db),
 	}
 }
 
@@ -35,6 +37,7 @@ func (r *Repositories) withTx(tx *sql.Tx) *Repositories {
 		TsumikiBlock:      NewTsumikiBlockRepository(tx),
 		TsumikiBlockMedia: NewTsumikiBlockMediaRepository(tx),
 		Work:              NewWorkRepository(tx),
+		Thumbnail:         NewThumbnailRepository(tx),
 	}
 }
 

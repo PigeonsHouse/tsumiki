@@ -44,6 +44,46 @@ table "users" {
   }
 }
 
+table "thumbnails" {
+  schema = schema.tsumiki
+  column "id" {
+    type           = int
+    null           = false
+    auto_increment = true
+  }
+  column "user_id" {
+    type = int
+    null = false
+  }
+  column "path" {
+    type = varchar(255)
+    null = false
+  }
+  column "created_at" {
+    type    = timestamp
+    null    = true
+    default = sql("CURRENT_TIMESTAMP")
+  }
+  column "updated_at" {
+    type      = timestamp
+    null      = true
+    default   = sql("CURRENT_TIMESTAMP")
+    on_update = sql("CURRENT_TIMESTAMP")
+  }
+  primary_key {
+    columns = [column.id]
+  }
+  index "fk_thumbnails_user_id" {
+    columns = [column.user_id]
+  }
+  foreign_key "fk_thumbnails_user_id" {
+    columns     = [column.user_id]
+    ref_columns = [table.users.column.id]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+}
+
 table "works" {
   schema = schema.tsumiki
   column "id" {
@@ -59,8 +99,8 @@ table "works" {
     type = varchar(255)
     null = true
   }
-  column "thumbnail_url" {
-    type = varchar(255)
+  column "thumbnail_upload_id" {
+    type = int
     null = true
   }
   column "owner_user_id" {
@@ -84,9 +124,18 @@ table "works" {
   index "fk_works_owner_user_id" {
     columns = [column.owner_user_id]
   }
+  index "fk_works_thumbnail_upload_id" {
+    columns = [column.thumbnail_upload_id]
+  }
   foreign_key "fk_works_owner_user_id" {
     columns     = [column.owner_user_id]
     ref_columns = [table.users.column.id]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
+  }
+  foreign_key "fk_works_thumbnail_upload_id" {
+    columns     = [column.thumbnail_upload_id]
+    ref_columns = [table.thumbnails.column.id]
     on_delete   = NO_ACTION
     on_update   = NO_ACTION
   }
@@ -103,9 +152,9 @@ table "tsumikis" {
     type = varchar(255)
     null = false
   }
-  column "thumbnail_url" {
-    type = varchar(255)
-    null = false
+  column "thumbnail_upload_id" {
+    type = int
+    null = true
   }
   column "visibility" {
     type = enum("public", "limited")
@@ -137,11 +186,20 @@ table "tsumikis" {
   primary_key {
     columns = [column.id]
   }
+  index "fk_tsumikis_thumbnail_upload_id" {
+    columns = [column.thumbnail_upload_id]
+  }
   index "fk_tsumikis_work_id" {
     columns = [column.work_id]
   }
   index "fk_tsumikis_user_id" {
     columns = [column.user_id]
+  }
+  foreign_key "fk_tsumikis_thumbnail_upload_id" {
+    columns     = [column.thumbnail_upload_id]
+    ref_columns = [table.thumbnails.column.id]
+    on_delete   = NO_ACTION
+    on_update   = NO_ACTION
   }
   foreign_key "fk_tsumikis_work_id" {
     columns     = [column.work_id]

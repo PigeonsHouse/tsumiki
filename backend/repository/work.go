@@ -8,7 +8,8 @@ import (
 type WorkRepository interface {
 	GetWorks(pageSize, page int) ([]schema.Work, error)
 	GetWork(workID int) (*schema.Work, error)
-	CreateWork(userID int, title string, description string) (*schema.Work, error)
+	CreateWork(userID int, title string, description string, thumbnailID *int) (*schema.Work, error)
+	UpdateWorkThumbnail(workID int, thumbnailID int) error
 	UpdateWork(workID int, title string, description string) (*schema.Work, error)
 	DeleteWork(workID int) error
 }
@@ -21,23 +22,33 @@ func NewWorkRepository(db DBTX) WorkRepository {
 	return &workRepositoryImpl{db: db}
 }
 
-const workSelectQuery = "SELECT w.id, w.title, w.description, w.thumbnail_url, w.created_at, w.updated_at, " +
-	"u.id, u.discord_user_id, u.name, u.avatar_url, u.created_at, u.updated_at " +
+const workSelectQuery = "SELECT w.id, w.title, w.description, w.created_at, w.updated_at, " +
+	"u.id, u.discord_user_id, u.name, u.avatar_url, u.created_at, u.updated_at, " +
+	"th.id, th.path, th.created_at, th.updated_at " +
 	"FROM works w " +
-	"JOIN users u ON w.owner_user_id = u.id"
+	"JOIN users u ON w.owner_user_id = u.id " +
+	"LEFT JOIN thumbnails th ON w.thumbnail_upload_id = th.id"
 
 func scanWork(scan func(...any) error) (*schema.Work, error) {
 	var w schema.Work
-	var thumbUrl sql.NullString
+	var thID sql.NullInt64
+	var thPath sql.NullString
+	var thCreatedAt, thUpdatedAt sql.NullTime
 	err := scan(
-		&w.ID, &w.Title, &w.Description, &thumbUrl, &w.CreatedAt, &w.UpdatedAt,
+		&w.ID, &w.Title, &w.Description, &w.CreatedAt, &w.UpdatedAt,
 		&w.Owner.ID, &w.Owner.DiscordUserID, &w.Owner.Name, &w.Owner.AvatarUrl, &w.Owner.CreatedAt, &w.Owner.UpdatedAt,
+		&thID, &thPath, &thCreatedAt, &thUpdatedAt,
 	)
 	if err != nil {
 		return nil, err
 	}
-	if thumbUrl.Valid {
-		w.ThumbnailUrl = &thumbUrl.String
+	if thID.Valid {
+		w.Thumbnail = &schema.ThumbnailUpload{
+			ID:        int(thID.Int64),
+			Url:       thPath.String,
+			CreatedAt: thCreatedAt.Time,
+			UpdatedAt: thUpdatedAt.Time,
+		}
 	}
 	return &w, nil
 }
@@ -76,10 +87,10 @@ func (wr *workRepositoryImpl) GetWorkTsumikis(workID int, pageSize, page int) ([
 	return nil, nil
 }
 
-func (wr *workRepositoryImpl) CreateWork(userID int, title string, description string) (*schema.Work, error) {
+func (wr *workRepositoryImpl) CreateWork(userID int, title string, description string, thumbnailID *int) (*schema.Work, error) {
 	result, err := wr.db.Exec(
-		"INSERT INTO works (owner_user_id, title, description) VALUES (?, ?, ?)",
-		userID, title, description,
+		"INSERT INTO works (owner_user_id, title, description, thumbnail_upload_id) VALUES (?, ?, ?, ?)",
+		userID, title, description, thumbnailID,
 	)
 	if err != nil {
 		return nil, err
@@ -89,6 +100,14 @@ func (wr *workRepositoryImpl) CreateWork(userID int, title string, description s
 		return nil, err
 	}
 	return wr.GetWork(int(id))
+}
+
+func (wr *workRepositoryImpl) UpdateWorkThumbnail(workID int, thumbnailID int) error {
+	_, err := wr.db.Exec(
+		"UPDATE works SET thumbnail_upload_id = ? WHERE id = ?",
+		thumbnailID, workID,
+	)
+	return err
 }
 
 func (wr *workRepositoryImpl) UpdateWork(workID int, title string, description string) (*schema.Work, error) {

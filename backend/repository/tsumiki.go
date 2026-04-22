@@ -9,7 +9,8 @@ type TsumikiRepository interface {
 	GetTsumiki(watchUserID *int, tsumikiID int) (*schema.Tsumiki, error)
 	GetTsumikiBlocks(tsumikiID int, pageSize, page int) ([]schema.TsumikiBlockView, error)
 	GetTsumikis(watchUserID *int, pageSize, page int, authorID *int, workID *int, keyword string) ([]schema.Tsumiki, error)
-	CreateTsumiki(userID int, title string, visibility string, workID *int) (*schema.Tsumiki, error)
+	CreateTsumiki(userID int, title string, visibility string, workID *int, thumbnailID int) (*schema.Tsumiki, error)
+	UpdateTsumikiThumbnail(tsumikiID int, thumbnailID int) error
 	UpdateTsumiki(tsumikiID int, title string, visibility string, workID *int) (*schema.Tsumiki, error)
 	DeleteTsumiki(tsumikiID int) error
 	CreateMedia(tsumikiID int, mediaType string, url string) (*schema.TsumikiBlockMedia, error)
@@ -23,38 +24,53 @@ func NewTsumikiRepository(db DBTX) TsumikiRepository {
 	return &tsumikiRepositoryImpl{db: db}
 }
 
-const tsumikiSelectQuery = "SELECT t.id, t.title, t.thumbnail_url, t.visibility, t.created_at, t.updated_at, " +
+const tsumikiSelectQuery = "SELECT t.id, t.title, t.visibility, t.created_at, t.updated_at, " +
 	"u.id, u.discord_user_id, u.name, u.avatar_url, u.created_at, u.updated_at, " +
-	"w.id, w.title, w.description, w.thumbnail_url, w.created_at, w.updated_at, " +
-	"wu.id, wu.discord_user_id, wu.name, wu.avatar_url, wu.created_at, wu.updated_at " +
+	"w.id, w.title, w.description, w.created_at, w.updated_at, " +
+	"wu.id, wu.discord_user_id, wu.name, wu.avatar_url, wu.created_at, wu.updated_at, " +
+	"wth.id, wth.path, wth.created_at, wth.updated_at, " +
+	"tth.id, tth.path, tth.created_at, tth.updated_at " +
 	"FROM tsumikis t " +
 	"JOIN users u ON t.user_id = u.id " +
 	"LEFT JOIN works w ON t.work_id = w.id " +
-	"LEFT JOIN users wu ON w.owner_user_id = wu.id"
+	"LEFT JOIN users wu ON w.owner_user_id = wu.id " +
+	"LEFT JOIN thumbnails wth ON w.thumbnail_upload_id = wth.id " +
+	"LEFT JOIN thumbnails tth ON t.thumbnail_upload_id = tth.id"
 
 func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 	var t schema.Tsumiki
-	var thumbUrl sql.NullString
 	var workID sql.NullInt64
 	var workTitle, workDesc sql.NullString
-	var workThumbUrl sql.NullString
 	var workCreatedAt, workUpdatedAt sql.NullTime
 	var ownerID sql.NullInt64
 	var ownerDiscordID, ownerName, ownerAvatarUrl sql.NullString
 	var ownerCreatedAt, ownerUpdatedAt sql.NullTime
+	var wthID sql.NullInt64
+	var wthPath sql.NullString
+	var wthCreatedAt, wthUpdatedAt sql.NullTime
+	var tthID sql.NullInt64
+	var tthPath sql.NullString
+	var tthCreatedAt, tthUpdatedAt sql.NullTime
 
 	err := scan(
-		&t.ID, &t.Title, &thumbUrl, &t.Visibility, &t.CreatedAt, &t.UpdatedAt,
+		&t.ID, &t.Title, &t.Visibility, &t.CreatedAt, &t.UpdatedAt,
 		&t.User.ID, &t.User.DiscordUserID, &t.User.Name, &t.User.AvatarUrl, &t.User.CreatedAt, &t.User.UpdatedAt,
-		&workID, &workTitle, &workDesc, &workThumbUrl, &workCreatedAt, &workUpdatedAt,
+		&workID, &workTitle, &workDesc, &workCreatedAt, &workUpdatedAt,
 		&ownerID, &ownerDiscordID, &ownerName, &ownerAvatarUrl, &ownerCreatedAt, &ownerUpdatedAt,
+		&wthID, &wthPath, &wthCreatedAt, &wthUpdatedAt,
+		&tthID, &tthPath, &tthCreatedAt, &tthUpdatedAt,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	if thumbUrl.Valid {
-		t.ThumbnailUrl = &thumbUrl.String
+	if tthID.Valid {
+		t.Thumbnail = &schema.ThumbnailUpload{
+			ID:        int(tthID.Int64),
+			Url:       tthPath.String,
+			CreatedAt: tthCreatedAt.Time,
+			UpdatedAt: tthUpdatedAt.Time,
+		}
 	}
 
 	if workID.Valid {
@@ -65,8 +81,13 @@ func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 			CreatedAt:   workCreatedAt.Time,
 			UpdatedAt:   workUpdatedAt.Time,
 		}
-		if workThumbUrl.Valid {
-			w.ThumbnailUrl = &workThumbUrl.String
+		if wthID.Valid {
+			w.Thumbnail = &schema.ThumbnailUpload{
+				ID:        int(wthID.Int64),
+				Url:       wthPath.String,
+				CreatedAt: wthCreatedAt.Time,
+				UpdatedAt: wthUpdatedAt.Time,
+			}
 		}
 		if ownerID.Valid {
 			w.Owner = schema.User{
@@ -236,10 +257,10 @@ func (tr *tsumikiRepositoryImpl) GetTsumikis(watchUserID *int, pageSize, page in
 	return tsumikis, rows.Err()
 }
 
-func (tr *tsumikiRepositoryImpl) CreateTsumiki(userID int, title string, visibility string, workID *int) (*schema.Tsumiki, error) {
+func (tr *tsumikiRepositoryImpl) CreateTsumiki(userID int, title string, visibility string, workID *int, thumbnailID int) (*schema.Tsumiki, error) {
 	result, err := tr.db.Exec(
-		"INSERT INTO tsumikis (user_id, title, visibility, work_id) VALUES (?, ?, ?, ?)",
-		userID, title, visibility, workID,
+		"INSERT INTO tsumikis (user_id, title, visibility, work_id, thumbnail_upload_id) VALUES (?, ?, ?, ?, ?)",
+		userID, title, visibility, workID, thumbnailID,
 	)
 	if err != nil {
 		return nil, err
@@ -249,6 +270,14 @@ func (tr *tsumikiRepositoryImpl) CreateTsumiki(userID int, title string, visibil
 		return nil, err
 	}
 	return tr.fetchTsumikiByID(int(id))
+}
+
+func (tr *tsumikiRepositoryImpl) UpdateTsumikiThumbnail(tsumikiID int, thumbnailID int) error {
+	_, err := tr.db.Exec(
+		"UPDATE tsumikis SET thumbnail_upload_id = ? WHERE id = ?",
+		thumbnailID, tsumikiID,
+	)
+	return err
 }
 
 func (tr *tsumikiRepositoryImpl) UpdateTsumiki(tsumikiID int, title string, visibility string, workID *int) (*schema.Tsumiki, error) {

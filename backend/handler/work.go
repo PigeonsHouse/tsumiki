@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"tsumiki/helper"
+	"tsumiki/media"
 	"tsumiki/middleware"
 	"tsumiki/repository"
 
@@ -18,20 +19,29 @@ type WorkHandler interface {
 	GetWorkTsumiki(w http.ResponseWriter, r *http.Request)
 	CreateWork(w http.ResponseWriter, r *http.Request)
 	EditWork(w http.ResponseWriter, r *http.Request)
+	UpdateWorkThumbnail(w http.ResponseWriter, r *http.Request)
 	DeleteWork(w http.ResponseWriter, r *http.Request)
 }
 
 type workHandlerImpl struct {
 	repositories *repository.Repositories
+	media        media.MediaService
 }
 
-func NewWorkHandler(repos *repository.Repositories) WorkHandler {
+func NewWorkHandler(repos *repository.Repositories, mediaSvc media.MediaService) WorkHandler {
 	return &workHandlerImpl{
 		repositories: repos,
+		media:        mediaSvc,
 	}
 }
 
-type workRequest struct {
+type createWorkRequest struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	ThumbnailID *int   `json:"thumbnail_id"`
+}
+
+type editWorkRequest struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 }
@@ -97,13 +107,26 @@ func (wh *workHandlerImpl) CreateWork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req workRequest
+	var req createWorkRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
 	}
 
-	work, err := wh.repositories.Work.CreateWork(userID, req.Title, req.Description)
+	if req.ThumbnailID != nil {
+		thumbnail, err := wh.repositories.Thumbnail.Get(*req.ThumbnailID)
+		if err != nil {
+			fmt.Println("DBエラー: ", err)
+			helper.ResponseInternalServerError(w, "DBエラー")
+			return
+		}
+		if thumbnail == nil {
+			helper.ResponseBadRequest(w, "サムネイルが見つかりません")
+			return
+		}
+	}
+
+	work, err := wh.repositories.Work.CreateWork(userID, req.Title, req.Description, req.ThumbnailID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -124,7 +147,7 @@ func (wh *workHandlerImpl) EditWork(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseBadRequest(w, "作品IDが不正です")
 		return
 	}
-	var req workRequest
+	var req editWorkRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
@@ -152,6 +175,61 @@ func (wh *workHandlerImpl) EditWork(w http.ResponseWriter, r *http.Request) {
 	}
 
 	helper.ResponseOk(w, updatedWork)
+}
+
+func (wh *workHandlerImpl) UpdateWorkThumbnail(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		helper.ResponseUnauthorized(w, "認証情報が見つかりません")
+		return
+	}
+	workID, err := parseWorkID(r)
+	if err != nil {
+		helper.ResponseBadRequest(w, "作品IDが不正です")
+		return
+	}
+
+	var req struct {
+		ThumbnailID int `json:"thumbnail_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		helper.ResponseBadRequest(w, "リクエストボディが不正です")
+		return
+	}
+
+	work, err := wh.repositories.Work.GetWork(workID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+	if work == nil {
+		helper.ResponseNotFound(w, "作品が見つかりません")
+		return
+	}
+	if work.Owner.ID != userID {
+		helper.ResponseForbidden(w, "この作品の作成者ではありません")
+		return
+	}
+
+	thumbnail, err := wh.repositories.Thumbnail.Get(req.ThumbnailID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+	if thumbnail == nil {
+		helper.ResponseBadRequest(w, "サムネイルが見つかりません")
+		return
+	}
+
+	if err := wh.repositories.Work.UpdateWorkThumbnail(workID, req.ThumbnailID); err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+
+	helper.ResponseOk(w, nil)
 }
 
 func (wh *workHandlerImpl) DeleteWork(w http.ResponseWriter, r *http.Request) {
