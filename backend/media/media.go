@@ -76,7 +76,7 @@ func (ms *mediaServiceImpl) UploadAvatar(ctx context.Context, userID int, r io.R
 		return "", fmt.Errorf("アバター画像のアップロードに失敗しました: %w", err)
 	}
 
-	return fmt.Sprintf("%s/%s", ms.bucket, key), nil
+	return key, nil
 }
 
 func (ms *mediaServiceImpl) UploadTsumikiMedia(ctx context.Context, tsumikiID int, r io.Reader, contentType string, ext string) (string, error) {
@@ -98,7 +98,7 @@ func (ms *mediaServiceImpl) UploadTsumikiMedia(ctx context.Context, tsumikiID in
 		return "", fmt.Errorf("ファイルのアップロードに失敗しました: %w", err)
 	}
 
-	return fmt.Sprintf("%s/%s", ms.bucket, key), nil
+	return key, nil
 }
 
 func (ms *mediaServiceImpl) UploadThumbnail(ctx context.Context, userID int, r io.Reader, contentType string, ext string) (string, error) {
@@ -117,9 +117,9 @@ func (ms *mediaServiceImpl) UploadThumbnail(ctx context.Context, userID int, r i
 	if err != nil {
 		return "", fmt.Errorf("サムネイルのアップロードに失敗しました: %w", err)
 	}
-	return fmt.Sprintf("%s/%s", ms.bucket, key), nil
+	return key, nil
 }
 
 func (ms *mediaServiceImpl) ResolveURL(path string) string {
-	return fmt.Sprintf("%s/%s", ms.publicURL, path)
+	return fmt.Sprintf("%s/%s/%s", ms.publicURL, ms.bucket, path)
 }

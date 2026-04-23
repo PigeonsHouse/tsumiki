@@ -60,6 +60,9 @@ func (wh *workHandlerImpl) GetWorks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	for i := range works {
+		helper.ResolveWorkURLs(&works[i], wh.media)
+	}
 	helper.ResponseOk(w, works)
 }
 
@@ -85,6 +88,7 @@ func (wh *workHandlerImpl) GetSpecifiedWork(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	helper.ResolveWorkURLs(work, wh.media)
 	helper.ResponseOk(w, work)
 }
 
@@ -118,6 +122,9 @@ func (wh *workHandlerImpl) GetWorkTsumiki(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	for i := range tsumikis {
+		helper.ResolveTsumikiURLs(&tsumikis[i], wh.media)
+	}
 	helper.ResponseOk(w, tsumikis)
 }
 
@@ -177,6 +184,7 @@ func (wh *workHandlerImpl) CreateWork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	helper.ResolveWorkURLs(work, wh.media)
 	helper.ResponseOk(w, work)
 }
 
@@ -226,6 +234,7 @@ func (wh *workHandlerImpl) EditWork(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	helper.ResolveWorkURLs(updatedWork, wh.media)
 	helper.ResponseOk(w, updatedWork)
 }
 

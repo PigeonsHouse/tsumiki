@@ -99,6 +99,9 @@ func (th *tsumikiHandlerImpl) GetMyTsumikis(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	for i := range tsumikis {
+		helper.ResolveTsumikiURLs(&tsumikis[i], th.media)
+	}
 	helper.ResponseOk(w, tsumikis)
 }
 
@@ -120,6 +123,9 @@ func (th *tsumikiHandlerImpl) GetUserTsumikis(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	for i := range tsumikis {
+		helper.ResolveTsumikiURLs(&tsumikis[i], th.media)
+	}
 	helper.ResponseOk(w, tsumikis)
 }
 
@@ -134,6 +140,9 @@ func (th *tsumikiHandlerImpl) GetTsumikis(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	for i := range tsumikis {
+		helper.ResolveTsumikiURLs(&tsumikis[i], th.media)
+	}
 	helper.ResponseOk(w, tsumikis)
 }
 
@@ -156,6 +165,7 @@ func (th *tsumikiHandlerImpl) GetSpecifiedTsumiki(w http.ResponseWriter, r *http
 		return
 	}
 
+	helper.ResolveTsumikiURLs(tsumiki, th.media)
 	helper.ResponseOk(w, tsumiki)
 }
 
@@ -186,6 +196,7 @@ func (th *tsumikiHandlerImpl) GetBlocks(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	helper.ResolveBlockViewsURLs(blocks, th.media)
 	helper.ResponseOk(w, blocks)
 }
 
@@ -223,6 +234,7 @@ func (th *tsumikiHandlerImpl) CreateTsumiki(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	helper.ResolveTsumikiURLs(tsumiki, th.media)
 	helper.ResponseOk(w, tsumiki)
 }
 
@@ -317,6 +329,7 @@ func (th *tsumikiHandlerImpl) EditTsumiki(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	helper.ResolveTsumikiURLs(updatedTsumiki, th.media)
 	helper.ResponseOk(w, updatedTsumiki)
 }
 
