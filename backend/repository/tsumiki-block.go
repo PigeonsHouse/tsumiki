@@ -24,7 +24,7 @@ func NewTsumikiBlockRepository(db DBTX) TsumikiBlockRepository {
 func (tbr *tsumikiBlockRepositoryImpl) fetchBlock(blockID int) (*schema.TsumikiBlock, error) {
 	var b schema.TsumikiBlock
 	err := tbr.db.QueryRow(
-		"SELECT id, message, percentage, condition, next_block_id, tsumiki_id, created_at, updated_at "+
+		"SELECT id, message, percentage, `condition`, next_block_id, tsumiki_id, created_at, updated_at "+
 			"FROM tsumiki_blocks WHERE id = ? AND deleted_at IS NULL",
 		blockID,
 	).Scan(&b.ID, &b.Message, &b.Percentage, &b.Condition, &b.NextBlockId, &b.TsumikiId, &b.CreatedAt, &b.UpdatedAt)
@@ -76,7 +76,7 @@ func (tbr *tsumikiBlockRepositoryImpl) CreateBlock(tsumikiID int, message *strin
 	}
 
 	result, err := tbr.db.Exec(
-		"INSERT INTO tsumiki_blocks (tsumiki_id, message, percentage, condition) VALUES (?, ?, ?, ?)",
+		"INSERT INTO tsumiki_blocks (tsumiki_id, message, percentage, `condition`) VALUES (?, ?, ?, ?)",
 		tsumikiID, message, percentage, condition,
 	)
 	if err != nil {
@@ -102,7 +102,7 @@ func (tbr *tsumikiBlockRepositoryImpl) CreateBlock(tsumikiID int, message *strin
 
 func (tbr *tsumikiBlockRepositoryImpl) UpdateBlock(blockID int, message *string, percentage int, condition int) (*schema.TsumikiBlock, error) {
 	_, err := tbr.db.Exec(
-		"UPDATE tsumiki_blocks SET message = ?, percentage = ?, condition = ? WHERE id = ? AND deleted_at IS NULL",
+		"UPDATE tsumiki_blocks SET message = ?, percentage = ?, `condition` = ? WHERE id = ? AND deleted_at IS NULL",
 		message, percentage, condition, blockID,
 	)
 	if err != nil {

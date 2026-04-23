@@ -140,7 +140,7 @@ func (tr *tsumikiRepositoryImpl) GetTsumiki(watchUserID *int, tsumikiID int) (*s
 func (tr *tsumikiRepositoryImpl) GetTsumikiBlocks(tsumikiID int, pageSize, page int) ([]schema.TsumikiBlockView, error) {
 	// deleted_at IS NULL の条件をJOIN側に置くことで、削除済みブロックのメディアは取得しない
 	rows, err := tr.db.Query(
-		"SELECT b.id, b.deleted_at, b.message, b.percentage, b.condition, b.created_at, b.updated_at, "+
+		"SELECT b.id, b.deleted_at, b.message, b.percentage, b.`condition`, b.created_at, b.updated_at, "+
 			"m.id, m.type, m.url, m.`order`, m.created_at, m.updated_at "+
 			"FROM tsumiki_blocks b "+
 			"LEFT JOIN tsumiki_block_medias m ON b.id = m.tsumiki_block_id AND b.deleted_at IS NULL "+
