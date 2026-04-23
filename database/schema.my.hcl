@@ -96,7 +96,7 @@ table "works" {
     null = false
   }
   column "description" {
-    type = varchar(255)
+    type = varchar(4095)
     null = true
   }
   column "thumbnail_id" {

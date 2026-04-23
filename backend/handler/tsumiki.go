@@ -24,6 +24,11 @@ import (
 const (
 	mediaMaxBytes5MB   int64 = 5 << 20
 	mediaMaxBytes100MB int64 = 100 << 20
+
+	maxTitleLength        = 200
+	maxDescriptionLength  = 4000
+	maxBlockMessageLength = 200
+	maxBlockMediaCount    = 4
 )
 
 type TsumikiHandler interface {
@@ -196,6 +201,10 @@ func (th *tsumikiHandlerImpl) CreateTsumiki(w http.ResponseWriter, r *http.Reque
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
 	}
+	if len(req.Title) > maxTitleLength {
+		helper.ResponseBadRequest(w, "タイトルは200文字以内にしてください")
+		return
+	}
 
 	if err := validateThumbnailAvailable(th.repositories, req.ThumbnailID, w); err != nil {
 		return
@@ -279,6 +288,10 @@ func (th *tsumikiHandlerImpl) EditTsumiki(w http.ResponseWriter, r *http.Request
 	var req editTsumikiRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
+		return
+	}
+	if len(req.Title) > maxTitleLength {
+		helper.ResponseBadRequest(w, "タイトルは200文字以内にしてください")
 		return
 	}
 
@@ -481,6 +494,14 @@ func (th *tsumikiHandlerImpl) AddBlock(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
 	}
+	if req.Message != nil && len(*req.Message) > maxBlockMessageLength {
+		helper.ResponseBadRequest(w, "メッセージは200文字以内にしてください")
+		return
+	}
+	if len(req.MediaIDs) > maxBlockMediaCount {
+		helper.ResponseBadRequest(w, "メディアは4つまで設定できます")
+		return
+	}
 
 	tsumiki, err := th.repositories.Tsumiki.GetTsumiki(&userID, tsumikiID)
 	if err != nil {
@@ -552,6 +573,14 @@ func (th *tsumikiHandlerImpl) EditBlock(w http.ResponseWriter, r *http.Request) 
 	var req writeBlockRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
+		return
+	}
+	if req.Message != nil && len(*req.Message) > maxBlockMessageLength {
+		helper.ResponseBadRequest(w, "メッセージは200文字以内にしてください")
+		return
+	}
+	if len(req.MediaIDs) > maxBlockMediaCount {
+		helper.ResponseBadRequest(w, "メディアは4つまで設定できます")
 		return
 	}
 

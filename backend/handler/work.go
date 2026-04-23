@@ -112,6 +112,14 @@ func (wh *workHandlerImpl) CreateWork(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
 	}
+	if len(req.Title) > maxTitleLength {
+		helper.ResponseBadRequest(w, "タイトルは200文字以内にしてください")
+		return
+	}
+	if len(req.Description) > maxDescriptionLength {
+		helper.ResponseBadRequest(w, "説明は4000文字以内にしてください")
+		return
+	}
 
 	if req.ThumbnailID != nil {
 		if err := validateThumbnailAvailable(wh.repositories, *req.ThumbnailID, w); err != nil {
@@ -143,6 +151,14 @@ func (wh *workHandlerImpl) EditWork(w http.ResponseWriter, r *http.Request) {
 	var req editWorkRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
+		return
+	}
+	if len(req.Title) > maxTitleLength {
+		helper.ResponseBadRequest(w, "タイトルは200文字以内にしてください")
+		return
+	}
+	if len(req.Description) > maxDescriptionLength {
+		helper.ResponseBadRequest(w, "説明は4000文字以内にしてください")
 		return
 	}
 

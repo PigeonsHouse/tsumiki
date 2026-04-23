@@ -29,7 +29,7 @@ Table thumbnails {
 
 Table tsumikis {
     id int [pk, increment]
-    title varchar [not null]
+    title varchar(255) [not null]
     thumbnail_id int [unique, ref: > thumbnails.id, note: 'アプリ側でnot nullを担保']
     visibility visibility [not null]
     miruko_watching_duration int [note: '単位は秒']
@@ -41,7 +41,7 @@ Table tsumikis {
 
 Table tsumiki_blocks {
     id int [pk, increment]
-    message varchar [note: 'メッセージかメディアはいずれか必須(ロジックで担保)']
+    message varchar(255) [note: 'メッセージかメディアはいずれか必須(ロジックで担保)']
     percentage int [not null]
     condition int [not null, note: '1~5の値を取る(ロジックで担保)']
     next_block_id int [unique, ref: - tsumiki_blocks.id]
@@ -70,8 +70,8 @@ Table tsumiki_block_medias {
 
 Table works {
     id int [pk, increment]
-    title varchar [not null]
-    description varchar
+    title varchar(255) [not null]
+    description varchar(4095)
     thumbnail_id int [unique, ref: > thumbnails.id]
     owner_user_id int [ref: > users.id, not null]
     created_at timestamp [default: `now()`]
