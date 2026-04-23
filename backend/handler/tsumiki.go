@@ -515,6 +515,18 @@ func (th *tsumikiHandlerImpl) AddBlock(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseBadRequest(w, "メディアは4つまで設定できます")
 		return
 	}
+	if len(req.MediaIDs) == 0 && (req.Message == nil || len(*req.Message) == 0) {
+		helper.ResponseBadRequest(w, "メッセージかメディアのいずれかは設定してください")
+		return
+	}
+	if req.Condition < 1 || 5 < req.Condition {
+		helper.ResponseBadRequest(w, "コンディションは1~5の間で指定してください")
+		return
+	}
+	if req.Percentage < 0 || 100 < req.Percentage {
+		helper.ResponseBadRequest(w, "パーセンテージは0~100の間で指定してください")
+		return
+	}
 
 	tsumiki, err := th.repositories.Tsumiki.GetTsumiki(&userID, tsumikiID)
 	if err != nil {
@@ -594,6 +606,18 @@ func (th *tsumikiHandlerImpl) EditBlock(w http.ResponseWriter, r *http.Request) 
 	}
 	if len(req.MediaIDs) > maxBlockMediaCount {
 		helper.ResponseBadRequest(w, "メディアは4つまで設定できます")
+		return
+	}
+	if len(req.MediaIDs) == 0 && (req.Message == nil || len(*req.Message) == 0) {
+		helper.ResponseBadRequest(w, "メッセージかメディアのいずれかは設定してください")
+		return
+	}
+	if req.Condition < 1 || 5 < req.Condition {
+		helper.ResponseBadRequest(w, "コンディションは1~5の間で指定してください")
+		return
+	}
+	if req.Percentage < 0 || 100 < req.Percentage {
+		helper.ResponseBadRequest(w, "パーセンテージは0~100の間で指定してください")
 		return
 	}
 
