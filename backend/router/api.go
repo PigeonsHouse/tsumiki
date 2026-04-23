@@ -39,7 +39,6 @@ func SetApiRouter(mux *chi.Mux, handlers *handler.Handlers) {
 				r.Use(middleware.OptionalAuth)
 				r.Get("/", handlers.Tsumiki.GetTsumikis)
 				r.Get("/{tsumikiID}", handlers.Tsumiki.GetSpecifiedTsumiki)
-				r.Get("/{tsumikiID}/blocks", handlers.Tsumiki.GetBlocks)
 			})
 			r.Group(func(r chi.Router) {
 				r.Use(middleware.RequireAuth)
@@ -48,7 +47,11 @@ func SetApiRouter(mux *chi.Mux, handlers *handler.Handlers) {
 				r.Put("/{tsumikiID}/thumbnail", handlers.Tsumiki.UpdateTsumikiThumbnail)
 				r.Delete("/{tsumikiID}", handlers.Tsumiki.DeleteTsumiki)
 				r.Post("/{tsumikiID}/medias", handlers.Tsumiki.PostMedia)
-				r.Route("/{tsumikiID}/blocks", func(r chi.Router) {
+			})
+			r.Route("/{tsumikiID}/blocks", func(r chi.Router) {
+				r.With(middleware.OptionalAuth).Get("/", handlers.Tsumiki.GetBlocks)
+				r.Group(func(r chi.Router) {
+					r.Use(middleware.RequireAuth)
 					r.Post("/", handlers.Tsumiki.AddBlock)
 					r.Put("/{blockID}", handlers.Tsumiki.EditBlock)
 					r.Delete("/{blockID}", handlers.Tsumiki.OmitBlock)
