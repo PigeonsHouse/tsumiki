@@ -210,7 +210,7 @@ table "tsumikis" {
   foreign_key "fk_tsumikis_work_id" {
     columns     = [column.work_id]
     ref_columns = [table.works.column.id]
-    on_delete   = NO_ACTION
+    on_delete   = SET_NULL
     on_update   = NO_ACTION
   }
   foreign_key "fk_tsumikis_user_id" {
@@ -276,13 +276,13 @@ table "tsumiki_blocks" {
   foreign_key "fk_tsumiki_blocks_next_block_id" {
     columns     = [column.next_block_id]
     ref_columns = [table.tsumiki_blocks.column.id]
-    on_delete   = NO_ACTION
+    on_delete   = SET_NULL
     on_update   = NO_ACTION
   }
   foreign_key "fk_tsumiki_blocks_tsumiki_id" {
     columns     = [column.tsumiki_id]
     ref_columns = [table.tsumikis.column.id]
-    on_delete   = NO_ACTION
+    on_delete   = CASCADE
     on_update   = NO_ACTION
   }
 }
@@ -331,7 +331,7 @@ table "tsumiki_block_medias" {
   foreign_key "fk_tsumiki_block_medias_tsumiki_block_id" {
     columns     = [column.tsumiki_block_id]
     ref_columns = [table.tsumiki_blocks.column.id]
-    on_delete   = NO_ACTION
+    on_delete   = SET_NULL
     on_update   = NO_ACTION
   }
 }
