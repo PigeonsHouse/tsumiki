@@ -26,7 +26,7 @@ func NewTsumikiRepository(db DBTX) TsumikiRepository {
 
 const tsumikiSelectQuery = "SELECT t.id, t.title, t.visibility, t.created_at, t.updated_at, " +
 	"u.id, u.discord_user_id, u.name, u.avatar_url, u.created_at, u.updated_at, " +
-	"w.id, w.title, w.description, w.created_at, w.updated_at, " +
+	"w.id, w.title, w.description, w.visibility, w.created_at, w.updated_at, " +
 	"wu.id, wu.discord_user_id, wu.name, wu.avatar_url, wu.created_at, wu.updated_at, " +
 	"wth.id, wth.path, wth.created_at, wth.updated_at, " +
 	"tth.id, tth.path, tth.created_at, tth.updated_at " +
@@ -40,7 +40,7 @@ const tsumikiSelectQuery = "SELECT t.id, t.title, t.visibility, t.created_at, t.
 func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 	var t schema.Tsumiki
 	var workID sql.NullInt64
-	var workTitle, workDesc sql.NullString
+	var workTitle, workDesc, workVisibility sql.NullString
 	var workCreatedAt, workUpdatedAt sql.NullTime
 	var ownerID sql.NullInt64
 	var ownerDiscordID, ownerName, ownerAvatarUrl sql.NullString
@@ -55,7 +55,7 @@ func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 	err := scan(
 		&t.ID, &t.Title, &t.Visibility, &t.CreatedAt, &t.UpdatedAt,
 		&t.User.ID, &t.User.DiscordUserID, &t.User.Name, &t.User.AvatarUrl, &t.User.CreatedAt, &t.User.UpdatedAt,
-		&workID, &workTitle, &workDesc, &workCreatedAt, &workUpdatedAt,
+		&workID, &workTitle, &workDesc, &workVisibility, &workCreatedAt, &workUpdatedAt,
 		&ownerID, &ownerDiscordID, &ownerName, &ownerAvatarUrl, &ownerCreatedAt, &ownerUpdatedAt,
 		&wthID, &wthPath, &wthCreatedAt, &wthUpdatedAt,
 		&tthID, &tthPath, &tthCreatedAt, &tthUpdatedAt,
@@ -78,6 +78,7 @@ func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 			ID:          int(workID.Int64),
 			Title:       workTitle.String,
 			Description: workDesc.String,
+			Visibility:  workVisibility.String,
 			CreatedAt:   workCreatedAt.Time,
 			UpdatedAt:   workUpdatedAt.Time,
 		}
@@ -119,10 +120,13 @@ func (tr *tsumikiRepositoryImpl) GetTsumiki(watchUserID *int, tsumikiID int) (*s
 	args := []any{tsumikiID}
 
 	if watchUserID != nil {
-		query += " AND (t.visibility = 'public' OR t.user_id = ?)"
+		query += " AND (t.visibility = 'public' OR t.user_id = ? OR (u.guild_id IS NOT NULL AND u.guild_id = (SELECT guild_id FROM users WHERE id = ?)))"
+		args = append(args, *watchUserID, *watchUserID)
+		query += " AND (t.work_id IS NULL OR w.visibility = 'public' OR (wu.guild_id IS NOT NULL AND wu.guild_id = (SELECT guild_id FROM users WHERE id = ?)))"
 		args = append(args, *watchUserID)
 	} else {
 		query += " AND t.visibility = 'public'"
+		query += " AND (t.work_id IS NULL OR w.visibility = 'public')"
 	}
 
 	row := tr.db.QueryRow(query, args...)
@@ -212,14 +216,18 @@ func (tr *tsumikiRepositoryImpl) GetTsumikiBlocks(tsumikiID int, pageSize, page 
 }
 
 func (tr *tsumikiRepositoryImpl) GetTsumikis(watchUserID *int, pageSize, page int, authorID *int, workID *int, keyword string) ([]schema.Tsumiki, error) {
-	query := tsumikiSelectQuery + " WHERE 1=1"
-	args := []any{}
+	var query string
+	var args []any
 
 	if watchUserID != nil {
-		query += " AND (t.visibility = 'public' OR t.user_id = ?)"
+		query = tsumikiSelectQuery + " WHERE (t.visibility = 'public' OR t.user_id = ? OR (u.guild_id IS NOT NULL AND u.guild_id = (SELECT guild_id FROM users WHERE id = ?)))"
+		args = []any{*watchUserID, *watchUserID}
+		query += " AND (t.work_id IS NULL OR w.visibility = 'public' OR (wu.guild_id IS NOT NULL AND wu.guild_id = (SELECT guild_id FROM users WHERE id = ?)))"
 		args = append(args, *watchUserID)
 	} else {
-		query += " AND t.visibility = 'public'"
+		query = tsumikiSelectQuery + " WHERE t.visibility = 'public'"
+		query += " AND (t.work_id IS NULL OR w.visibility = 'public')"
+		args = []any{}
 	}
 
 	if authorID != nil {

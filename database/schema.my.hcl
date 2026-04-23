@@ -99,6 +99,10 @@ table "works" {
     type = varchar(4095)
     null = true
   }
+  column "visibility" {
+    type = enum("public", "limited")
+    null = false
+  }
   column "thumbnail_id" {
     type = int
     null = true

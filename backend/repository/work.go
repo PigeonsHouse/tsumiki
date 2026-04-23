@@ -6,11 +6,11 @@ import (
 )
 
 type WorkRepository interface {
-	GetWorks(pageSize, page int) ([]schema.Work, error)
+	GetWorks(watchUserID *int, pageSize, page int) ([]schema.Work, error)
 	GetWork(workID int) (*schema.Work, error)
-	CreateWork(userID int, title string, description string, thumbnailID *int) (*schema.Work, error)
+	CreateWork(userID int, title string, visibility string, description string, thumbnailID *int) (*schema.Work, error)
 	UpdateWorkThumbnail(workID int, thumbnailID int) error
-	UpdateWork(workID int, title string, description string) (*schema.Work, error)
+	UpdateWork(workID int, title string, visibility string, description string) (*schema.Work, error)
 	DeleteWork(workID int) error
 }
 
@@ -22,8 +22,8 @@ func NewWorkRepository(db DBTX) WorkRepository {
 	return &workRepositoryImpl{db: db}
 }
 
-const workSelectQuery = "SELECT w.id, w.title, w.description, w.created_at, w.updated_at, " +
-	"u.id, u.discord_user_id, u.name, u.avatar_url, u.created_at, u.updated_at, " +
+const workSelectQuery = "SELECT w.id, w.title, w.description, w.visibility, w.created_at, w.updated_at, " +
+	"u.id, u.discord_user_id, u.name, u.guild_id, u.avatar_url, u.created_at, u.updated_at, " +
 	"th.id, th.path, th.created_at, th.updated_at " +
 	"FROM works w " +
 	"JOIN users u ON w.owner_user_id = u.id " +
@@ -35,8 +35,8 @@ func scanWork(scan func(...any) error) (*schema.Work, error) {
 	var thPath sql.NullString
 	var thCreatedAt, thUpdatedAt sql.NullTime
 	err := scan(
-		&w.ID, &w.Title, &w.Description, &w.CreatedAt, &w.UpdatedAt,
-		&w.Owner.ID, &w.Owner.DiscordUserID, &w.Owner.Name, &w.Owner.AvatarUrl, &w.Owner.CreatedAt, &w.Owner.UpdatedAt,
+		&w.ID, &w.Title, &w.Description, &w.Visibility, &w.CreatedAt, &w.UpdatedAt,
+		&w.Owner.ID, &w.Owner.DiscordUserID, &w.Owner.Name, &w.Owner.GuildID, &w.Owner.AvatarUrl, &w.Owner.CreatedAt, &w.Owner.UpdatedAt,
 		&thID, &thPath, &thCreatedAt, &thUpdatedAt,
 	)
 	if err != nil {
@@ -53,11 +53,22 @@ func scanWork(scan func(...any) error) (*schema.Work, error) {
 	return &w, nil
 }
 
-func (wr *workRepositoryImpl) GetWorks(pageSize, page int) ([]schema.Work, error) {
-	rows, err := wr.db.Query(
-		workSelectQuery+" ORDER BY w.created_at DESC LIMIT ? OFFSET ?",
-		pageSize, (page-1)*pageSize,
-	)
+func (wr *workRepositoryImpl) GetWorks(watchUserID *int, pageSize, page int) ([]schema.Work, error) {
+	var query string
+	var args []any
+
+	if watchUserID != nil {
+		query = workSelectQuery + " WHERE (w.visibility = 'public' OR (u.guild_id IS NOT NULL AND u.guild_id = (SELECT guild_id FROM users WHERE id = ?)))"
+		args = []any{*watchUserID}
+	} else {
+		query = workSelectQuery + " WHERE w.visibility = 'public'"
+		args = []any{}
+	}
+
+	query += " ORDER BY w.created_at DESC LIMIT ? OFFSET ?"
+	args = append(args, pageSize, (page-1)*pageSize)
+
+	rows, err := wr.db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -83,14 +94,10 @@ func (wr *workRepositoryImpl) GetWork(workID int) (*schema.Work, error) {
 	return w, err
 }
 
-func (wr *workRepositoryImpl) GetWorkTsumikis(workID int, pageSize, page int) ([]schema.Tsumiki, error) {
-	return nil, nil
-}
-
-func (wr *workRepositoryImpl) CreateWork(userID int, title string, description string, thumbnailID *int) (*schema.Work, error) {
+func (wr *workRepositoryImpl) CreateWork(userID int, title string, visibility string, description string, thumbnailID *int) (*schema.Work, error) {
 	result, err := wr.db.Exec(
-		"INSERT INTO works (owner_user_id, title, description, thumbnail_id) VALUES (?, ?, ?, ?)",
-		userID, title, description, thumbnailID,
+		"INSERT INTO works (owner_user_id, title, visibility, description, thumbnail_id) VALUES (?, ?, ?, ?, ?)",
+		userID, title, visibility, description, thumbnailID,
 	)
 	if err != nil {
 		return nil, err
@@ -110,10 +117,10 @@ func (wr *workRepositoryImpl) UpdateWorkThumbnail(workID int, thumbnailID int) e
 	return err
 }
 
-func (wr *workRepositoryImpl) UpdateWork(workID int, title string, description string) (*schema.Work, error) {
+func (wr *workRepositoryImpl) UpdateWork(workID int, title string, visibility string, description string) (*schema.Work, error) {
 	_, err := wr.db.Exec(
-		"UPDATE works SET title = ?, description = ? WHERE id = ?",
-		title, description, workID,
+		"UPDATE works SET title = ?, visibility = ?, description = ? WHERE id = ?",
+		title, visibility, description, workID,
 	)
 	if err != nil {
 		return nil, err

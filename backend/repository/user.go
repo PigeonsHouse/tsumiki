@@ -32,9 +32,9 @@ func (ur *userRepositoryImpl) FindByDiscordUserId(id string) (*schema.User, erro
 	var user schema.User
 
 	err := ur.db.QueryRow(
-		"SELECT id, discord_user_id, name, avatar_url, created_at, updated_at FROM users WHERE discord_user_id = ?",
+		"SELECT id, discord_user_id, name, guild_id, avatar_url, created_at, updated_at FROM users WHERE discord_user_id = ?",
 		id,
-	).Scan(&user.ID, &user.DiscordUserID, &user.Name, &user.AvatarUrl, &user.CreatedAt, &user.UpdatedAt)
+	).Scan(&user.ID, &user.DiscordUserID, &user.Name, &user.GuildID, &user.AvatarUrl, &user.CreatedAt, &user.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
@@ -86,9 +86,9 @@ func (ur *userRepositoryImpl) CreateUserByDiscord(
 func (ur *userRepositoryImpl) FindByID(id int) (*schema.User, error) {
 	var user schema.User
 	err := ur.db.QueryRow(
-		"SELECT id, discord_user_id, name, avatar_url, created_at, updated_at FROM users WHERE id = ?",
+		"SELECT id, discord_user_id, name, guild_id, avatar_url, created_at, updated_at FROM users WHERE id = ?",
 		id,
-	).Scan(&user.ID, &user.DiscordUserID, &user.Name, &user.AvatarUrl, &user.CreatedAt, &user.UpdatedAt)
+	).Scan(&user.ID, &user.DiscordUserID, &user.Name, &user.GuildID, &user.AvatarUrl, &user.CreatedAt, &user.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}

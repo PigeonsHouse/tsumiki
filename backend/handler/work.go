@@ -9,6 +9,7 @@ import (
 	"tsumiki/media"
 	"tsumiki/middleware"
 	"tsumiki/repository"
+	"tsumiki/schema"
 
 	"github.com/go-chi/chi/v5"
 )
@@ -37,19 +38,22 @@ func NewWorkHandler(repos *repository.Repositories, mediaSvc media.MediaService)
 
 type createWorkRequest struct {
 	Title       string `json:"title"`
+	Visibility  string `json:"visibility"`
 	Description string `json:"description"`
 	ThumbnailID *int   `json:"thumbnail_id"`
 }
 
 type editWorkRequest struct {
 	Title       string `json:"title"`
+	Visibility  string `json:"visibility"`
 	Description string `json:"description"`
 }
 
 func (wh *workHandlerImpl) GetWorks(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetOptionalUserIDFromContext(r.Context())
 	pageSize, page, _ := parsePaginationQuery(r)
 
-	works, err := wh.repositories.Work.GetWorks(pageSize, page)
+	works, err := wh.repositories.Work.GetWorks(userID, pageSize, page)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -60,6 +64,7 @@ func (wh *workHandlerImpl) GetWorks(w http.ResponseWriter, r *http.Request) {
 }
 
 func (wh *workHandlerImpl) GetSpecifiedWork(w http.ResponseWriter, r *http.Request) {
+	userID := middleware.GetOptionalUserIDFromContext(r.Context())
 	workID, err := parseWorkID(r)
 	if err != nil {
 		helper.ResponseBadRequest(w, "作品IDが不正です")
@@ -76,6 +81,9 @@ func (wh *workHandlerImpl) GetSpecifiedWork(w http.ResponseWriter, r *http.Reque
 		helper.ResponseNotFound(w, "作品が見つかりません")
 		return
 	}
+	if !wh.canAccessWork(w, work, userID) {
+		return
+	}
 
 	helper.ResponseOk(w, work)
 }
@@ -88,8 +96,21 @@ func (wh *workHandlerImpl) GetWorkTsumiki(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	pageSize, page, _ := parsePaginationQuery(r)
+	work, err := wh.repositories.Work.GetWork(workID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+	if work == nil {
+		helper.ResponseNotFound(w, "作品が見つかりません")
+		return
+	}
+	if !wh.canAccessWork(w, work, userID) {
+		return
+	}
 
+	pageSize, page, _ := parsePaginationQuery(r)
 	tsumikis, err := wh.repositories.Tsumiki.GetTsumikis(userID, pageSize, page, nil, &workID, "")
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
@@ -98,6 +119,28 @@ func (wh *workHandlerImpl) GetWorkTsumiki(w http.ResponseWriter, r *http.Request
 	}
 
 	helper.ResponseOk(w, tsumikis)
+}
+
+// canAccessWork は作品のvisibilityを確認し、アクセス不可なら403を返してfalseを返す
+func (wh *workHandlerImpl) canAccessWork(w http.ResponseWriter, work *schema.Work, userID *int) bool {
+	if work.Visibility == "public" {
+		return true
+	}
+	if userID == nil {
+		helper.ResponseForbidden(w, "この作品は限定公開です")
+		return false
+	}
+	viewer, err := wh.repositories.User.FindByID(*userID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return false
+	}
+	if viewer == nil || viewer.GuildID == nil || work.Owner.GuildID == nil || *viewer.GuildID != *work.Owner.GuildID {
+		helper.ResponseForbidden(w, "この作品は限定公開です")
+		return false
+	}
+	return true
 }
 
 func (wh *workHandlerImpl) CreateWork(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +170,7 @@ func (wh *workHandlerImpl) CreateWork(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	work, err := wh.repositories.Work.CreateWork(userID, req.Title, req.Description, req.ThumbnailID)
+	work, err := wh.repositories.Work.CreateWork(userID, req.Title, req.Visibility, req.Description, req.ThumbnailID)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")
@@ -176,7 +219,7 @@ func (wh *workHandlerImpl) EditWork(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseForbidden(w, "この作品の作成者ではありません")
 		return
 	}
-	updatedWork, err := wh.repositories.Work.UpdateWork(workID, req.Title, req.Description)
+	updatedWork, err := wh.repositories.Work.UpdateWork(workID, req.Title, req.Visibility, req.Description)
 	if err != nil {
 		fmt.Println("DBエラー: ", err)
 		helper.ResponseInternalServerError(w, "DBエラー")

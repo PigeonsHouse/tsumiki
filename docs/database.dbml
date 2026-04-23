@@ -72,6 +72,7 @@ Table works {
     id int [pk, increment]
     title varchar(255) [not null]
     description varchar(4095)
+    visibility visibility [not null]
     thumbnail_id int [unique, ref: > thumbnails.id]
     owner_user_id int [ref: > users.id, not null]
     created_at timestamp [default: `now()`]
