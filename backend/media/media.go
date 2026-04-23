@@ -86,7 +86,7 @@ func (ms *mediaServiceImpl) UploadTsumikiMedia(ctx context.Context, tsumikiID in
 	}
 
 	hash := sha256.Sum256(data)
-	key := fmt.Sprintf("tsumiki_block_medias/%d/%x%s", tsumikiID, hash, ext)
+	key := fmt.Sprintf("tsumikis/%d/medias/%x%s", tsumikiID, hash, ext)
 
 	_, err = ms.s3Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(ms.bucket),
