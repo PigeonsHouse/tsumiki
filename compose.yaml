@@ -108,6 +108,16 @@ services:
     volumes:
       - seaweedfsdata:/data
 
+  redoc:
+    profiles: [dev, docs]
+    image: redocly/redoc
+    ports:
+      - "${REDOC_PORT:-8080}:80"
+    volumes:
+      - ./docs/openapi:/usr/share/nginx/html/openapi:ro
+    environment:
+      SPEC_URL: /openapi/openapi.yaml
+
 volumes:
   dbdata: null
   seaweedfsdata: null

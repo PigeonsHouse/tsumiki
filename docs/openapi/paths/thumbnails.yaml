@@ -1,0 +1,40 @@
+thumbnails:
+  post:
+    tags:
+      - Thumbnails
+    summary: サムネイルのアップロード
+    description: |
+      サムネイル画像をアップロードする。
+      - 対応形式: JPEG / PNG / GIF
+      - 最大ファイルサイズ: 5MB
+      - 最大解像度: 4096×4096px
+
+      アップロード後に返されるIDを積み木・作品作成時の `thumbnail_id` に使用する。
+    operationId: postThumbnail
+    security:
+      - cookieAuth: []
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [thumbnail]
+            properties:
+              thumbnail:
+                type: string
+                format: binary
+                description: 画像ファイル (JPEG/PNG/GIF、最大5MB)
+    responses:
+      "200":
+        description: アップロードされたサムネイル情報
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/ThumbnailUpload"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"

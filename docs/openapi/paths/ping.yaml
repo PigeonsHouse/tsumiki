@@ -1,0 +1,19 @@
+ping:
+  get:
+    tags:
+      - Ping
+    summary: ヘルスチェック
+    operationId: getPing
+    security: []
+    responses:
+      "200":
+        description: サーバーが正常に動作しています
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  example: ok

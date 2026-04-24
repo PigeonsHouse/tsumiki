@@ -1,0 +1,103 @@
+me:
+  get:
+    tags:
+      - Users
+    summary: 自分のユーザー情報を取得
+    operationId: getMyInfo
+    security:
+      - cookieAuth: []
+    responses:
+      "200":
+        description: ユーザー情報
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/User"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+meTsumikis:
+  get:
+    tags:
+      - Users
+    summary: 自分の積み木一覧を取得
+    description: "自分が作成した積み木を全件（public・limited 含む）取得する。"
+    operationId: getMyTsumikis
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/PageSize"
+      - $ref: "../components/parameters.yaml#/Page"
+      - $ref: "../components/parameters.yaml#/Keyword"
+    responses:
+      "200":
+        description: 積み木一覧
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../components/schemas.yaml#/Tsumiki"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+userByID:
+  get:
+    tags:
+      - Users
+    summary: ユーザー情報を取得
+    operationId: getUserInfo
+    security: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/UserID"
+    responses:
+      "200":
+        description: ユーザー情報
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/User"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+userTsumikis:
+  get:
+    tags:
+      - Users
+    summary: 特定ユーザーの積み木一覧を取得
+    description: |
+      指定ユーザーの積み木一覧を取得する。可視性ルールは `GET /tsumikis` と同条件（authorIDで絞り込み済み）。
+      - 未認証: 対象ユーザーの `public` 積み木（紐づく作品も `public`）のみ返す
+      - 認証済み: `public` + 同じDiscordサーバーの場合は `limited` 積み木も返す
+    operationId: getUserTsumikis
+    security:
+      - {}
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/UserID"
+      - $ref: "../components/parameters.yaml#/PageSize"
+      - $ref: "../components/parameters.yaml#/Page"
+      - $ref: "../components/parameters.yaml#/Keyword"
+    responses:
+      "200":
+        description: 積み木一覧
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../components/schemas.yaml#/Tsumiki"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"

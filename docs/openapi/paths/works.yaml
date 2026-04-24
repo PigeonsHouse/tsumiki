@@ -1,0 +1,258 @@
+list:
+  get:
+    tags:
+      - Works
+    summary: 作品一覧を取得
+    description: |
+      作品一覧を取得する。
+      - 未認証: `visibility: public` の作品のみ返す
+      - 認証済み: `public` の作品に加え、同じDiscordサーバーに所属するユーザーの `limited` 作品も返す
+    operationId: getWorks
+    security:
+      - {}
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/PageSize"
+      - $ref: "../components/parameters.yaml#/Page"
+    responses:
+      "200":
+        description: 作品一覧
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../components/schemas.yaml#/Work"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Works
+    summary: 作品を作成
+    description: |
+      新しい作品を作成する。
+      `thumbnail_id` は任意で、指定する場合は `/thumbnails` で事前にアップロードした未使用のサムネイルIDを指定する。
+    operationId: createWork
+    security:
+      - cookieAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [title, visibility, description]
+            properties:
+              title:
+                type: string
+                maxLength: 200
+              visibility:
+                type: string
+                enum: [public, limited]
+              description:
+                type: string
+                maxLength: 4000
+              thumbnail_id:
+                type: integer
+                format: int64
+                nullable: true
+                description: サムネイルID（任意）
+    responses:
+      "200":
+        description: 作成された作品
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Work"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+byID:
+  get:
+    tags:
+      - Works
+    summary: 作品を取得
+    description: |
+      指定した作品を取得する。
+      - `visibility: public` の作品は誰でも閲覧可能
+      - `visibility: limited` の作品は、作品オーナーと同じDiscordサーバーに所属している場合のみ閲覧可能（未認証・別サーバーの場合は 403）
+    operationId: getSpecifiedWork
+    security:
+      - {}
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/WorkID"
+    responses:
+      "200":
+        description: 作品情報
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Work"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+  put:
+    tags:
+      - Works
+    summary: 作品を編集
+    description: 作品のタイトル・公開設定・説明を更新する。作成者のみ実行できる。
+    operationId: editWork
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/WorkID"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [title, visibility, description]
+            properties:
+              title:
+                type: string
+                maxLength: 200
+              visibility:
+                type: string
+                enum: [public, limited]
+              description:
+                type: string
+                maxLength: 4000
+    responses:
+      "200":
+        description: 更新後の作品
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Work"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Works
+    summary: 作品を削除
+    description: 作品を削除する。作成者のみ実行できる。
+    operationId: deleteWork
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/WorkID"
+    responses:
+      "200":
+        description: 削除成功
+        content:
+          application/json:
+            schema:
+              nullable: true
+              example: null
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+thumbnail:
+  put:
+    tags:
+      - Works
+    summary: 作品のサムネイルを更新
+    description: |
+      作品のサムネイルを差し替える。作成者のみ実行できる。
+      指定するサムネイルは未使用のものでなければならない。
+    operationId: updateWorkThumbnail
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/WorkID"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [thumbnail_id]
+            properties:
+              thumbnail_id:
+                type: integer
+                format: int64
+    responses:
+      "200":
+        description: 更新成功
+        content:
+          application/json:
+            schema:
+              nullable: true
+              example: null
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "409":
+        $ref: "../components/responses.yaml#/Conflict"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+tsumikis:
+  get:
+    tags:
+      - Works
+    summary: 作品に紐づく積み木一覧を取得
+    description: |
+      指定した作品に紐づく積み木の一覧を取得する。
+      まず作品自体の閲覧権限チェックが行われる（`GET /works/{workID}` と同条件）。
+      通過後の積み木一覧の絞り込みは `GET /tsumikis` と同じ可視性ルールに従う。
+    operationId: getWorkTsumiki
+    security:
+      - {}
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/WorkID"
+      - $ref: "../components/parameters.yaml#/PageSize"
+      - $ref: "../components/parameters.yaml#/Page"
+    responses:
+      "200":
+        description: 積み木一覧
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../components/schemas.yaml#/Tsumiki"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"

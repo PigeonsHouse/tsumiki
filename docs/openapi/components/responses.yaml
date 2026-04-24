@@ -1,0 +1,41 @@
+BadRequest:
+  description: リクエストが不正です
+  content:
+    application/json:
+      schema:
+        $ref: "./schemas.yaml#/ErrorResponse"
+
+Unauthorized:
+  description: 認証が必要です
+  content:
+    application/json:
+      schema:
+        $ref: "./schemas.yaml#/ErrorResponse"
+
+Forbidden:
+  description: アクセスが禁止されています
+  content:
+    application/json:
+      schema:
+        $ref: "./schemas.yaml#/ErrorResponse"
+
+NotFound:
+  description: リソースが見つかりません
+  content:
+    application/json:
+      schema:
+        $ref: "./schemas.yaml#/ErrorResponse"
+
+Conflict:
+  description: リソースが競合しています
+  content:
+    application/json:
+      schema:
+        $ref: "./schemas.yaml#/ErrorResponse"
+
+InternalServerError:
+  description: サーバーエラーが発生しました
+  content:
+    application/json:
+      schema:
+        $ref: "./schemas.yaml#/ErrorResponse"

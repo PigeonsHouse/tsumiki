@@ -1,0 +1,140 @@
+openapi: "3.0.3"
+
+info:
+  title: Tsumiki API
+  version: "1.0.0"
+  description: |
+    Tsumiki アプリケーションの REST API。
+
+    ## 認証
+    Cookie ベースの JWT を使用する。
+    - `access_token`: 通常のAPI呼び出しに使用（短命）
+    - `refresh_token`: アクセストークンの更新に使用（長命）
+
+    ログインは `/auth/discord` から Discord OAuth を経由して行う。
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+tags:
+  - name: Ping
+    description: ヘルスチェック
+  - name: Auth
+    description: 認証 (Discord OAuth)
+  - name: Users
+    description: ユーザー
+  - name: Thumbnails
+    description: サムネイルのアップロード
+  - name: Tsumikis
+    description: 積み木
+  - name: Blocks
+    description: 積み木ブロック
+  - name: Works
+    description: 作品
+
+paths:
+  /ping:
+    $ref: "./paths/ping.yaml#/ping"
+
+  /auth/discord:
+    $ref: "./paths/auth.yaml#/discord"
+  /auth/discord/callback:
+    $ref: "./paths/auth.yaml#/callback"
+  /auth/token-refresh:
+    $ref: "./paths/auth.yaml#/tokenRefresh"
+
+  /users/me:
+    $ref: "./paths/users.yaml#/me"
+  /users/me/tsumikis:
+    $ref: "./paths/users.yaml#/meTsumikis"
+  /users/{userID}:
+    $ref: "./paths/users.yaml#/userByID"
+  /users/{userID}/tsumikis:
+    $ref: "./paths/users.yaml#/userTsumikis"
+
+  /thumbnails:
+    $ref: "./paths/thumbnails.yaml#/thumbnails"
+
+  /tsumikis:
+    $ref: "./paths/tsumikis.yaml#/list"
+  /tsumikis/{tsumikiID}:
+    $ref: "./paths/tsumikis.yaml#/byID"
+  /tsumikis/{tsumikiID}/thumbnail:
+    $ref: "./paths/tsumikis.yaml#/thumbnail"
+  /tsumikis/{tsumikiID}/medias:
+    $ref: "./paths/tsumikis.yaml#/medias"
+  /tsumikis/{tsumikiID}/blocks:
+    $ref: "./paths/tsumikis.yaml#/blocks"
+  /tsumikis/{tsumikiID}/blocks/{blockID}:
+    $ref: "./paths/tsumikis.yaml#/blockByID"
+
+  /works:
+    $ref: "./paths/works.yaml#/list"
+  /works/{workID}:
+    $ref: "./paths/works.yaml#/byID"
+  /works/{workID}/thumbnail:
+    $ref: "./paths/works.yaml#/thumbnail"
+  /works/{workID}/tsumikis:
+    $ref: "./paths/works.yaml#/tsumikis"
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
+      description: アクセストークン（Cookie に格納された JWT）
+    refreshTokenCookie:
+      type: apiKey
+      in: cookie
+      name: refresh_token
+      description: リフレッシュトークン（Cookie に格納された JWT）
+
+  schemas:
+    ErrorResponse:
+      $ref: "./components/schemas.yaml#/ErrorResponse"
+    User:
+      $ref: "./components/schemas.yaml#/User"
+    ThumbnailUpload:
+      $ref: "./components/schemas.yaml#/ThumbnailUpload"
+    Work:
+      $ref: "./components/schemas.yaml#/Work"
+    Tsumiki:
+      $ref: "./components/schemas.yaml#/Tsumiki"
+    TsumikiBlockMedia:
+      $ref: "./components/schemas.yaml#/TsumikiBlockMedia"
+    TsumikiBlock:
+      $ref: "./components/schemas.yaml#/TsumikiBlock"
+    TsumikiBlockView:
+      $ref: "./components/schemas.yaml#/TsumikiBlockView"
+
+  responses:
+    BadRequest:
+      $ref: "./components/responses.yaml#/BadRequest"
+    Unauthorized:
+      $ref: "./components/responses.yaml#/Unauthorized"
+    Forbidden:
+      $ref: "./components/responses.yaml#/Forbidden"
+    NotFound:
+      $ref: "./components/responses.yaml#/NotFound"
+    Conflict:
+      $ref: "./components/responses.yaml#/Conflict"
+    InternalServerError:
+      $ref: "./components/responses.yaml#/InternalServerError"
+
+  parameters:
+    PageSize:
+      $ref: "./components/parameters.yaml#/PageSize"
+    Page:
+      $ref: "./components/parameters.yaml#/Page"
+    Keyword:
+      $ref: "./components/parameters.yaml#/Keyword"
+    UserID:
+      $ref: "./components/parameters.yaml#/UserID"
+    TsumikiID:
+      $ref: "./components/parameters.yaml#/TsumikiID"
+    BlockID:
+      $ref: "./components/parameters.yaml#/BlockID"
+    WorkID:
+      $ref: "./components/parameters.yaml#/WorkID"

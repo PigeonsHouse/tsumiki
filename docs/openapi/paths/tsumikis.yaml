@@ -1,0 +1,463 @@
+list:
+  get:
+    tags:
+      - Tsumikis
+    summary: 積み木一覧を取得
+    description: |
+      積み木一覧を取得する。可視性ルールは以下の通り。
+      - 未認証: `visibility: public` かつ紐づく作品も `public`（または作品なし）な積み木のみ返す
+      - 認証済み: 以下の条件を満たす積み木を返す
+        - `public` な積み木（紐づく作品も `public` または作品なし）
+        - 自分が作成した積み木（visibilityに関わらず）
+        - 同じDiscordサーバーのメンバーが作成した `limited` 積み木（紐づく作品も同サーバーまたは `public`）
+    operationId: getTsumikis
+    security:
+      - {}
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/PageSize"
+      - $ref: "../components/parameters.yaml#/Page"
+      - $ref: "../components/parameters.yaml#/Keyword"
+    responses:
+      "200":
+        description: 積み木一覧
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../components/schemas.yaml#/Tsumiki"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Tsumikis
+    summary: 積み木を作成
+    description: |
+      新しい積み木を作成する。
+      `thumbnail_id` には `/thumbnails` で事前にアップロードしたサムネイルのIDを指定する。
+      サムネイルは未使用のものだけ指定できる。
+    operationId: createTsumiki
+    security:
+      - cookieAuth: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [title, visibility, thumbnail_id]
+            properties:
+              title:
+                type: string
+                maxLength: 200
+              visibility:
+                type: string
+                enum: [public, limited]
+              work_id:
+                type: integer
+                format: int64
+                nullable: true
+                description: 紐づける作品のID（任意）
+              thumbnail_id:
+                type: integer
+                format: int64
+    responses:
+      "200":
+        description: 作成された積み木
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Tsumiki"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "409":
+        $ref: "../components/responses.yaml#/Conflict"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+byID:
+  get:
+    tags:
+      - Tsumikis
+    summary: 積み木を取得
+    description: |
+      指定した積み木を取得する。可視性ルールは `GET /tsumikis` と同条件。
+      権限がない場合は 404 を返す（存在と区別しない）。
+    operationId: getSpecifiedTsumiki
+    security:
+      - {}
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/TsumikiID"
+    responses:
+      "200":
+        description: 積み木情報
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Tsumiki"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+  put:
+    tags:
+      - Tsumikis
+    summary: 積み木を編集
+    description: 積み木のタイトル・公開設定・紐づく作品を更新する。作成者のみ実行できる。
+    operationId: editTsumiki
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/TsumikiID"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [title, visibility]
+            properties:
+              title:
+                type: string
+                maxLength: 200
+              visibility:
+                type: string
+                enum: [public, limited]
+              work_id:
+                type: integer
+                format: int64
+                nullable: true
+                description: 紐づける作品のID（null で紐づけ解除）
+    responses:
+      "200":
+        description: 更新後の積み木
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/Tsumiki"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Tsumikis
+    summary: 積み木を削除
+    description: 積み木を削除する。作成者のみ実行できる。
+    operationId: deleteTsumiki
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/TsumikiID"
+    responses:
+      "200":
+        description: 削除成功
+        content:
+          application/json:
+            schema:
+              nullable: true
+              example: null
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+thumbnail:
+  put:
+    tags:
+      - Tsumikis
+    summary: 積み木のサムネイルを更新
+    description: |
+      積み木のサムネイルを差し替える。作成者のみ実行できる。
+      指定するサムネイルは未使用のものでなければならない。
+    operationId: updateTsumikiThumbnail
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/TsumikiID"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [thumbnail_id]
+            properties:
+              thumbnail_id:
+                type: integer
+                format: int64
+    responses:
+      "200":
+        description: 更新成功
+        content:
+          application/json:
+            schema:
+              nullable: true
+              example: null
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "409":
+        $ref: "../components/responses.yaml#/Conflict"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+medias:
+  post:
+    tags:
+      - Tsumikis
+    summary: 積み木にメディアをアップロード
+    description: |
+      積み木に紐づくメディアファイルをアップロードする。作成者のみ実行できる。
+      - 画像 (JPEG/PNG/GIF): 最大5MB、最大4096×4096px
+      - 音声 (MP3/WAV/OGG/AAC): 最大5MB
+      - 動画 (MP4/WebM/MOV): 最大100MB
+
+      返されたメディアIDをブロック作成・編集時の `media_ids` に使用する。
+    operationId: postMedia
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/TsumikiID"
+    requestBody:
+      required: true
+      content:
+        multipart/form-data:
+          schema:
+            type: object
+            required: [file]
+            properties:
+              file:
+                type: string
+                format: binary
+                description: メディアファイル
+    responses:
+      "200":
+        description: アップロードされたメディア情報
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/TsumikiBlockMedia"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+blocks:
+  get:
+    tags:
+      - Blocks
+    summary: 積み木のブロック一覧を取得
+    description: |
+      積み木のブロックをチェーン順に取得する。
+      まず積み木自体の閲覧権限チェックが行われる（`GET /tsumikis/{tsumikiID}` と同条件）。
+      削除済みブロックは `is_deleted: true` のみ返される。
+    operationId: getBlocks
+    security:
+      - {}
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/TsumikiID"
+      - $ref: "../components/parameters.yaml#/PageSize"
+      - $ref: "../components/parameters.yaml#/Page"
+    responses:
+      "200":
+        description: ブロック一覧
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "../components/schemas.yaml#/TsumikiBlockView"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+  post:
+    tags:
+      - Blocks
+    summary: 積み木にブロックを追加
+    description: |
+      積み木の末尾にブロックを追加する。作成者のみ実行できる。
+      `latest_block_id` は楽観的ロック用で、クライアントが最後に確認した最新ブロックのIDを指定する。
+      サーバー側の最新ブロックIDと一致しない場合は 409 を返す。
+      ブロックにはメッセージかメディアのいずれかが必須。
+    operationId: addBlock
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/TsumikiID"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [percentage, condition]
+            properties:
+              message:
+                type: string
+                maxLength: 200
+                nullable: true
+              percentage:
+                type: integer
+                minimum: 0
+                maximum: 100
+                description: 進捗率 (0〜100)
+              condition:
+                type: integer
+                minimum: 1
+                maximum: 5
+                description: コンディション (1〜5)
+              media_ids:
+                type: array
+                items:
+                  type: integer
+                  format: int64
+                maxItems: 4
+                description: 添付するメディアのID一覧（最大4件）
+              latest_block_id:
+                type: integer
+                format: int64
+                nullable: true
+                description: 楽観的ロック用。最後に確認した最新ブロックのID（ブロックが存在しない場合は null）
+    responses:
+      "200":
+        description: 作成されたブロック
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/TsumikiBlock"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "409":
+        $ref: "../components/responses.yaml#/Conflict"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+blockByID:
+  put:
+    tags:
+      - Blocks
+    summary: ブロックを編集
+    description: ブロックのメッセージ・進捗率・コンディション・メディアを更新する。積み木の作成者のみ実行できる。
+    operationId: editBlock
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/TsumikiID"
+      - $ref: "../components/parameters.yaml#/BlockID"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [percentage, condition]
+            properties:
+              message:
+                type: string
+                maxLength: 200
+                nullable: true
+              percentage:
+                type: integer
+                minimum: 0
+                maximum: 100
+              condition:
+                type: integer
+                minimum: 1
+                maximum: 5
+              media_ids:
+                type: array
+                items:
+                  type: integer
+                  format: int64
+                maxItems: 4
+    responses:
+      "200":
+        description: 更新後のブロック
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/TsumikiBlock"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+  delete:
+    tags:
+      - Blocks
+    summary: ブロックを削除 (ソフトデリート)
+    description: "ブロックを論理削除する。積み木の作成者のみ実行できる。削除後はブロック一覧で `is_deleted: true` として返される。"
+    operationId: omitBlock
+    security:
+      - cookieAuth: []
+    parameters:
+      - $ref: "../components/parameters.yaml#/TsumikiID"
+      - $ref: "../components/parameters.yaml#/BlockID"
+    responses:
+      "200":
+        description: 削除成功
+        content:
+          application/json:
+            schema:
+              nullable: true
+              example: null
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "404":
+        $ref: "../components/responses.yaml#/NotFound"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"

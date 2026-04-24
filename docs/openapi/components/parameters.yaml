@@ -1,0 +1,60 @@
+PageSize:
+  name: page_size
+  in: query
+  description: "1ページあたりの件数 (1〜50、デフォルト: 20)"
+  required: false
+  schema:
+    type: integer
+    minimum: 1
+    maximum: 50
+    default: 20
+
+Page:
+  name: page
+  in: query
+  description: "ページ番号 (デフォルト: 1)"
+  required: false
+  schema:
+    type: integer
+    minimum: 1
+    default: 1
+
+Keyword:
+  name: keyword
+  in: query
+  description: 検索キーワード
+  required: false
+  schema:
+    type: string
+
+UserID:
+  name: userID
+  in: path
+  required: true
+  schema:
+    type: integer
+    format: int64
+
+TsumikiID:
+  name: tsumikiID
+  in: path
+  required: true
+  schema:
+    type: integer
+    format: int64
+
+BlockID:
+  name: blockID
+  in: path
+  required: true
+  schema:
+    type: integer
+    format: int64
+
+WorkID:
+  name: workID
+  in: path
+  required: true
+  schema:
+    type: integer
+    format: int64

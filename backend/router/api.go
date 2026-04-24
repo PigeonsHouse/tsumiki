@@ -8,6 +8,7 @@ import (
 )
 
 func SetApiRouter(mux *chi.Mux, handlers *handler.Handlers) {
+	// TODO: レートリミットをかける
 	mux.Route("/api/v1", func(r chi.Router) {
 		r.Get("/ping", handlers.Ping.Ping)
 
@@ -29,6 +30,7 @@ func SetApiRouter(mux *chi.Mux, handlers *handler.Handlers) {
 			})
 		})
 
+		// TODO: メディア投稿系は強めのレートリミットをかける
 		r.Route("/thumbnails", func(r chi.Router) {
 			r.Use(middleware.RequireAuth)
 			r.Post("/", handlers.Thumbnail.PostThumbnail)

@@ -1,0 +1,81 @@
+discord:
+  get:
+    tags:
+      - Auth
+    summary: Discord OAuth認証へリダイレクト
+    operationId: redirectDiscord
+    security: []
+    responses:
+      "308":
+        description: Discord OAuth認証ページへリダイレクト
+
+callback:
+  get:
+    tags:
+      - Auth
+    summary: Discord OAuthコールバック
+    description: |
+      Discord OAuthの認証コールバック。
+      認証成功時にアクセストークンとリフレッシュトークンをCookieにセットしてユーザー情報を返す。
+    operationId: callbackDiscord
+    security: []
+    parameters:
+      - name: code
+        in: query
+        description: Discordから返される認可コード
+        required: false
+        schema:
+          type: string
+      - name: error_description
+        in: query
+        description: ユーザーがキャンセルした場合などのエラー説明
+        required: false
+        schema:
+          type: string
+    responses:
+      "200":
+        description: 認証成功
+        headers:
+          Set-Cookie:
+            description: access_token および refresh_token のCookieをセット
+            schema:
+              type: string
+        content:
+          application/json:
+            schema:
+              $ref: "../components/schemas.yaml#/User"
+      "400":
+        $ref: "../components/responses.yaml#/BadRequest"
+      "403":
+        $ref: "../components/responses.yaml#/Forbidden"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
+tokenRefresh:
+  get:
+    tags:
+      - Auth
+    summary: アクセストークンのリフレッシュ
+    description: |
+      Cookieのリフレッシュトークンを使って新しいアクセストークンとリフレッシュトークンを発行する。
+      成功時は新しいトークンがCookieにセットされる。
+    operationId: refreshToken
+    security:
+      - refreshTokenCookie: []
+    responses:
+      "200":
+        description: トークンのリフレッシュ成功
+        headers:
+          Set-Cookie:
+            description: 新しい access_token および refresh_token のCookieをセット
+            schema:
+              type: string
+        content:
+          application/json:
+            schema:
+              nullable: true
+              example: null
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
