@@ -7,7 +7,7 @@ type Work struct {
 	Title       string           `json:"title"`
 	Description string           `json:"description"`
 	Visibility  string           `json:"visibility"`
-	Thumbnail   *ThumbnailUpload `json:"thumbnail"`
+	ThumbnailURL *string `json:"thumbnail_url"`
 	Owner       User             `json:"owner"`
 	CreatedAt   time.Time        `json:"created_at"`
 	UpdatedAt   time.Time        `json:"updated_at"`

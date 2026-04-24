@@ -12,7 +12,7 @@ type ThumbnailUpload struct {
 type Tsumiki struct {
 	ID         int              `json:"id"`
 	Title      string           `json:"title"`
-	Thumbnail  *ThumbnailUpload `json:"thumbnail"`
+	ThumbnailURL *string `json:"thumbnail_url"`
 	Visibility string           `json:"visibility"`
 	User       User             `json:"user"`
 	Work       *Work            `json:"work"`

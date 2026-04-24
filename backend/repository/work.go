@@ -43,12 +43,8 @@ func scanWork(scan func(...any) error) (*schema.Work, error) {
 		return nil, err
 	}
 	if thID.Valid {
-		w.Thumbnail = &schema.ThumbnailUpload{
-			ID:        int(thID.Int64),
-			Url:       thPath.String,
-			CreatedAt: thCreatedAt.Time,
-			UpdatedAt: thUpdatedAt.Time,
-		}
+		url := thPath.String
+		w.ThumbnailURL = &url
 	}
 	return &w, nil
 }

@@ -65,12 +65,8 @@ func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 	}
 
 	if tthID.Valid {
-		t.Thumbnail = &schema.ThumbnailUpload{
-			ID:        int(tthID.Int64),
-			Url:       tthPath.String,
-			CreatedAt: tthCreatedAt.Time,
-			UpdatedAt: tthUpdatedAt.Time,
-		}
+		url := tthPath.String
+		t.ThumbnailURL = &url
 	}
 
 	if workID.Valid {
@@ -83,12 +79,8 @@ func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 			UpdatedAt:   workUpdatedAt.Time,
 		}
 		if wthID.Valid {
-			w.Thumbnail = &schema.ThumbnailUpload{
-				ID:        int(wthID.Int64),
-				Url:       wthPath.String,
-				CreatedAt: wthCreatedAt.Time,
-				UpdatedAt: wthUpdatedAt.Time,
-			}
+			url := wthPath.String
+			w.ThumbnailURL = &url
 		}
 		if ownerID.Valid {
 			w.Owner = schema.User{

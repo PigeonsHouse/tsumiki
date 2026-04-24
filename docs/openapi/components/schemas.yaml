@@ -62,9 +62,9 @@ Work:
       type: string
       enum: [public, limited]
       description: "public: 誰でも閲覧可能 / limited: 同じDiscordサーバーのメンバーのみ閲覧可能"
-    thumbnail:
-      allOf:
-        - $ref: "#/ThumbnailUpload"
+    thumbnail_url:
+      type: string
+      format: uri
       nullable: true
     owner:
       $ref: "#/User"
@@ -85,9 +85,9 @@ Tsumiki:
     title:
       type: string
       maxLength: 200
-    thumbnail:
-      allOf:
-        - $ref: "#/ThumbnailUpload"
+    thumbnail_url:
+      type: string
+      format: uri
       nullable: true
     visibility:
       type: string

@@ -7,8 +7,9 @@ import (
 
 func ResolveTsumikiURLs(t *schema.Tsumiki, svc media.MediaService) {
 	t.User.AvatarUrl = svc.ResolveURL(t.User.AvatarUrl)
-	if t.Thumbnail != nil {
-		t.Thumbnail.Url = svc.ResolveURL(t.Thumbnail.Url)
+	if t.ThumbnailURL != nil {
+		resolved := svc.ResolveURL(*t.ThumbnailURL)
+		t.ThumbnailURL = &resolved
 	}
 	if t.Work != nil {
 		ResolveWorkURLs(t.Work, svc)
@@ -17,8 +18,9 @@ func ResolveTsumikiURLs(t *schema.Tsumiki, svc media.MediaService) {
 
 func ResolveWorkURLs(w *schema.Work, svc media.MediaService) {
 	w.Owner.AvatarUrl = svc.ResolveURL(w.Owner.AvatarUrl)
-	if w.Thumbnail != nil {
-		w.Thumbnail.Url = svc.ResolveURL(w.Thumbnail.Url)
+	if w.ThumbnailURL != nil {
+		resolved := svc.ResolveURL(*w.ThumbnailURL)
+		w.ThumbnailURL = &resolved
 	}
 }
 
