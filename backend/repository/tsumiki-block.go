@@ -1,5 +1,7 @@
 package repository
 
+//go:generate mockgen -source=tsumiki-block.go -destination=mock/mock_tsumiki_block.go -package=mock
+
 import (
 	"database/sql"
 	"tsumiki/schema"

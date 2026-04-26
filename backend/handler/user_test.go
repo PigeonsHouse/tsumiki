@@ -1,34 +1,18 @@
 package handler_test
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 	"tsumiki/handler"
 	mediamock "tsumiki/media/mock"
 	"tsumiki/repository"
 	repomock "tsumiki/repository/mock"
 	"tsumiki/schema"
 
-	"github.com/go-chi/chi/v5"
 	"go.uber.org/mock/gomock"
 )
-
-func sampleUser() *schema.User {
-	guildID := "guild123"
-	return &schema.User{
-		ID:            1,
-		DiscordUserID: "discord123",
-		Name:          "Test User",
-		GuildID:       &guildID,
-		AvatarUrl:     "avatars/1/abc.png",
-		CreatedAt:     time.Now().Truncate(time.Second),
-		UpdatedAt:     time.Now().Truncate(time.Second),
-	}
-}
 
 func TestGetMyInfo(t *testing.T) {
 	ctrl := gomock.NewController(t)
@@ -42,8 +26,7 @@ func TestGetMyInfo(t *testing.T) {
 
 	h := handler.NewUserHandler(&repository.Repositories{User: mockRepo}, mockMedia)
 
-	req := httptest.NewRequest(http.MethodGet, "/users/me", nil)
-	req = req.WithContext(context.WithValue(req.Context(), "user_id", expected.ID))
+	req := withUserID(httptest.NewRequest(http.MethodGet, "/users/me", nil), expected.ID)
 	w := httptest.NewRecorder()
 
 	h.GetMyInfo(w, req)
@@ -67,6 +50,39 @@ func TestGetMyInfo(t *testing.T) {
 	}
 }
 
+func TestGetMyInfo_Unauthorized(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	h := handler.NewUserHandler(&repository.Repositories{}, mediamock.NewMockMediaService(ctrl))
+
+	req := httptest.NewRequest(http.MethodGet, "/users/me", nil)
+	w := httptest.NewRecorder()
+
+	h.GetMyInfo(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("status: want %d, got %d", http.StatusUnauthorized, w.Code)
+	}
+}
+
+func TestGetMyInfo_NotFound(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	mockRepo := repomock.NewMockUserRepository(ctrl)
+	mockRepo.EXPECT().FindByID(999).Return(nil, nil)
+
+	h := handler.NewUserHandler(&repository.Repositories{User: mockRepo}, mediamock.NewMockMediaService(ctrl))
+
+	req := withUserID(httptest.NewRequest(http.MethodGet, "/users/me", nil), 999)
+	w := httptest.NewRecorder()
+
+	h.GetMyInfo(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("status: want %d, got %d", http.StatusNotFound, w.Code)
+	}
+}
+
 func TestGetUserInfo(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	expected := sampleUser()
@@ -79,10 +95,7 @@ func TestGetUserInfo(t *testing.T) {
 
 	h := handler.NewUserHandler(&repository.Repositories{User: mockRepo}, mockMedia)
 
-	rctx := chi.NewRouteContext()
-	rctx.URLParams.Add("userID", "1")
-	req := httptest.NewRequest(http.MethodGet, "/users/1", nil)
-	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+	req := withChiParam(httptest.NewRequest(http.MethodGet, "/users/1", nil), "userID", "1")
 	w := httptest.NewRecorder()
 
 	h.GetUserInfo(w, req)
@@ -103,5 +116,38 @@ func TestGetUserInfo(t *testing.T) {
 	}
 	if resp.AvatarUrl != "https://cdn.example.com/"+expected.AvatarUrl {
 		t.Errorf("AvatarUrl: want resolved URL, got %s", resp.AvatarUrl)
+	}
+}
+
+func TestGetUserInfo_InvalidID(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	h := handler.NewUserHandler(&repository.Repositories{}, mediamock.NewMockMediaService(ctrl))
+
+	req := withChiParam(httptest.NewRequest(http.MethodGet, "/users/abc", nil), "userID", "abc")
+	w := httptest.NewRecorder()
+
+	h.GetUserInfo(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("status: want %d, got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestGetUserInfo_NotFound(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	mockRepo := repomock.NewMockUserRepository(ctrl)
+	mockRepo.EXPECT().FindByID(999).Return(nil, nil)
+
+	h := handler.NewUserHandler(&repository.Repositories{User: mockRepo}, mediamock.NewMockMediaService(ctrl))
+
+	req := withChiParam(httptest.NewRequest(http.MethodGet, "/users/999", nil), "userID", "999")
+	w := httptest.NewRecorder()
+
+	h.GetUserInfo(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("status: want %d, got %d", http.StatusNotFound, w.Code)
 	}
 }
