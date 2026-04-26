@@ -1,12 +1,26 @@
 package repository
 
+//go:generate mockgen -source=repository.go -destination=mock/mock_repository.go -package=mock
+
 import "database/sql"
+
+type RowScanner interface {
+	Scan(dest ...any) error
+}
+
+type RowsScanner interface {
+	Next() bool
+	Scan(dest ...any) error
+	Close() error
+	Err() error
+}
 
 type DBTX interface {
 	Exec(query string, args ...any) (sql.Result, error)
-	Query(query string, args ...any) (*sql.Rows, error)
-	QueryRow(query string, args ...any) *sql.Row
+	Query(query string, args ...any) (RowsScanner, error)
+	QueryRow(query string, args ...any) RowScanner
 }
+
 
 type Repositories struct {
 	db                *sql.DB
@@ -19,25 +33,27 @@ type Repositories struct {
 }
 
 func NewRepositories(db *sql.DB) *Repositories {
+	adapted := &dbTXAdapter{inner: db}
 	return &Repositories{
 		db:                db,
-		User:              NewUserRepository(db),
-		Tsumiki:           NewTsumikiRepository(db),
-		TsumikiBlock:      NewTsumikiBlockRepository(db),
-		TsumikiBlockMedia: NewTsumikiBlockMediaRepository(db),
-		Work:              NewWorkRepository(db),
-		Thumbnail:         NewThumbnailRepository(db),
+		User:              NewUserRepository(adapted),
+		Tsumiki:           NewTsumikiRepository(adapted),
+		TsumikiBlock:      NewTsumikiBlockRepository(adapted),
+		TsumikiBlockMedia: NewTsumikiBlockMediaRepository(adapted),
+		Work:              NewWorkRepository(adapted),
+		Thumbnail:         NewThumbnailRepository(adapted),
 	}
 }
 
 func (r *Repositories) withTx(tx *sql.Tx) *Repositories {
+	adapted := &dbTXAdapter{inner: tx}
 	return &Repositories{
-		User:              NewUserRepository(tx),
-		Tsumiki:           NewTsumikiRepository(tx),
-		TsumikiBlock:      NewTsumikiBlockRepository(tx),
-		TsumikiBlockMedia: NewTsumikiBlockMediaRepository(tx),
-		Work:              NewWorkRepository(tx),
-		Thumbnail:         NewThumbnailRepository(tx),
+		User:              NewUserRepository(adapted),
+		Tsumiki:           NewTsumikiRepository(adapted),
+		TsumikiBlock:      NewTsumikiBlockRepository(adapted),
+		TsumikiBlockMedia: NewTsumikiBlockMediaRepository(adapted),
+		Work:              NewWorkRepository(adapted),
+		Thumbnail:         NewThumbnailRepository(adapted),
 	}
 }
 

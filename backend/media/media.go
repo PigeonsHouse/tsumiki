@@ -1,5 +1,7 @@
 package media
 
+//go:generate mockgen -source=media.go -destination=mock/mock_media.go -package=mock
+
 import (
 	"bytes"
 	"context"

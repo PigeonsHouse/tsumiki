@@ -1,5 +1,7 @@
 package repository
 
+//go:generate mockgen -source=user.go -destination=mock/mock_user.go -package=mock
+
 import (
 	"database/sql"
 	"time"
