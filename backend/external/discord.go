@@ -35,7 +35,7 @@ type GuildInfoResponse struct {
 }
 
 type DiscordService interface {
-	GetRedirectUrl() string
+	GetRedirectUrl(state string) string
 	ValidateRedirectedCode(code string) (TokenResponse, error)
 	GetUserInfo(tokenRes TokenResponse) (UserInfoResponse, error)
 	GetUserGuildsInfo(tokenRes TokenResponse) ([]GuildInfoResponse, error)
@@ -64,9 +64,9 @@ func (d *discordServiceImpl) FetchAvatar(userInfo UserInfoResponse) (io.ReadClos
 	return resp.Body, resp.Header.Get("Content-Type"), nil
 }
 
-func (d *discordServiceImpl) GetRedirectUrl() string {
-	return fmt.Sprintf("%s/oauth2/authorize?client_id=%s&redirect_uri=%s&scope=%s&response_type=code",
-		apiEndpoint, env.DiscordClientID, url.QueryEscape(callbackUrl()), scope)
+func (d *discordServiceImpl) GetRedirectUrl(state string) string {
+	return fmt.Sprintf("%s/oauth2/authorize?client_id=%s&redirect_uri=%s&scope=%s&response_type=code&state=%s",
+		apiEndpoint, env.DiscordClientID, url.QueryEscape(callbackUrl()), scope, url.QueryEscape(state))
 }
 
 func (d *discordServiceImpl) ValidateRedirectedCode(code string) (TokenResponse, error) {

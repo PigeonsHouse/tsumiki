@@ -7,15 +7,20 @@ import (
 )
 
 var (
-	BackendUrl string
-	AppPort    int
-	JwtSecret  []byte
+	BackendUrl  string
+	FrontendUrl string
+	AppPort     int
+	JwtSecret   []byte
 )
 
 func LoadAppEnv() error {
 	BackendUrl = os.Getenv("BACKEND_URL")
 	if BackendUrl == "" {
 		return fmt.Errorf("loading env error: BACKEND_URL")
+	}
+	FrontendUrl = os.Getenv("FRONTEND_URL")
+	if FrontendUrl == "" {
+		return fmt.Errorf("loading env error: FRONTEND_URL")
 	}
 	if port := os.Getenv("APP_PORT"); port != "" {
 		portNum, err := strconv.Atoi(port)

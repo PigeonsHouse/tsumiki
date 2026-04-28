@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -12,6 +14,30 @@ import (
 	"tsumiki/repository"
 	"tsumiki/store"
 )
+
+type OAuthState struct {
+	Mode string `json:"mode"`
+}
+
+func encodeOAuthState(state OAuthState) (string, error) {
+	b, err := json.Marshal(state)
+	if err != nil {
+		return "", err
+	}
+	return base64.URLEncoding.EncodeToString(b), nil
+}
+
+func decodeOAuthState(encoded string) (OAuthState, error) {
+	b, err := base64.URLEncoding.DecodeString(encoded)
+	if err != nil {
+		return OAuthState{}, err
+	}
+	var state OAuthState
+	if err := json.Unmarshal(b, &state); err != nil {
+		return OAuthState{}, err
+	}
+	return state, nil
+}
 
 type AuthHandler interface {
 	RedirectDiscord(w http.ResponseWriter, r *http.Request)
@@ -36,14 +62,33 @@ func NewAuthHandler(repos *repository.Repositories, authStore store.AuthStore, m
 }
 
 func (ah *authHandlerImpl) RedirectDiscord(w http.ResponseWriter, r *http.Request) {
-	redirectUrl := ah.discord.GetRedirectUrl()
+	mode := r.URL.Query().Get("mode")
+	if mode == "" {
+		mode = "json"
+	}
+	encodedState, err := encodeOAuthState(OAuthState{Mode: mode})
+	if err != nil {
+		helper.ResponseInternalServerError(w, "stateの生成に失敗しました")
+		return
+	}
+	redirectUrl := ah.discord.GetRedirectUrl(encodedState)
 	http.Redirect(w, r, redirectUrl, http.StatusPermanentRedirect)
 }
 
 func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Request) {
+	oauthState, err := decodeOAuthState(r.URL.Query().Get("state"))
+	if err != nil {
+		helper.ResponseBadRequest(w, "stateが無効です")
+		return
+	}
+
 	// エラーパラメーターのチェック（ユーザーがキャンセルした場合など）
 	if errDesc := r.URL.Query().Get("error_description"); errDesc != "" {
 		fmt.Println("認証に失敗しました")
+		if oauthState.Mode == "redirect" {
+			http.Redirect(w, r, env.FrontendUrl+"/login/callback?error=auth_failed", http.StatusFound)
+			return
+		}
 		helper.ResponseBadRequest(w, "認証に失敗しました")
 		return
 	}
@@ -157,6 +202,11 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 		MaxAge:   int(auth.RefreshTokenLiveTime / time.Second),
 		Secure:   true,
 	})
+
+	if oauthState.Mode == "redirect" {
+		http.Redirect(w, r, env.FrontendUrl+"/login/callback", http.StatusFound)
+		return
+	}
 
 	userResponse := *user
 	userResponse.AvatarUrl = ah.media.ResolveURL(user.AvatarUrl)
