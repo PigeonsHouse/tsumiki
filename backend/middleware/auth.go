@@ -25,8 +25,8 @@ func GetOptionalUserIDFromContext(ctx context.Context) *int {
 	}
 }
 
-var RequireAuth = authMiddleware(true)
-var OptionalAuth = authMiddleware(false)
+var RequireAuth = authMiddleware(false)
+var OptionalAuth = authMiddleware(true)
 
 func authMiddleware(optional bool) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
