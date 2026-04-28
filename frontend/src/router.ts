@@ -11,11 +11,17 @@ export type Path =
   | `/tsumikis`
   | `/tsumikis/:tsumikiId`
   | `/upload`
+  | `/users/:userId`
+  | `/users/:userId/tsumikis`
+  | `/users/:userId/works`
   | `/works`
   | `/works/:workId`
 
 export type Params = {
   '/tsumikis/:tsumikiId': { tsumikiId: string }
+  '/users/:userId': { userId: string }
+  '/users/:userId/tsumikis': { userId: string }
+  '/users/:userId/works': { userId: string }
   '/works/:workId': { workId: string }
 }
 
