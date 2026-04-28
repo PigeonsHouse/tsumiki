@@ -15,10 +15,11 @@ export const useGetWorks = (params: GetWorksRequest = {}) => {
   });
 };
 
-export const useGetWork = (workID: number) => {
+export const useGetWork = (workID: number, enabled: boolean) => {
   return useQuery({
     queryKey: ["works", workID],
     queryFn: () => worksApi.getSpecifiedWork({ workID }),
+    enabled,
   });
 };
 
@@ -44,7 +45,9 @@ export const useDeleteWork = (workID: number) => {
 
 export const useUpdateWorkThumbnail = (workID: number) => {
   return useMutation({
-    mutationFn: (updateTsumikiThumbnailRequest: UpdateTsumikiThumbnailRequest) =>
+    mutationFn: (
+      updateTsumikiThumbnailRequest: UpdateTsumikiThumbnailRequest,
+    ) =>
       worksApi.updateWorkThumbnail({ workID, updateTsumikiThumbnailRequest }),
   });
 };
