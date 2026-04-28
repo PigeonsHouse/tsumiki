@@ -4,7 +4,7 @@ const TsumikiList = () => {
   const { data } = useGetTsumikis();
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>積み木一覧</h1>
+      <h1 style={{ marginTop: 0, textAlign: "center" }}>積み木一覧</h1>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
         {data?.map((tsumiki) => (
           <a

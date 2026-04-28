@@ -1,5 +1,11 @@
 const MyWorks = () => {
-  return <>自分の作品一覧</>;
+  return (
+    <div>
+      <h1 style={{ marginTop: 0, textAlign: "center" }}>
+        自分の関わった作品一覧
+      </h1>
+    </div>
+  );
 };
 
 export default MyWorks;

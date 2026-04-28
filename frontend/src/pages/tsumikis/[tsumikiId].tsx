@@ -17,7 +17,7 @@ const TsumikiDetail = () => {
 
   return (
     <div>
-      <h1 style={{ marginTop: 0 }}>積み木詳細</h1>
+      <h1 style={{ marginTop: 0, textAlign: "center" }}>積み木詳細</h1>
       {tsumiki && blocks && (
         <div style={{ width: 1024, margin: "auto" }}>
           <img
