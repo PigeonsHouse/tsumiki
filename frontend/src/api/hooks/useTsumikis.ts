@@ -14,10 +14,11 @@ export const useGetTsumikis = (params: GetTsumikisRequest = {}) => {
   });
 };
 
-export const useGetTsumiki = (tsumikiID: number) => {
+export const useGetTsumiki = (tsumikiID: number, enabled: boolean) => {
   return useQuery({
     queryKey: ["tsumikis", tsumikiID],
     queryFn: () => tsumikisApi.getSpecifiedTsumiki({ tsumikiID }),
+    enabled,
   });
 };
 
@@ -43,8 +44,13 @@ export const useDeleteTsumiki = (tsumikiID: number) => {
 
 export const useUpdateTsumikiThumbnail = (tsumikiID: number) => {
   return useMutation({
-    mutationFn: (updateTsumikiThumbnailRequest: UpdateTsumikiThumbnailRequest) =>
-      tsumikisApi.updateTsumikiThumbnail({ tsumikiID, updateTsumikiThumbnailRequest }),
+    mutationFn: (
+      updateTsumikiThumbnailRequest: UpdateTsumikiThumbnailRequest,
+    ) =>
+      tsumikisApi.updateTsumikiThumbnail({
+        tsumikiID,
+        updateTsumikiThumbnailRequest,
+      }),
   });
 };
 
