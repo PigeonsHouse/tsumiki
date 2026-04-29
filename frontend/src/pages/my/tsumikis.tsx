@@ -1,7 +1,9 @@
-import { useGetMyTsumikis } from "../../api";
+import { useDeleteTsumiki, useGetMyTsumikis } from "../../api";
 
 const MyTsumikis = () => {
   const { data } = useGetMyTsumikis();
+  const { mutate: deleteTsumiki } = useDeleteTsumiki();
+
   return (
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>自分の積み木一覧</h1>
@@ -9,6 +11,7 @@ const MyTsumikis = () => {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {data?.map((tsumiki) => (
             <a
+              key={tsumiki.id}
               href={`/tsumikis/${tsumiki.id}`}
               style={{
                 border: "1px solid black",
@@ -48,6 +51,26 @@ const MyTsumikis = () => {
                   作品：{tsumiki.work.title}
                 </a>
               )}
+              <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                <a
+                  style={{ textDecoration: "none" }}
+                  href={`/tsumikis/${tsumiki.id}/edit`}
+                >
+                  <button>✏️</button>
+                </a>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (confirm(`${tsumiki.title} を削除してもよいですか？`)) {
+                      deleteTsumiki(tsumiki.id, {
+                        onError: () => alert("削除に失敗しました"),
+                      });
+                    }
+                  }}
+                >
+                  🗑️
+                </button>
+              </div>
               <small>{tsumiki.createdAt.toISOString()}</small>
             </a>
           ))}

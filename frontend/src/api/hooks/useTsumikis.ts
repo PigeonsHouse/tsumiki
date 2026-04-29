@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   GetTsumikisRequest,
   CreateTsumikiRequest,
@@ -36,9 +36,13 @@ export const useEditTsumiki = (tsumikiID: number) => {
   });
 };
 
-export const useDeleteTsumiki = (tsumikiID: number) => {
+export const useDeleteTsumiki = () => {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: () => tsumikisApi.deleteTsumiki({ tsumikiID }),
+    mutationFn: (tsumikiID: number) => tsumikisApi.deleteTsumiki({ tsumikiID }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users", "me", "tsumikis"] });
+    },
   });
 };
 
