@@ -1,6 +1,7 @@
 import { useParams } from "react-router";
 import { useGetUser } from "../../../api";
 import { useMemo } from "react";
+import NotFound from "../../../components/NotFound";
 
 const UserPage = () => {
   const { userId: userIdRaw } = useParams();
@@ -12,9 +13,11 @@ const UserPage = () => {
     [userIdRaw],
   );
   const userId = useMemo(() => Number(userIdRaw), [userIdRaw]);
-  const { data } = useGetUser(userId, isValidId);
+  const { data, isError } = useGetUser(userId, isValidId);
 
-  return (
+  return (!isValidId || isError) ? (
+    <NotFound />
+  ) : (
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>ユーザページTOP</h1>
       {data && (

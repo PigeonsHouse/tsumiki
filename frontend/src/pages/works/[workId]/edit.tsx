@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import { useGetWork, useEditWork, useUpdateWorkThumbnail, useUploadThumbnail } from "../../../api";
+import NotFound from "../../../components/NotFound";
 
 type FormValues = {
   title: string;
@@ -16,7 +17,7 @@ const EditWork = () => {
   const isValidId = !Number.isNaN(workID) && workID > 0;
 
   const navigate = useNavigate();
-  const { data: work } = useGetWork(workID, isValidId);
+  const { data: work, isError } = useGetWork(workID, isValidId);
   const { mutateAsync: editWork } = useEditWork(workID);
   const { mutateAsync: uploadThumbnail } = useUploadThumbnail();
   const { mutateAsync: updateThumbnail } = useUpdateWorkThumbnail(workID);
@@ -58,7 +59,9 @@ const EditWork = () => {
     navigate(`/works/${workID}`);
   };
 
-  return (
+  return (!isValidId || isError) ? (
+    <NotFound />
+  ) : (
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>作品編集</h1>
       <form

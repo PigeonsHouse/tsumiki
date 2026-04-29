@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { useGetWork, useGetWorkTsumikis } from "../../../api";
+import NotFound from "../../../components/NotFound";
 
 const WorkDetail = () => {
   const { workId: workIdRaw } = useParams();
@@ -12,10 +13,12 @@ const WorkDetail = () => {
     [workIdRaw],
   );
   const workId = useMemo(() => Number(workIdRaw), [workIdRaw]);
-  const { data: work } = useGetWork(workId, isValidId);
+  const { data: work, isError } = useGetWork(workId, isValidId);
   const { data: tsumikis } = useGetWorkTsumikis(workId);
 
-  return (
+  return (!isValidId || isError) ? (
+    <NotFound />
+  ) : (
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>作品詳細</h1>
       {work && (

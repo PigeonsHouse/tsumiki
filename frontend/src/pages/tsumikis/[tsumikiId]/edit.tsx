@@ -8,6 +8,7 @@ import {
   useUpdateTsumikiThumbnail,
   useUploadThumbnail,
 } from "../../../api";
+import NotFound from "../../../components/NotFound";
 
 type FormValues = {
   title: string;
@@ -22,7 +23,7 @@ const EditTsumiki = () => {
   const isValidId = !Number.isNaN(tsumikiID) && tsumikiID > 0;
 
   const navigate = useNavigate();
-  const { data: tsumiki } = useGetTsumiki(tsumikiID, isValidId);
+  const { data: tsumiki, isError } = useGetTsumiki(tsumikiID, isValidId);
   const { data: works } = useGetWorks();
   const { mutateAsync: editTsumiki } = useEditTsumiki(tsumikiID);
   const { mutateAsync: uploadThumbnail } = useUploadThumbnail();
@@ -65,7 +66,9 @@ const EditTsumiki = () => {
     navigate(`/tsumikis/${tsumikiID}`);
   };
 
-  return (
+  return (!isValidId || isError) ? (
+    <NotFound />
+  ) : (
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>積み木編集</h1>
       <form

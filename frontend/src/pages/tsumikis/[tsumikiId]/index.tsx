@@ -1,6 +1,7 @@
 import { useParams } from "react-router";
 import { useGetBlocks, useGetTsumiki } from "../../../api";
 import { useMemo } from "react";
+import NotFound from "../../../components/NotFound";
 
 const TsumikiDetail = () => {
   const { tsumikiId: tsumikiIdRaw } = useParams();
@@ -12,10 +13,12 @@ const TsumikiDetail = () => {
     [tsumikiIdRaw],
   );
   const tsumikiId = useMemo(() => Number(tsumikiIdRaw), [tsumikiIdRaw]);
-  const { data: tsumiki } = useGetTsumiki(tsumikiId, isValidId);
+  const { data: tsumiki, isError } = useGetTsumiki(tsumikiId, isValidId);
   const { data: blocks } = useGetBlocks(tsumikiId, isValidId);
 
-  return (
+  return (!isValidId || isError) ? (
+    <NotFound />
+  ) : (
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>積み木詳細</h1>
       {tsumiki && blocks && (

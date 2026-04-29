@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { useGetUserTsumikis } from "../../../api";
+import NotFound from "../../../components/NotFound";
 
 const UserTsumikis = () => {
   const { userId: userIdRaw } = useParams();
@@ -12,9 +13,11 @@ const UserTsumikis = () => {
     [userIdRaw],
   );
   const userId = useMemo(() => Number(userIdRaw), [userIdRaw]);
-  const { data } = useGetUserTsumikis(userId, isValidId);
+  const { data, isError } = useGetUserTsumikis(userId, isValidId);
 
-  return (
+  return (!isValidId || isError) ? (
+    <NotFound />
+  ) : (
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>ユーザの積み木一覧</h1>
       <div style={{ width: 1024, margin: "auto" }}>
