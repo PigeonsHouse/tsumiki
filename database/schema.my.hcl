@@ -370,7 +370,7 @@ table "tsumiki_favorites" {
   foreign_key "fk_tsumiki_favorites_tsumiki_id" {
     columns     = [column.tsumiki_id]
     ref_columns = [table.tsumikis.column.id]
-    on_delete   = NO_ACTION
+    on_delete   = CASCADE
     on_update   = NO_ACTION
   }
   foreign_key "fk_tsumiki_favorites_user_id" {
@@ -430,7 +430,7 @@ table "tsumiki_comments" {
   foreign_key "fk_tsumiki_comments_tsumiki_id" {
     columns     = [column.tsumiki_id]
     ref_columns = [table.tsumikis.column.id]
-    on_delete   = NO_ACTION
+    on_delete   = CASCADE
     on_update   = NO_ACTION
   }
   foreign_key "fk_tsumiki_comments_tsumiki_block_id" {
@@ -532,7 +532,7 @@ table "tsumiki_reactions" {
   foreign_key "fk_tsumiki_reactions_tsumiki_id" {
     columns     = [column.tsumiki_id]
     ref_columns = [table.tsumikis.column.id]
-    on_delete   = NO_ACTION
+    on_delete   = CASCADE
     on_update   = NO_ACTION
   }
   foreign_key "fk_tsumiki_reactions_user_id" {
