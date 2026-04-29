@@ -1,6 +1,11 @@
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
-import { useUploadThumbnail, useCreateTsumiki, useGetWorks, useCreateWork } from "../../api";
+import {
+  useUploadThumbnail,
+  useCreateTsumiki,
+  useGetWorks,
+  useCreateWork,
+} from "../../api";
 import { blocksApi, tsumikisApi } from "../../api/client";
 import { thumbnailsApi } from "../../api/client";
 
@@ -39,6 +44,8 @@ const NewTsumiki = () => {
   });
 
   const workMode = watch("workMode");
+  const percentage = watch("percentage");
+  const condition = watch("condition");
   const { data: works } = useGetWorks();
   const { mutateAsync: uploadThumbnail } = useUploadThumbnail();
   const { mutateAsync: createTsumiki } = useCreateTsumiki();
@@ -55,7 +62,9 @@ const NewTsumiki = () => {
     } else if (data.workMode === "new") {
       let newWorkThumbnailId: number | null = null;
       if (data.newWorkThumbnail?.length > 0) {
-        const { id } = await thumbnailsApi.postThumbnail({ thumbnail: data.newWorkThumbnail[0] });
+        const { id } = await thumbnailsApi.postThumbnail({
+          thumbnail: data.newWorkThumbnail[0],
+        });
         newWorkThumbnailId = id;
       }
       const work = await createWork({
@@ -104,7 +113,10 @@ const NewTsumiki = () => {
   return (
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>積み木新規作成</h1>
-      <form onSubmit={handleSubmit(onSubmit)} style={{ maxWidth: 480, margin: "0 auto" }}>
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        style={{ maxWidth: 480, margin: "0 auto" }}
+      >
         <fieldset style={{ marginBottom: 24 }}>
           <legend>積み木情報</legend>
 
@@ -117,23 +129,36 @@ const NewTsumiki = () => {
               style={{ width: "100%" }}
               {...register("title", {
                 required: "タイトルは必須です",
-                maxLength: { value: 200, message: "200文字以内で入力してください" },
+                maxLength: {
+                  value: 200,
+                  message: "200文字以内で入力してください",
+                },
               })}
             />
-            {errors.title && <p style={{ color: "red", margin: "4px 0 0" }}>{errors.title.message}</p>}
+            {errors.title && (
+              <p style={{ color: "red", margin: "4px 0 0" }}>
+                {errors.title.message}
+              </p>
+            )}
           </div>
 
           <div style={{ marginBottom: 12 }}>
             <label htmlFor="visibility">公開設定（必須）</label>
             <br />
-            <select id="visibility" style={{ width: "100%" }} {...register("visibility")}>
+            <select
+              id="visibility"
+              style={{ width: "100%" }}
+              {...register("visibility")}
+            >
               <option value="public">public（誰でも閲覧可能）</option>
               <option value="limited">limited（同サーバーメンバーのみ）</option>
             </select>
           </div>
 
           <div style={{ marginBottom: 12 }}>
-            <label htmlFor="thumbnail">サムネイル画像（必須 / JPEG・PNG・GIF・最大5MB）</label>
+            <label htmlFor="thumbnail">
+              サムネイル画像（必須 / JPEG・PNG・GIF・最大5MB）
+            </label>
             <br />
             <input
               id="thumbnail"
@@ -141,27 +166,43 @@ const NewTsumiki = () => {
               accept="image/jpeg,image/png,image/gif"
               {...register("thumbnail", { required: "サムネイルは必須です" })}
             />
-            {errors.thumbnail && <p style={{ color: "red", margin: "4px 0 0" }}>{errors.thumbnail.message}</p>}
+            {errors.thumbnail && (
+              <p style={{ color: "red", margin: "4px 0 0" }}>
+                {errors.thumbnail.message}
+              </p>
+            )}
           </div>
 
           <div style={{ marginBottom: 12 }}>
             <label>紐づける作品（任意）</label>
             <br />
-            <label><input type="radio" value="none" {...register("workMode")} /> なし</label>
-            {" "}
-            <label><input type="radio" value="existing" {...register("workMode")} /> 既存から選ぶ</label>
-            {" "}
-            <label><input type="radio" value="new" {...register("workMode")} /> 新しく作成</label>
+            <label>
+              <input type="radio" value="none" {...register("workMode")} /> なし
+            </label>{" "}
+            <label>
+              <input type="radio" value="existing" {...register("workMode")} />{" "}
+              既存から選ぶ
+            </label>{" "}
+            <label>
+              <input type="radio" value="new" {...register("workMode")} />{" "}
+              新しく作成
+            </label>
           </div>
 
           {workMode === "existing" && (
             <div style={{ marginBottom: 12 }}>
               <label htmlFor="workId">作品を選択</label>
               <br />
-              <select id="workId" style={{ width: "100%" }} {...register("workId")}>
+              <select
+                id="workId"
+                style={{ width: "100%" }}
+                {...register("workId")}
+              >
                 <option value="">選択してください</option>
                 {works?.map((work) => (
-                  <option key={work.id} value={work.id}>{work.title}</option>
+                  <option key={work.id} value={work.id}>
+                    {work.title}
+                  </option>
                 ))}
               </select>
             </div>
@@ -179,19 +220,33 @@ const NewTsumiki = () => {
                   type="text"
                   style={{ width: "100%" }}
                   {...register("newWorkTitle", {
-                    required: workMode === "new" ? "作品タイトルは必須です" : false,
-                    maxLength: { value: 200, message: "200文字以内で入力してください" },
+                    required:
+                      workMode === "new" ? "作品タイトルは必須です" : false,
+                    maxLength: {
+                      value: 200,
+                      message: "200文字以内で入力してください",
+                    },
                   })}
                 />
-                {errors.newWorkTitle && <p style={{ color: "red", margin: "4px 0 0" }}>{errors.newWorkTitle.message}</p>}
+                {errors.newWorkTitle && (
+                  <p style={{ color: "red", margin: "4px 0 0" }}>
+                    {errors.newWorkTitle.message}
+                  </p>
+                )}
               </div>
 
               <div style={{ marginBottom: 8 }}>
                 <label htmlFor="newWorkVisibility">公開設定（必須）</label>
                 <br />
-                <select id="newWorkVisibility" style={{ width: "100%" }} {...register("newWorkVisibility")}>
+                <select
+                  id="newWorkVisibility"
+                  style={{ width: "100%" }}
+                  {...register("newWorkVisibility")}
+                >
                   <option value="public">public（誰でも閲覧可能）</option>
-                  <option value="limited">limited（同サーバーメンバーのみ）</option>
+                  <option value="limited">
+                    limited（同サーバーメンバーのみ）
+                  </option>
                 </select>
               </div>
 
@@ -204,10 +259,17 @@ const NewTsumiki = () => {
                   style={{ width: "100%" }}
                   {...register("newWorkDescription", {
                     required: workMode === "new" ? "説明は必須です" : false,
-                    maxLength: { value: 4000, message: "4000文字以内で入力してください" },
+                    maxLength: {
+                      value: 4000,
+                      message: "4000文字以内で入力してください",
+                    },
                   })}
                 />
-                {errors.newWorkDescription && <p style={{ color: "red", margin: "4px 0 0" }}>{errors.newWorkDescription.message}</p>}
+                {errors.newWorkDescription && (
+                  <p style={{ color: "red", margin: "4px 0 0" }}>
+                    {errors.newWorkDescription.message}
+                  </p>
+                )}
               </div>
 
               <div style={{ marginBottom: 8 }}>
@@ -228,33 +290,31 @@ const NewTsumiki = () => {
           <legend>最初のブロック</legend>
 
           <div style={{ marginBottom: 12 }}>
-            <label htmlFor="percentage">進捗率（必須・0〜100）</label>
+            <label htmlFor="percentage">進捗率: {percentage}%</label>
             <br />
             <input
               id="percentage"
-              type="number"
+              type="range"
               min={0}
               max={100}
+              step={1}
               style={{ width: "100%" }}
-              {...register("percentage", {
-                required: "進捗率は必須です",
-                min: { value: 0, message: "0以上で入力してください" },
-                max: { value: 100, message: "100以下で入力してください" },
-              })}
+              {...register("percentage", { required: true })}
             />
-            {errors.percentage && <p style={{ color: "red", margin: "4px 0 0" }}>{errors.percentage.message}</p>}
           </div>
 
           <div style={{ marginBottom: 12 }}>
-            <label htmlFor="condition">コンディション（必須・1〜5）</label>
+            <label htmlFor="condition">コンディション: {condition} / 5</label>
             <br />
-            <select id="condition" style={{ width: "100%" }} {...register("condition", { required: true })}>
-              <option value={1}>1</option>
-              <option value={2}>2</option>
-              <option value={3}>3</option>
-              <option value={4}>4</option>
-              <option value={5}>5</option>
-            </select>
+            <input
+              id="condition"
+              type="range"
+              min={1}
+              max={5}
+              step={1}
+              style={{ width: "100%" }}
+              {...register("condition", { required: true })}
+            />
           </div>
 
           <div style={{ marginBottom: 12 }}>
@@ -265,18 +325,31 @@ const NewTsumiki = () => {
               rows={3}
               style={{ width: "100%" }}
               {...register("message", {
-                maxLength: { value: 200, message: "200文字以内で入力してください" },
+                maxLength: {
+                  value: 200,
+                  message: "200文字以内で入力してください",
+                },
                 validate: (value) => {
                   const medias = getValues("medias");
-                  return !!value || medias?.length > 0 || "メッセージかメディアのいずれかは必須です";
+                  return (
+                    !!value ||
+                    medias?.length > 0 ||
+                    "メッセージかメディアのいずれかは必須です"
+                  );
                 },
               })}
             />
-            {errors.message && <p style={{ color: "red", margin: "4px 0 0" }}>{errors.message.message}</p>}
+            {errors.message && (
+              <p style={{ color: "red", margin: "4px 0 0" }}>
+                {errors.message.message}
+              </p>
+            )}
           </div>
 
           <div style={{ marginBottom: 12 }}>
-            <label htmlFor="medias">メディア（任意・最大4件 / 画像・音声・動画）</label>
+            <label htmlFor="medias">
+              メディア（任意・最大4件 / 画像・音声・動画）
+            </label>
             <br />
             <input
               id="medias"
@@ -286,7 +359,11 @@ const NewTsumiki = () => {
               {...register("medias", {
                 validate: (value) => {
                   const message = getValues("message");
-                  return !!message || value?.length > 0 || "メッセージかメディアのいずれかは必須です";
+                  return (
+                    !!message ||
+                    value?.length > 0 ||
+                    "メッセージかメディアのいずれかは必須です"
+                  );
                 },
               })}
             />
