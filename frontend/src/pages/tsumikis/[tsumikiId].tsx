@@ -30,6 +30,31 @@ const TsumikiDetail = () => {
             src={tsumiki.thumbnailUrl || ""}
           />
           <h2>{tsumiki.title}</h2>
+          {tsumiki.work && (
+            <a href={`/works/${tsumiki.work.id}`}>
+              <div
+                style={{
+                  borderRadius: 8,
+                  padding: 8,
+                  border: "1px solid black",
+                  display: "flex",
+                  gap: 16,
+                  alignItems: "center",
+                }}
+              >
+                <img
+                  style={{
+                    height: 48,
+                    aspectRatio: "16 / 9",
+                    objectFit: "contain",
+                    backgroundColor: "gray",
+                  }}
+                  src={tsumiki.work.thumbnailUrl || ""}
+                />
+                作品：{tsumiki.work.title}
+              </div>
+            </a>
+          )}
           <a
             style={{ display: "flex", alignItems: "center", gap: 8 }}
             href={`/users/${tsumiki.user.id}`}
