@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import {
   useUploadThumbnail,
   useCreateTsumiki,
@@ -27,11 +28,13 @@ type FormValues = {
 
 const NewTsumiki = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const {
     register,
     handleSubmit,
     watch,
     getValues,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     defaultValues: {
@@ -47,6 +50,16 @@ const NewTsumiki = () => {
   const percentage = watch("percentage");
   const condition = watch("condition");
   const { data: works } = useGetWorks();
+
+  useEffect(() => {
+    if (!works) return;
+    const workId = searchParams.get("workId");
+    if (!workId) return;
+    if (works.some((w) => String(w.id) === workId)) {
+      setValue("workMode", "existing");
+      setValue("workId", workId);
+    }
+  }, [works, searchParams, setValue]);
   const { mutateAsync: uploadThumbnail } = useUploadThumbnail();
   const { mutateAsync: createTsumiki } = useCreateTsumiki();
   const { mutateAsync: createWork } = useCreateWork();

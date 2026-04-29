@@ -165,6 +165,8 @@ func (th *tsumikiHandlerImpl) GetSpecifiedTsumiki(w http.ResponseWriter, r *http
 		return
 	}
 
+	isOwner := userID != nil && *userID == tsumiki.User.ID
+	tsumiki.IsOwner = &isOwner
 	helper.ResolveTsumikiURLs(tsumiki, th.media)
 	helper.ResponseOk(w, tsumiki)
 }

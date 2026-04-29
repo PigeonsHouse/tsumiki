@@ -10,14 +10,16 @@ type ThumbnailUpload struct {
 }
 
 type Tsumiki struct {
-	ID         int              `json:"id"`
-	Title      string           `json:"title"`
-	ThumbnailURL *string `json:"thumbnail_url"`
-	Visibility string           `json:"visibility"`
-	User       User             `json:"user"`
-	Work       *Work            `json:"work"`
-	CreatedAt  time.Time        `json:"created_at"`
-	UpdatedAt  time.Time        `json:"updated_at"`
+	ID           int       `json:"id"`
+	Title        string    `json:"title"`
+	ThumbnailURL *string   `json:"thumbnail_url"`
+	Visibility   string    `json:"visibility"`
+	User         User      `json:"user"`
+	Work         *Work     `json:"work"`
+	IsOwner      *bool     `json:"is_owner,omitempty"`
+	Percentage   *int      `json:"percentage"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 type TsumikiBlock struct {

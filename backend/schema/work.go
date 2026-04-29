@@ -9,6 +9,7 @@ type Work struct {
 	Visibility   string    `json:"visibility"`
 	ThumbnailURL *string   `json:"thumbnail_url"`
 	Owner        User      `json:"owner"`
+	IsOwner      *bool     `json:"is_owner,omitempty"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }

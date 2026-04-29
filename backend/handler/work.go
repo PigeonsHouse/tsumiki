@@ -88,6 +88,8 @@ func (wh *workHandlerImpl) GetSpecifiedWork(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	isOwner := userID != nil && *userID == work.Owner.ID
+	work.IsOwner = &isOwner
 	helper.ResolveWorkURLs(work, wh.media)
 	helper.ResponseOk(w, work)
 }

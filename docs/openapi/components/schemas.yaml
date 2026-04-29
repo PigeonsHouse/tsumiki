@@ -69,6 +69,10 @@ Work:
       nullable: true
     owner:
       $ref: "#/User"
+    is_owner:
+      type: boolean
+      nullable: true
+      description: "認証済みユーザーが作品のオーナーであれば true。詳細取得時のみ返す"
     created_at:
       type: string
       format: date-time
@@ -100,6 +104,16 @@ Tsumiki:
       allOf:
         - $ref: "#/Work"
       nullable: true
+    is_owner:
+      type: boolean
+      nullable: true
+      description: "認証済みユーザーが積み木のオーナーであれば true。詳細取得時のみ返す"
+    percentage:
+      type: integer
+      minimum: 0
+      maximum: 100
+      nullable: true
+      description: "最新ブロックの進捗度。ブロックが存在しない場合は null"
     created_at:
       type: string
       format: date-time

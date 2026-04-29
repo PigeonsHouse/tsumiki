@@ -31,7 +31,8 @@ const tsumikiSelectQuery = "SELECT t.id, t.title, t.visibility, t.created_at, t.
 	"w.id, w.title, w.description, w.visibility, w.created_at, w.updated_at, " +
 	"wu.id, wu.discord_user_id, wu.name, wu.avatar_url, wu.created_at, wu.updated_at, " +
 	"wth.id, wth.path, wth.created_at, wth.updated_at, " +
-	"tth.id, tth.path, tth.created_at, tth.updated_at " +
+	"tth.id, tth.path, tth.created_at, tth.updated_at, " +
+	"(SELECT percentage FROM tsumiki_blocks WHERE tsumiki_id = t.id AND deleted_at IS NULL ORDER BY id DESC LIMIT 1) AS percentage " +
 	"FROM tsumikis t " +
 	"JOIN users u ON t.user_id = u.id " +
 	"LEFT JOIN works w ON t.work_id = w.id " +
@@ -53,6 +54,7 @@ func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 	var tthID sql.NullInt64
 	var tthPath sql.NullString
 	var tthCreatedAt, tthUpdatedAt sql.NullTime
+	var percentage sql.NullInt64
 
 	err := scan(
 		&t.ID, &t.Title, &t.Visibility, &t.CreatedAt, &t.UpdatedAt,
@@ -61,9 +63,15 @@ func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 		&ownerID, &ownerDiscordID, &ownerName, &ownerAvatarUrl, &ownerCreatedAt, &ownerUpdatedAt,
 		&wthID, &wthPath, &wthCreatedAt, &wthUpdatedAt,
 		&tthID, &tthPath, &tthCreatedAt, &tthUpdatedAt,
+		&percentage,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	if percentage.Valid {
+		p := int(percentage.Int64)
+		t.Percentage = &p
 	}
 
 	if tthID.Valid {

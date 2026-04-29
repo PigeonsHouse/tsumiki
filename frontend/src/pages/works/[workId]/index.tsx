@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useParams } from "react-router";
-import { useGetWork, useGetWorkTsumikis } from "../../../api";
+import { useGetWork, useGetWorkTsumikis, useDeleteWork } from "../../../api";
 import NotFound from "../../../components/NotFound";
 
 const WorkDetail = () => {
@@ -15,6 +15,13 @@ const WorkDetail = () => {
   const workId = useMemo(() => Number(workIdRaw), [workIdRaw]);
   const { data: work, isError } = useGetWork(workId, isValidId);
   const { data: tsumikis } = useGetWorkTsumikis(workId);
+  const { mutateAsync: deleteWork } = useDeleteWork(workId);
+
+  const handleDelete = async () => {
+    if (!confirm("この作品を削除しますか？")) return;
+    await deleteWork();
+    location.href = "/works";
+  };
 
   return (!isValidId || isError) ? (
     <NotFound />
@@ -45,10 +52,22 @@ const WorkDetail = () => {
             <span>{work.owner.name}</span>
           </a>
           <small>{work.createdAt.toISOString()}</small>
+          {work.isOwner && (
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <a href={`/works/${workId}/edit`}>
+                <button type="button">編集</button>
+              </a>
+              <button type="button" onClick={handleDelete}>削除</button>
+              <a href={`/tsumikis/new?workId=${workId}`}>
+                <button type="button">積み木を追加</button>
+              </a>
+            </div>
+          )}
           <hr />
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {tsumikis?.map((tsumiki) => (
               <a
+                key={tsumiki.id}
                 href={`/tsumikis/${tsumiki.id}`}
                 style={{
                   border: "1px solid black",
@@ -73,6 +92,9 @@ const WorkDetail = () => {
                   }}
                   src={tsumiki.thumbnailUrl || ""}
                 />
+                {tsumiki.percentage != null && (
+                  <div>進捗度: {tsumiki.percentage}%</div>
+                )}
                 <a
                   style={{ display: "flex", alignItems: "center", gap: 8 }}
                   href={`/users/${tsumiki.user.id}`}
@@ -83,11 +105,6 @@ const WorkDetail = () => {
                   />
                   <span>{tsumiki.user.name}</span>
                 </a>
-                {tsumiki.work && (
-                  <a href={`/works/${tsumiki.work.id}`}>
-                    作品：{tsumiki.work.title}
-                  </a>
-                )}
                 <small>{tsumiki.createdAt.toISOString()}</small>
               </a>
             ))}
