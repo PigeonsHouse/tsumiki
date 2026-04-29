@@ -1,5 +1,5 @@
 import { useParams } from "react-router";
-import { useGetBlocks, useGetTsumiki } from "../../api";
+import { useGetBlocks, useGetTsumiki } from "../../../api";
 import { useMemo } from "react";
 
 const TsumikiDetail = () => {

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useParams } from "react-router";
-import { useGetWork, useGetWorkTsumikis } from "../../api";
+import { useGetWork, useGetWorkTsumikis } from "../../../api";
 
 const WorkDetail = () => {
   const { workId: workIdRaw } = useParams();
