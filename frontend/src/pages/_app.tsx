@@ -33,8 +33,11 @@ const Layout = () => {
               gap: 8,
             }}
           >
-            <a href="/upload" style={{ height: "100%" }}>
-              <button style={{ height: "100%" }}>投稿する</button>
+            <a href="/tsumikis/new" style={{ height: "100%" }}>
+              <button style={{ height: "100%" }}>積み木を投稿する</button>
+            </a>
+            <a href="/works/new" style={{ height: "100%" }}>
+              <button style={{ height: "100%" }}>作品を投稿する</button>
             </a>
             <div
               style={{
