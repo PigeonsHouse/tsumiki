@@ -1,12 +1,19 @@
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
-import { useUploadThumbnail, useCreateTsumiki } from "../../api";
+import { useUploadThumbnail, useCreateTsumiki, useGetWorks, useCreateWork } from "../../api";
 import { blocksApi, tsumikisApi } from "../../api/client";
+import { thumbnailsApi } from "../../api/client";
 
 type FormValues = {
   title: string;
   visibility: "public" | "limited";
   thumbnail: FileList;
+  workMode: "none" | "existing" | "new";
+  workId: string;
+  newWorkTitle: string;
+  newWorkVisibility: "public" | "limited";
+  newWorkDescription: string;
+  newWorkThumbnail: FileList;
   message: string;
   percentage: number;
   condition: number;
@@ -18,26 +25,58 @@ const NewTsumiki = () => {
   const {
     register,
     handleSubmit,
+    watch,
     getValues,
     formState: { errors, isSubmitting },
-  } = useForm<FormValues>({ defaultValues: { visibility: "public", percentage: 0, condition: 3 } });
+  } = useForm<FormValues>({
+    defaultValues: {
+      visibility: "public",
+      workMode: "none",
+      newWorkVisibility: "public",
+      percentage: 0,
+      condition: 3,
+    },
+  });
 
+  const workMode = watch("workMode");
+  const { data: works } = useGetWorks();
   const { mutateAsync: uploadThumbnail } = useUploadThumbnail();
   const { mutateAsync: createTsumiki } = useCreateTsumiki();
+  const { mutateAsync: createWork } = useCreateWork();
 
   const onSubmit = async (data: FormValues) => {
     // 1. サムネイルアップロード
     const { id: thumbnailId } = await uploadThumbnail(data.thumbnail[0]);
 
-    // 2. 積み木作成
+    // 2. 作品の解決（既存選択 or 新規作成）
+    let workId: number | null = null;
+    if (data.workMode === "existing" && data.workId) {
+      workId = Number(data.workId);
+    } else if (data.workMode === "new") {
+      let newWorkThumbnailId: number | null = null;
+      if (data.newWorkThumbnail?.length > 0) {
+        const { id } = await thumbnailsApi.postThumbnail({ thumbnail: data.newWorkThumbnail[0] });
+        newWorkThumbnailId = id;
+      }
+      const work = await createWork({
+        title: data.newWorkTitle,
+        visibility: data.newWorkVisibility,
+        description: data.newWorkDescription,
+        thumbnailId: newWorkThumbnailId,
+      });
+      workId = work.id;
+    }
+
+    // 3. 積み木作成
     const tsumiki = await createTsumiki({
       title: data.title,
       visibility: data.visibility,
       thumbnailId,
+      workId,
     });
     const tsumikiID = tsumiki.id;
 
-    // 3. メディアアップロード（選択されていれば最大4件）
+    // 4. メディアアップロード（選択されていれば最大4件）
     const mediaIds: number[] = [];
     if (data.medias && data.medias.length > 0) {
       const files = Array.from(data.medias).slice(0, 4);
@@ -47,7 +86,7 @@ const NewTsumiki = () => {
       }
     }
 
-    // 4. 最初のブロック追加
+    // 5. 最初のブロック追加
     await blocksApi.addBlock({
       tsumikiID,
       addBlockRequest: {
@@ -104,6 +143,85 @@ const NewTsumiki = () => {
             />
             {errors.thumbnail && <p style={{ color: "red", margin: "4px 0 0" }}>{errors.thumbnail.message}</p>}
           </div>
+
+          <div style={{ marginBottom: 12 }}>
+            <label>紐づける作品（任意）</label>
+            <br />
+            <label><input type="radio" value="none" {...register("workMode")} /> なし</label>
+            {" "}
+            <label><input type="radio" value="existing" {...register("workMode")} /> 既存から選ぶ</label>
+            {" "}
+            <label><input type="radio" value="new" {...register("workMode")} /> 新しく作成</label>
+          </div>
+
+          {workMode === "existing" && (
+            <div style={{ marginBottom: 12 }}>
+              <label htmlFor="workId">作品を選択</label>
+              <br />
+              <select id="workId" style={{ width: "100%" }} {...register("workId")}>
+                <option value="">選択してください</option>
+                {works?.map((work) => (
+                  <option key={work.id} value={work.id}>{work.title}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {workMode === "new" && (
+            <fieldset style={{ marginBottom: 12 }}>
+              <legend>新しい作品</legend>
+
+              <div style={{ marginBottom: 8 }}>
+                <label htmlFor="newWorkTitle">タイトル（必須）</label>
+                <br />
+                <input
+                  id="newWorkTitle"
+                  type="text"
+                  style={{ width: "100%" }}
+                  {...register("newWorkTitle", {
+                    required: workMode === "new" ? "作品タイトルは必須です" : false,
+                    maxLength: { value: 200, message: "200文字以内で入力してください" },
+                  })}
+                />
+                {errors.newWorkTitle && <p style={{ color: "red", margin: "4px 0 0" }}>{errors.newWorkTitle.message}</p>}
+              </div>
+
+              <div style={{ marginBottom: 8 }}>
+                <label htmlFor="newWorkVisibility">公開設定（必須）</label>
+                <br />
+                <select id="newWorkVisibility" style={{ width: "100%" }} {...register("newWorkVisibility")}>
+                  <option value="public">public（誰でも閲覧可能）</option>
+                  <option value="limited">limited（同サーバーメンバーのみ）</option>
+                </select>
+              </div>
+
+              <div style={{ marginBottom: 8 }}>
+                <label htmlFor="newWorkDescription">説明（必須）</label>
+                <br />
+                <textarea
+                  id="newWorkDescription"
+                  rows={3}
+                  style={{ width: "100%" }}
+                  {...register("newWorkDescription", {
+                    required: workMode === "new" ? "説明は必須です" : false,
+                    maxLength: { value: 4000, message: "4000文字以内で入力してください" },
+                  })}
+                />
+                {errors.newWorkDescription && <p style={{ color: "red", margin: "4px 0 0" }}>{errors.newWorkDescription.message}</p>}
+              </div>
+
+              <div style={{ marginBottom: 8 }}>
+                <label htmlFor="newWorkThumbnail">サムネイル画像（任意）</label>
+                <br />
+                <input
+                  id="newWorkThumbnail"
+                  type="file"
+                  accept="image/jpeg,image/png,image/gif"
+                  {...register("newWorkThumbnail")}
+                />
+              </div>
+            </fieldset>
+          )}
         </fieldset>
 
         <fieldset style={{ marginBottom: 24 }}>
