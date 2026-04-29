@@ -5,6 +5,20 @@ discord:
     summary: Discord OAuth認証へリダイレクト
     operationId: redirectDiscord
     security: []
+    parameters:
+      - name: mode
+        in: query
+        description: |
+          コールバック後のレスポンス形式。
+          `redirect` を指定するとフロントエンドURL (`/login/callback`) へリダイレクトする。
+          省略または `json` を指定するとJSONでユーザー情報を返す。
+        required: false
+        schema:
+          type: string
+          enum:
+            - json
+            - redirect
+          default: json
     responses:
       "308":
         description: Discord OAuth認証ページへリダイレクト
@@ -16,7 +30,9 @@ callback:
     summary: Discord OAuthコールバック
     description: |
       Discord OAuthの認証コールバック。
-      認証成功時にアクセストークンとリフレッシュトークンをCookieにセットしてユーザー情報を返す。
+      認証成功時にアクセストークンとリフレッシュトークンをCookieにセットする。
+      `mode=json` の場合はユーザー情報をJSONで返す。
+      `mode=redirect` の場合はフロントエンドの `/login/callback` へリダイレクトする。
     operationId: callbackDiscord
     security: []
     parameters:
@@ -32,9 +48,15 @@ callback:
         required: false
         schema:
           type: string
+      - name: state
+        in: query
+        description: OAuthフローで引き回すstateパラメータ（base64エンコードされたJSON）
+        required: false
+        schema:
+          type: string
     responses:
       "200":
-        description: 認証成功
+        description: 認証成功（mode=json）
         headers:
           Set-Cookie:
             description: access_token および refresh_token のCookieをセット
@@ -44,6 +66,15 @@ callback:
           application/json:
             schema:
               $ref: "../components/schemas.yaml#/User"
+      "302":
+        description: 認証成功またはエラー時のリダイレクト（mode=redirect）
+        headers:
+          Location:
+            description: |
+              成功時: `{FRONTEND_URL}/login/callback`
+              エラー時: `{FRONTEND_URL}/login/callback?error=auth_failed`
+            schema:
+              type: string
       "400":
         $ref: "../components/responses.yaml#/BadRequest"
       "403":
