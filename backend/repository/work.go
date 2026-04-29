@@ -10,9 +10,9 @@ import (
 type WorkRepository interface {
 	GetWorks(watchUserID *int, pageSize, page int) ([]schema.Work, error)
 	GetWork(workID int) (*schema.Work, error)
-	CreateWork(userID int, title string, visibility string, description string, thumbnailID *int) (*schema.Work, error)
+	CreateWork(userID int, title string, visibility string, description *string, thumbnailID *int) (*schema.Work, error)
 	UpdateWorkThumbnail(workID int, thumbnailID int) error
-	UpdateWork(workID int, title string, visibility string, description string) (*schema.Work, error)
+	UpdateWork(workID int, title string, visibility string, description *string) (*schema.Work, error)
 	DeleteWork(workID int) error
 }
 
@@ -92,7 +92,7 @@ func (wr *workRepositoryImpl) GetWork(workID int) (*schema.Work, error) {
 	return w, err
 }
 
-func (wr *workRepositoryImpl) CreateWork(userID int, title string, visibility string, description string, thumbnailID *int) (*schema.Work, error) {
+func (wr *workRepositoryImpl) CreateWork(userID int, title string, visibility string, description *string, thumbnailID *int) (*schema.Work, error) {
 	result, err := wr.db.Exec(
 		"INSERT INTO works (owner_user_id, title, visibility, description, thumbnail_id) VALUES (?, ?, ?, ?, ?)",
 		userID, title, visibility, description, thumbnailID,
@@ -115,7 +115,7 @@ func (wr *workRepositoryImpl) UpdateWorkThumbnail(workID int, thumbnailID int) e
 	return err
 }
 
-func (wr *workRepositoryImpl) UpdateWork(workID int, title string, visibility string, description string) (*schema.Work, error) {
+func (wr *workRepositoryImpl) UpdateWork(workID int, title string, visibility string, description *string) (*schema.Work, error) {
 	_, err := wr.db.Exec(
 		"UPDATE works SET title = ?, visibility = ?, description = ? WHERE id = ?",
 		title, visibility, description, workID,

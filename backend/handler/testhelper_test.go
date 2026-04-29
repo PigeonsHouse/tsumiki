@@ -35,10 +35,11 @@ func sampleUser() *schema.User {
 }
 
 func sampleWork() *schema.Work {
+	desc := "Test Description"
 	return &schema.Work{
 		ID:          2,
 		Title:       "Test Work",
-		Description: "Test Description",
+		Description: &desc,
 		Visibility:  "public",
 		Owner:       *sampleUser(),
 		CreatedAt:   time.Now().Truncate(time.Second),

@@ -70,7 +70,7 @@ const NewTsumiki = () => {
       const work = await createWork({
         title: data.newWorkTitle,
         visibility: data.newWorkVisibility,
-        description: data.newWorkDescription,
+        description: data.newWorkDescription || undefined,
         thumbnailId: newWorkThumbnailId,
       });
       workId = work.id;
@@ -174,7 +174,7 @@ const NewTsumiki = () => {
           </div>
 
           <div style={{ marginBottom: 12 }}>
-            <label>紐づける作品（任意）</label>
+            <label>紐づける作品</label>
             <br />
             <label>
               <input type="radio" value="none" {...register("workMode")} /> なし
@@ -251,14 +251,13 @@ const NewTsumiki = () => {
               </div>
 
               <div style={{ marginBottom: 8 }}>
-                <label htmlFor="newWorkDescription">説明（必須）</label>
+                <label htmlFor="newWorkDescription">説明</label>
                 <br />
                 <textarea
                   id="newWorkDescription"
                   rows={3}
                   style={{ width: "100%" }}
                   {...register("newWorkDescription", {
-                    required: workMode === "new" ? "説明は必須です" : false,
                     maxLength: {
                       value: 4000,
                       message: "4000文字以内で入力してください",
@@ -273,7 +272,7 @@ const NewTsumiki = () => {
               </div>
 
               <div style={{ marginBottom: 8 }}>
-                <label htmlFor="newWorkThumbnail">サムネイル画像（任意）</label>
+                <label htmlFor="newWorkThumbnail">サムネイル画像</label>
                 <br />
                 <input
                   id="newWorkThumbnail"
@@ -318,7 +317,7 @@ const NewTsumiki = () => {
           </div>
 
           <div style={{ marginBottom: 12 }}>
-            <label htmlFor="message">メッセージ（任意・200文字以内）</label>
+            <label htmlFor="message">メッセージ（200文字以内）</label>
             <br />
             <textarea
               id="message"
@@ -348,7 +347,7 @@ const NewTsumiki = () => {
 
           <div style={{ marginBottom: 12 }}>
             <label htmlFor="medias">
-              メディア（任意・最大4件 / 画像・音声・動画）
+              メディア（最大4件 / 画像・音声・動画）
             </label>
             <br />
             <input

@@ -94,10 +94,11 @@ func sampleThumbnail() *schema.ThumbnailUpload {
 
 func sampleWork() *schema.Work {
 	owner := sampleUser()
+	desc := "desc"
 	return &schema.Work{
 		ID:          2,
 		Title:       "Test Work",
-		Description: "desc",
+		Description: &desc,
 		Visibility:  "public",
 		Owner:       *owner,
 		CreatedAt:   time.Now().Truncate(time.Second),
@@ -176,7 +177,7 @@ func makeWorkScanFn(w *schema.Work) func(dest ...any) error {
 	return func(dest ...any) error {
 		*dest[0].(*int) = w.ID
 		*dest[1].(*string) = w.Title
-		*dest[2].(*string) = w.Description
+		*dest[2].(**string) = w.Description
 		*dest[3].(*string) = w.Visibility
 		*dest[4].(*time.Time) = w.CreatedAt
 		*dest[5].(*time.Time) = w.UpdatedAt

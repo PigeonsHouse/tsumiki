@@ -42,7 +42,7 @@ list:
         application/json:
           schema:
             type: object
-            required: [title, visibility, description]
+            required: [title, visibility]
             properties:
               title:
                 type: string
@@ -53,6 +53,7 @@ list:
               description:
                 type: string
                 maxLength: 4000
+                nullable: true
               thumbnail_id:
                 type: integer
                 format: int64
@@ -119,7 +120,7 @@ byID:
         application/json:
           schema:
             type: object
-            required: [title, visibility, description]
+            required: [title, visibility]
             properties:
               title:
                 type: string
@@ -130,6 +131,7 @@ byID:
               description:
                 type: string
                 maxLength: 4000
+                nullable: true
     responses:
       "200":
         description: 更新後の作品

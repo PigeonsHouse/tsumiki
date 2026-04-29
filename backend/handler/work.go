@@ -37,16 +37,16 @@ func NewWorkHandler(repos *repository.Repositories, mediaSvc media.MediaService)
 }
 
 type createWorkRequest struct {
-	Title       string `json:"title"`
-	Visibility  string `json:"visibility"`
-	Description string `json:"description"`
-	ThumbnailID *int   `json:"thumbnail_id"`
+	Title       string  `json:"title"`
+	Visibility  string  `json:"visibility"`
+	Description *string `json:"description"`
+	ThumbnailID *int    `json:"thumbnail_id"`
 }
 
 type editWorkRequest struct {
-	Title       string `json:"title"`
-	Visibility  string `json:"visibility"`
-	Description string `json:"description"`
+	Title       string  `json:"title"`
+	Visibility  string  `json:"visibility"`
+	Description *string `json:"description"`
 }
 
 func (wh *workHandlerImpl) GetWorks(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +166,7 @@ func (wh *workHandlerImpl) CreateWork(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseBadRequest(w, "タイトルは200文字以内にしてください")
 		return
 	}
-	if len(req.Description) > maxDescriptionLength {
+	if req.Description != nil && len(*req.Description) > maxDescriptionLength {
 		helper.ResponseBadRequest(w, "説明は4000文字以内にしてください")
 		return
 	}
@@ -208,7 +208,7 @@ func (wh *workHandlerImpl) EditWork(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseBadRequest(w, "タイトルは200文字以内にしてください")
 		return
 	}
-	if len(req.Description) > maxDescriptionLength {
+	if req.Description != nil && len(*req.Description) > maxDescriptionLength {
 		helper.ResponseBadRequest(w, "説明は4000文字以内にしてください")
 		return
 	}

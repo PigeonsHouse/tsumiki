@@ -47,7 +47,7 @@ ThumbnailUpload:
 
 Work:
   type: object
-  required: [id, title, description, visibility, owner, created_at, updated_at]
+  required: [id, title, visibility, owner, created_at, updated_at]
   properties:
     id:
       type: integer
@@ -58,6 +58,7 @@ Work:
     description:
       type: string
       maxLength: 4000
+      nullable: true
     visibility:
       type: string
       enum: [public, limited]

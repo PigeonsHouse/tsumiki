@@ -73,12 +73,14 @@ func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 
 	if workID.Valid {
 		w := &schema.Work{
-			ID:          int(workID.Int64),
-			Title:       workTitle.String,
-			Description: workDesc.String,
-			Visibility:  workVisibility.String,
-			CreatedAt:   workCreatedAt.Time,
-			UpdatedAt:   workUpdatedAt.Time,
+			ID:         int(workID.Int64),
+			Title:      workTitle.String,
+			Visibility: workVisibility.String,
+			CreatedAt:  workCreatedAt.Time,
+			UpdatedAt:  workUpdatedAt.Time,
+		}
+		if workDesc.Valid {
+			w.Description = &workDesc.String
 		}
 		if wthID.Valid {
 			url := wthPath.String

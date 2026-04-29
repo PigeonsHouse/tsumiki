@@ -41,7 +41,7 @@ func (m *MockWorkRepository) EXPECT() *MockWorkRepositoryMockRecorder {
 }
 
 // CreateWork mocks base method.
-func (m *MockWorkRepository) CreateWork(userID int, title string, visibility string, description string, thumbnailID *int) (*schema.Work, error) {
+func (m *MockWorkRepository) CreateWork(userID int, title string, visibility string, description *string, thumbnailID *int) (*schema.Work, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateWork", userID, title, visibility, description, thumbnailID)
 	ret0, _ := ret[0].(*schema.Work)
@@ -100,7 +100,7 @@ func (mr *MockWorkRepositoryMockRecorder) GetWorks(watchUserID, pageSize, page a
 }
 
 // UpdateWork mocks base method.
-func (m *MockWorkRepository) UpdateWork(workID int, title string, visibility string, description string) (*schema.Work, error) {
+func (m *MockWorkRepository) UpdateWork(workID int, title string, visibility string, description *string) (*schema.Work, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateWork", workID, title, visibility, description)
 	ret0, _ := ret[0].(*schema.Work)
