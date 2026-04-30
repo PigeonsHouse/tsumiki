@@ -10,7 +10,7 @@ import (
 
 func SetFrontendRouter(mux *chi.Mux, filePath string) {
 	fileServer := http.FileServer(http.Dir(filePath))
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
 		_, file := path.Split(r.URL.Path)
 		ext := filepath.Ext(file)
 		// SPA フォールバック
