@@ -44,6 +44,7 @@ func main() {
 
 	mux := chi.NewRouter()
 	router.SetApiRouter(mux, handlers)
+	router.SetMediaRouter(mux)
 	router.SetFrontendRouter(mux, "./view")
 
 	addr := fmt.Sprintf(":%d", env.AppPort)
