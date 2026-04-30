@@ -46,7 +46,15 @@ func main() {
 	router.SetApiRouter(mux, handlers)
 	router.SetFrontendRouter(mux, "./view")
 
-	if err := http.ListenAndServe(fmt.Sprintf(":%d", env.AppPort), mux); err != nil {
-		panic(err)
+	addr := fmt.Sprintf(":%d", env.AppPort)
+	if env.TLSEnabled {
+		// TLS_ENABLED=trueの場合、cert/配下の証明書を使用してHTTPS起動
+		if err := http.ListenAndServeTLS(addr, "cert/server.crt", "cert/server.key", mux); err != nil {
+			panic(err)
+		}
+	} else {
+		if err := http.ListenAndServe(addr, mux); err != nil {
+			panic(err)
+		}
 	}
 }
