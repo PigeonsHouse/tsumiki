@@ -14,7 +14,7 @@ const Index = () => {
       </div>
       <div
         style={{
-          width: 1024,
+          maxWidth: 1024,
           margin: "auto",
           marginTop: 32,
           border: "1px solid black",

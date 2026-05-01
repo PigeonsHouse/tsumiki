@@ -23,13 +23,13 @@ const WorkDetail = () => {
     location.href = "/works";
   };
 
-  return (!isValidId || isError) ? (
+  return !isValidId || isError ? (
     <NotFound />
   ) : (
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>作品詳細</h1>
       {work && (
-        <div style={{ width: 1024, margin: "auto" }}>
+        <div style={{ maxWidth: 1024, margin: "auto" }}>
           <img
             style={{
               aspectRatio: "16 / 9",
@@ -57,7 +57,9 @@ const WorkDetail = () => {
               <a href={`/works/${workId}/edit`}>
                 <button type="button">編集</button>
               </a>
-              <button type="button" onClick={handleDelete}>削除</button>
+              <button type="button" onClick={handleDelete}>
+                削除
+              </button>
               <a href={`/tsumikis/new?workId=${workId}`}>
                 <button type="button">積み木を追加</button>
               </a>

@@ -15,12 +15,12 @@ const UserTsumikis = () => {
   const userId = useMemo(() => Number(userIdRaw), [userIdRaw]);
   const { data, isError } = useGetUserTsumikis(userId, isValidId);
 
-  return (!isValidId || isError) ? (
+  return !isValidId || isError ? (
     <NotFound />
   ) : (
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>ユーザの積み木一覧</h1>
-      <div style={{ width: 1024, margin: "auto" }}>
+      <div style={{ maxWidth: 1024, margin: "auto" }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {data?.map((tsumiki) => (
             <a

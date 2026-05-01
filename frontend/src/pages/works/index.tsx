@@ -5,7 +5,7 @@ const WorkList = () => {
   return (
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>作品一覧</h1>
-      <div style={{ width: 1024, margin: "auto" }}>
+      <div style={{ maxWidth: 1024, margin: "auto" }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {data?.map((tsumiki) => (
             <a

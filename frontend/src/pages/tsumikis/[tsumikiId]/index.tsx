@@ -29,9 +29,13 @@ const TsumikiDetail = () => {
   );
   const tsumikiId = useMemo(() => Number(tsumikiIdRaw), [tsumikiIdRaw]);
   const { data: tsumiki, isError } = useGetTsumiki(tsumikiId, isValidId);
-  const { data: blocks, refetch: refetchBlocks } = useGetBlocks(tsumikiId, isValidId);
+  const { data: blocks, refetch: refetchBlocks } = useGetBlocks(
+    tsumikiId,
+    isValidId,
+  );
   const { mutateAsync: deleteTsumiki } = useDeleteTsumiki();
-  const { mutateAsync: addBlock, isPending: isAddingBlock } = useAddBlock(tsumikiId);
+  const { mutateAsync: addBlock, isPending: isAddingBlock } =
+    useAddBlock(tsumikiId);
   const { mutateAsync: uploadMedia } = useUploadTsumikiMedia(tsumikiId);
 
   const [form, setForm] = useState<BlockFormValues>({
@@ -81,13 +85,13 @@ const TsumikiDetail = () => {
     queryClient.invalidateQueries({ queryKey: ["tsumikis", tsumikiId] });
   };
 
-  return (!isValidId || isError) ? (
+  return !isValidId || isError ? (
     <NotFound />
   ) : (
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>積み木詳細</h1>
       {tsumiki && blocks && (
-        <div style={{ width: 1024, margin: "auto" }}>
+        <div style={{ maxWidth: 1024, margin: "auto" }}>
           <img
             style={{
               aspectRatio: "16 / 9",
@@ -142,7 +146,9 @@ const TsumikiDetail = () => {
               <a href={`/tsumikis/${tsumikiId}/edit`}>
                 <button type="button">編集</button>
               </a>
-              <button type="button" onClick={handleDelete}>削除</button>
+              <button type="button" onClick={handleDelete}>
+                削除
+              </button>
             </div>
           )}
           {blocks.map((block) => (
@@ -201,7 +207,10 @@ const TsumikiDetail = () => {
                       style={{ width: "100%" }}
                       value={form.percentage}
                       onChange={(e) =>
-                        setForm((v) => ({ ...v, percentage: Number(e.target.value) }))
+                        setForm((v) => ({
+                          ...v,
+                          percentage: Number(e.target.value),
+                        }))
                       }
                     />
                   </div>
@@ -216,7 +225,10 @@ const TsumikiDetail = () => {
                       style={{ width: "100%" }}
                       value={form.condition}
                       onChange={(e) =>
-                        setForm((v) => ({ ...v, condition: Number(e.target.value) }))
+                        setForm((v) => ({
+                          ...v,
+                          condition: Number(e.target.value),
+                        }))
                       }
                     />
                   </div>
@@ -247,7 +259,10 @@ const TsumikiDetail = () => {
                     <button type="submit" disabled={isAddingBlock}>
                       {isAddingBlock ? "追加中..." : "追加する"}
                     </button>
-                    <button type="button" onClick={() => setShowAddBlock(false)}>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddBlock(false)}
+                    >
                       キャンセル
                     </button>
                   </div>
