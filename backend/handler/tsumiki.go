@@ -214,7 +214,7 @@ func (th *tsumikiHandlerImpl) CreateTsumiki(w http.ResponseWriter, r *http.Reque
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
 	}
-	if len(req.Title) > maxTitleLength {
+	if helper.UTF16Len(req.Title) > maxTitleLength {
 		helper.ResponseBadRequest(w, "タイトルは200文字以内にしてください")
 		return
 	}
@@ -304,7 +304,7 @@ func (th *tsumikiHandlerImpl) EditTsumiki(w http.ResponseWriter, r *http.Request
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
 	}
-	if len(req.Title) > maxTitleLength {
+	if helper.UTF16Len(req.Title) > maxTitleLength {
 		helper.ResponseBadRequest(w, "タイトルは200文字以内にしてください")
 		return
 	}
@@ -509,7 +509,7 @@ func (th *tsumikiHandlerImpl) AddBlock(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
 	}
-	if req.Message != nil && len(*req.Message) > maxBlockMessageLength {
+	if req.Message != nil && helper.UTF16Len(*req.Message) > maxBlockMessageLength {
 		helper.ResponseBadRequest(w, "メッセージは200文字以内にしてください")
 		return
 	}
@@ -602,7 +602,7 @@ func (th *tsumikiHandlerImpl) EditBlock(w http.ResponseWriter, r *http.Request) 
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
 	}
-	if req.Message != nil && len(*req.Message) > maxBlockMessageLength {
+	if req.Message != nil && helper.UTF16Len(*req.Message) > maxBlockMessageLength {
 		helper.ResponseBadRequest(w, "メッセージは200文字以内にしてください")
 		return
 	}
