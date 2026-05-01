@@ -13,6 +13,7 @@ const refreshTokenTTL = 30 * 24 * time.Hour
 type AuthStore interface {
 	SetRefreshToken(ctx context.Context, userID int, sessionID string) error
 	ValidateAndDeleteRefreshToken(ctx context.Context, userID int, sessionID string) (bool, error)
+	DeleteAllRefreshTokens(ctx context.Context, userID int) error
 }
 
 type authStoreImpl struct {
@@ -40,4 +41,16 @@ func (as *authStoreImpl) ValidateAndDeleteRefreshToken(ctx context.Context, user
 		return false, err
 	}
 	return true, nil
+}
+
+func (as *authStoreImpl) DeleteAllRefreshTokens(ctx context.Context, userID int) error {
+	pattern := fmt.Sprintf("refresh_token:%d:*", userID)
+	keys, err := as.store.Keys(ctx, pattern).Result()
+	if err != nil {
+		return err
+	}
+	if len(keys) == 0 {
+		return nil
+	}
+	return as.store.Del(ctx, keys...).Err()
 }

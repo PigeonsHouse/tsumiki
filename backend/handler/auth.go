@@ -11,6 +11,7 @@ import (
 	"tsumiki/external"
 	"tsumiki/helper"
 	"tsumiki/media"
+	"tsumiki/middleware"
 	"tsumiki/repository"
 	"tsumiki/store"
 )
@@ -43,6 +44,7 @@ type AuthHandler interface {
 	RedirectDiscord(w http.ResponseWriter, r *http.Request)
 	CallbackDiscord(w http.ResponseWriter, r *http.Request)
 	RefreshToken(w http.ResponseWriter, r *http.Request)
+	Logout(w http.ResponseWriter, r *http.Request)
 }
 
 type authHandlerImpl struct {
@@ -211,6 +213,40 @@ func (ah *authHandlerImpl) CallbackDiscord(w http.ResponseWriter, r *http.Reques
 	userResponse := *user
 	userResponse.AvatarUrl = ah.media.ResolveURL(user.AvatarUrl)
 	helper.ResponseOk(w, userResponse)
+}
+
+func (ah *authHandlerImpl) Logout(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		helper.ResponseUnauthorized(w, "認証情報が見つかりません")
+		return
+	}
+
+	if err := ah.store.DeleteAllRefreshTokens(r.Context(), userID); err != nil {
+		fmt.Println("セッション削除エラー: ", err)
+		helper.ResponseInternalServerError(w, "セッション削除エラー")
+		return
+	}
+
+	// Cookieを無効化
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+		Secure:   true,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+		Secure:   true,
+	})
+
+	helper.ResponseOk(w, nil)
 }
 
 func (ah *authHandlerImpl) RefreshToken(w http.ResponseWriter, r *http.Request) {

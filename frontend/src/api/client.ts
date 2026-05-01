@@ -1,4 +1,5 @@
 import {
+  AuthApi,
   Configuration,
   UsersApi,
   WorksApi,
@@ -34,6 +35,7 @@ const config = new Configuration({
   middleware: [tokenRefreshMiddleware],
 });
 
+export const authApi = new AuthApi(config);
 export const usersApi = new UsersApi(config);
 export const worksApi = new WorksApi(config);
 export const tsumikisApi = new TsumikisApi(config);
