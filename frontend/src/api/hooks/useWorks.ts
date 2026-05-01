@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   GetWorksRequest,
   GetWorkTsumikiRequest,
@@ -31,9 +31,13 @@ export const useCreateWork = () => {
 };
 
 export const useEditWork = (workID: number) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (editWorkRequest: EditWorkRequest) =>
       worksApi.editWork({ workID, editWorkRequest }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["works", workID] });
+    },
   });
 };
 
