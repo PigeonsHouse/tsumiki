@@ -7,7 +7,6 @@ import (
 
 var (
 	S3Endpoint        string
-	S3PublicURL       string
 	S3Bucket          string
 	S3AccessKeyID     string
 	S3SecretAccessKey string
@@ -17,10 +16,6 @@ func LoadS3Env() error {
 	S3Endpoint = os.Getenv("S3_ENDPOINT")
 	if S3Endpoint == "" {
 		return fmt.Errorf("loading env error: S3_ENDPOINT")
-	}
-	S3PublicURL = os.Getenv("S3_PUBLIC_URL")
-	if S3PublicURL == "" {
-		return fmt.Errorf("loading env error: S3_PUBLIC_URL")
 	}
 	S3Bucket = os.Getenv("S3_BUCKET")
 	if S3Bucket == "" {
