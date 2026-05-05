@@ -308,3 +308,17 @@ func setupTsumikiRow(ctrl *gomock.Controller, t *schema.Tsumiki) *mock.MockRowSc
 	row.EXPECT().Scan(makeAnyArgs(31)...).DoAndReturn(makeTsumikiScanFn(t))
 	return row
 }
+
+// makeFavoriteScanFn: TotalFavoriteCount の 1 フィールドのみ Scan する
+func makeFavoriteScanFn(f *schema.Favorite) func(dest ...any) error {
+	return func(dest ...any) error {
+		*dest[0].(*int) = f.TotalFavoriteCount
+		return nil
+	}
+}
+
+func setupFavoriteRow(ctrl *gomock.Controller, f *schema.Favorite) *mock.MockRowScanner {
+	row := mock.NewMockRowScanner(ctrl)
+	row.EXPECT().Scan(makeAnyArgs(1)...).DoAndReturn(makeFavoriteScanFn(f))
+	return row
+}

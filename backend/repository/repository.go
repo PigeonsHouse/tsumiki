@@ -21,7 +21,6 @@ type DBTX interface {
 	QueryRow(query string, args ...any) RowScanner
 }
 
-
 type Repositories struct {
 	db                *sql.DB
 	RunTxFn           func(fn TxCommandFunc) error // nil = use real db transaction; override in tests
@@ -31,6 +30,7 @@ type Repositories struct {
 	TsumikiBlockMedia TsumikiBlockMediaRepository
 	Work              WorkRepository
 	Thumbnail         ThumbnailRepository
+	TsumikiFavorite   TsumikiFavoriteRepository
 }
 
 func NewRepositories(db *sql.DB) *Repositories {

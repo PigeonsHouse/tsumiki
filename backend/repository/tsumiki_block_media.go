@@ -1,6 +1,6 @@
 package repository
 
-//go:generate mockgen -source=tsumiki-block-media.go -destination=mock/mock_tsumiki_block_media.go -package=mock
+//go:generate mockgen -source=tsumiki_block_media.go -destination=mock/mock_tsumiki_block_media.go -package=mock
 
 import (
 	"strings"

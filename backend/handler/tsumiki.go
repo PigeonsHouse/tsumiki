@@ -29,6 +29,8 @@ const (
 	maxDescriptionLength  = 4000
 	maxBlockMessageLength = 200
 	maxBlockMediaCount    = 4
+
+	maxFavorite = 10
 )
 
 type TsumikiHandler interface {
@@ -45,6 +47,7 @@ type TsumikiHandler interface {
 	AddBlock(w http.ResponseWriter, r *http.Request)
 	EditBlock(w http.ResponseWriter, r *http.Request)
 	OmitBlock(w http.ResponseWriter, r *http.Request)
+	SetFavorite(w http.ResponseWriter, r *http.Request)
 }
 
 type tsumikiHandlerImpl struct {
@@ -82,6 +85,10 @@ type editTsumikiRequest struct {
 	Title      string `json:"title"`
 	Visibility string `json:"visibility"`
 	WorkID     *int   `json:"work_id"`
+}
+
+type updateFavoriteRequest struct {
+	Count int `json:"count"`
 }
 
 func (th *tsumikiHandlerImpl) GetMyTsumikis(w http.ResponseWriter, r *http.Request) {
@@ -726,6 +733,47 @@ func (th *tsumikiHandlerImpl) OmitBlock(w http.ResponseWriter, r *http.Request) 
 	}
 
 	helper.ResponseOk(w, nil)
+}
+
+func (th *tsumikiHandlerImpl) SetFavorite(w http.ResponseWriter, r *http.Request) {
+	userID, ok := middleware.GetUserIDFromContext(r.Context())
+	if !ok {
+		helper.ResponseUnauthorized(w, "認証情報が見つかりません")
+		return
+	}
+	tsumikiID, err := parseTsumikiID(r)
+	if err != nil {
+		helper.ResponseBadRequest(w, "積み木IDが不正です")
+		return
+	}
+	var req updateFavoriteRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		helper.ResponseBadRequest(w, "リクエストボディが不正です")
+		return
+	}
+	if req.Count < 0 {
+		helper.ResponseBadRequest(w, "いいねの数が不正です")
+		return
+	}
+	if req.Count > maxFavorite {
+		helper.ResponseBadRequest(w, "1積み木に対していいねは10回までです")
+		return
+	}
+
+	tsumiki, err := th.repositories.Tsumiki.GetTsumiki(&userID, tsumikiID)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
+	if tsumiki == nil {
+		helper.ResponseNotFound(w, "積み木が見つかりません")
+		return
+	}
+
+	updatedFavorite, err := th.repositories.TsumikiFavorite.SetFavoriteCount(tsumikiID, userID, req.Count)
+
+	helper.ResponseOk(w, updatedFavorite)
 }
 
 func parseTsumikiID(r *http.Request) (int, error) {

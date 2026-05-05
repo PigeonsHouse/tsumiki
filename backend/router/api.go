@@ -59,6 +59,7 @@ func SetApiRouter(mux *chi.Mux, handlers *handler.Handlers) {
 					r.Delete("/{blockID}", handlers.Tsumiki.OmitBlock)
 				})
 			})
+			r.With(middleware.RequireAuth).Put("/{tsumikiID}/favorite", handlers.Tsumiki.SetFavorite)
 		})
 
 		r.Route("/works", func(r chi.Router) {

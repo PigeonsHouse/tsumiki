@@ -364,8 +364,8 @@ table "tsumiki_favorites" {
   primary_key {
     columns = [column.tsumiki_id, column.user_id]
   }
-  index "fk_tsumiki_favorites_user_id" {
-    columns = [column.user_id]
+  index "fk_tsumiki_favorites_tsumiki_id" {
+    columns = [column.tsumiki_id]
   }
   foreign_key "fk_tsumiki_favorites_tsumiki_id" {
     columns     = [column.tsumiki_id]
@@ -376,7 +376,7 @@ table "tsumiki_favorites" {
   foreign_key "fk_tsumiki_favorites_user_id" {
     columns     = [column.user_id]
     ref_columns = [table.users.column.id]
-    on_delete   = NO_ACTION
+    on_delete   = CASCADE
     on_update   = NO_ACTION
   }
 }

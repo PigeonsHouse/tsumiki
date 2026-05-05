@@ -9,6 +9,11 @@ type ThumbnailUpload struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type Favorite struct {
+	TotalFavoriteCount int `json:"total_favorite_count"`
+	MyFavoriteCount    int `json:"my_favorite_count"`
+}
+
 type Tsumiki struct {
 	ID           int       `json:"id"`
 	Title        string    `json:"title"`

@@ -1,6 +1,6 @@
 package repository
 
-//go:generate mockgen -source=tsumiki-block.go -destination=mock/mock_tsumiki_block.go -package=mock
+//go:generate mockgen -source=tsumiki_block.go -destination=mock/mock_tsumiki_block.go -package=mock
 
 import (
 	"database/sql"
