@@ -46,7 +46,7 @@ export const useDeleteWork = (workID: number) => {
 export const useUpdateWorkThumbnail = (workID: number) => {
   return useMutation({
     mutationFn: (
-      updateTsumikiThumbnailRequest: UpdateTsumikiThumbnailRequest,
+      updateTsumikiThumbnailRequest: UpdateTsumikiThumbnailRequest
     ) =>
       worksApi.updateWorkThumbnail({ workID, updateTsumikiThumbnailRequest }),
   });
@@ -54,7 +54,7 @@ export const useUpdateWorkThumbnail = (workID: number) => {
 
 export const useGetWorkTsumikis = (
   workID: number,
-  params: Omit<GetWorkTsumikiRequest, "workID"> = {},
+  params: Omit<GetWorkTsumikiRequest, "workID"> = {}
 ) => {
   return useQuery({
     queryKey: ["works", workID, "tsumikis", params],

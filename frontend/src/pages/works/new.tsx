@@ -57,7 +57,10 @@ const NewWork = () => {
             style={{ width: "100%" }}
             {...register("title", {
               required: "タイトルは必須です",
-              maxLength: { value: 200, message: "200文字以内で入力してください" },
+              maxLength: {
+                value: 200,
+                message: "200文字以内で入力してください",
+              },
             })}
           />
           {errors.title && (
@@ -88,7 +91,10 @@ const NewWork = () => {
             rows={5}
             style={{ width: "100%" }}
             {...register("description", {
-              maxLength: { value: 4000, message: "4000文字以内で入力してください" },
+              maxLength: {
+                value: 4000,
+                message: "4000文字以内で入力してください",
+              },
             })}
           />
           {errors.description && (

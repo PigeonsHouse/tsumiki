@@ -1,4 +1,6 @@
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetBlocks,
   useGetTsumiki,
@@ -6,9 +8,7 @@ import {
   useAddBlock,
   useUploadTsumikiMedia,
 } from "../../../api";
-import { useEffect, useMemo, useState } from "react";
 import NotFound from "../../../components/NotFound";
-import { useQueryClient } from "@tanstack/react-query";
 
 type BlockFormValues = {
   message: string;
@@ -25,13 +25,13 @@ const TsumikiDetail = () => {
       tsumikiIdRaw !== "" &&
       tsumikiIdRaw !== undefined &&
       !Number.isNaN(Number(tsumikiIdRaw)),
-    [tsumikiIdRaw],
+    [tsumikiIdRaw]
   );
   const tsumikiId = useMemo(() => Number(tsumikiIdRaw), [tsumikiIdRaw]);
   const { data: tsumiki, isError } = useGetTsumiki(tsumikiId, isValidId);
   const { data: blocks, refetch: refetchBlocks } = useGetBlocks(
     tsumikiId,
-    isValidId,
+    isValidId
   );
   const { mutateAsync: deleteTsumiki } = useDeleteTsumiki();
   const { mutateAsync: addBlock, isPending: isAddingBlock } =

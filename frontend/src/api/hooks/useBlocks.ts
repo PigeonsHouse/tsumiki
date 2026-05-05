@@ -9,7 +9,7 @@ import { blocksApi } from "../client";
 export const useGetBlocks = (
   tsumikiID: number,
   enabled: boolean,
-  params: Omit<GetBlocksRequest, "tsumikiID"> = {},
+  params: Omit<GetBlocksRequest, "tsumikiID"> = {}
 ) => {
   return useQuery({
     queryKey: ["tsumikis", tsumikiID, "blocks", params],

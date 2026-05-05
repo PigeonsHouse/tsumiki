@@ -57,8 +57,8 @@ const EditTsumiki = () => {
     if (data.thumbnail?.length > 0) {
       tasks.push(
         uploadThumbnail(data.thumbnail[0]).then(({ id: thumbnailId }) =>
-          updateThumbnail({ thumbnailId }),
-        ),
+          updateThumbnail({ thumbnailId })
+        )
       );
     }
 
@@ -66,7 +66,7 @@ const EditTsumiki = () => {
     navigate(`/tsumikis/${tsumikiID}`);
   };
 
-  return (!isValidId || isError) ? (
+  return !isValidId || isError ? (
     <NotFound />
   ) : (
     <div>
@@ -84,7 +84,10 @@ const EditTsumiki = () => {
             style={{ width: "100%" }}
             {...register("title", {
               required: "タイトルは必須です",
-              maxLength: { value: 200, message: "200文字以内で入力してください" },
+              maxLength: {
+                value: 200,
+                message: "200文字以内で入力してください",
+              },
             })}
           />
           {errors.title && (
@@ -110,11 +113,7 @@ const EditTsumiki = () => {
         <div style={{ marginBottom: 12 }}>
           <label htmlFor="workId">紐づける作品</label>
           <br />
-          <select
-            id="workId"
-            style={{ width: "100%" }}
-            {...register("workId")}
-          >
+          <select id="workId" style={{ width: "100%" }} {...register("workId")}>
             <option value="">なし</option>
             {works?.map((work) => (
               <option key={work.id} value={work.id}>
@@ -125,12 +124,20 @@ const EditTsumiki = () => {
         </div>
 
         <div style={{ marginBottom: 12 }}>
-          <label htmlFor="thumbnail">サムネイル画像を差し替える（JPEG・PNG・GIF・最大5MB）</label>
+          <label htmlFor="thumbnail">
+            サムネイル画像を差し替える（JPEG・PNG・GIF・最大5MB）
+          </label>
           <br />
           {tsumiki?.thumbnailUrl && (
             <img
               src={tsumiki.thumbnailUrl}
-              style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "contain", backgroundColor: "gray", marginBottom: 4 }}
+              style={{
+                width: "100%",
+                aspectRatio: "16 / 9",
+                objectFit: "contain",
+                backgroundColor: "gray",
+                marginBottom: 4,
+              }}
             />
           )}
           <input

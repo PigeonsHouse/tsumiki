@@ -10,7 +10,7 @@ const WorkDetail = () => {
       workIdRaw !== "" &&
       workIdRaw !== undefined &&
       !Number.isNaN(Number(workIdRaw)),
-    [workIdRaw],
+    [workIdRaw]
   );
   const workId = useMemo(() => Number(workIdRaw), [workIdRaw]);
   const { data: work, isError } = useGetWork(workId, isValidId);
@@ -23,7 +23,7 @@ const WorkDetail = () => {
     location.href = "/works";
   };
 
-  return (!isValidId || isError) ? (
+  return !isValidId || isError ? (
     <NotFound />
   ) : (
     <div>
@@ -57,7 +57,9 @@ const WorkDetail = () => {
               <a href={`/works/${workId}/edit`}>
                 <button type="button">編集</button>
               </a>
-              <button type="button" onClick={handleDelete}>削除</button>
+              <button type="button" onClick={handleDelete}>
+                削除
+              </button>
               <a href={`/tsumikis/new?workId=${workId}`}>
                 <button type="button">積み木を追加</button>
               </a>

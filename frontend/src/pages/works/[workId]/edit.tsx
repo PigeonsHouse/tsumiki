@@ -1,7 +1,12 @@
 import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
-import { useGetWork, useEditWork, useUpdateWorkThumbnail, useUploadThumbnail } from "../../../api";
+import {
+  useGetWork,
+  useEditWork,
+  useUpdateWorkThumbnail,
+  useUploadThumbnail,
+} from "../../../api";
 import NotFound from "../../../components/NotFound";
 
 type FormValues = {
@@ -50,8 +55,8 @@ const EditWork = () => {
     if (data.thumbnail?.length > 0) {
       tasks.push(
         uploadThumbnail(data.thumbnail[0]).then(({ id: thumbnailId }) =>
-          updateThumbnail({ thumbnailId }),
-        ),
+          updateThumbnail({ thumbnailId })
+        )
       );
     }
 
@@ -59,7 +64,7 @@ const EditWork = () => {
     navigate(`/works/${workID}`);
   };
 
-  return (!isValidId || isError) ? (
+  return !isValidId || isError ? (
     <NotFound />
   ) : (
     <div>
@@ -77,7 +82,10 @@ const EditWork = () => {
             style={{ width: "100%" }}
             {...register("title", {
               required: "タイトルは必須です",
-              maxLength: { value: 200, message: "200文字以内で入力してください" },
+              maxLength: {
+                value: 200,
+                message: "200文字以内で入力してください",
+              },
             })}
           />
           {errors.title && (
@@ -108,7 +116,10 @@ const EditWork = () => {
             rows={5}
             style={{ width: "100%" }}
             {...register("description", {
-              maxLength: { value: 4000, message: "4000文字以内で入力してください" },
+              maxLength: {
+                value: 4000,
+                message: "4000文字以内で入力してください",
+              },
             })}
           />
           {errors.description && (
@@ -119,12 +130,20 @@ const EditWork = () => {
         </div>
 
         <div style={{ marginBottom: 12 }}>
-          <label htmlFor="thumbnail">サムネイル画像を差し替える（JPEG・PNG・GIF・最大5MB）</label>
+          <label htmlFor="thumbnail">
+            サムネイル画像を差し替える（JPEG・PNG・GIF・最大5MB）
+          </label>
           <br />
           {work?.thumbnailUrl && (
             <img
               src={work.thumbnailUrl}
-              style={{ width: "100%", aspectRatio: "16 / 9", objectFit: "contain", backgroundColor: "gray", marginBottom: 4 }}
+              style={{
+                width: "100%",
+                aspectRatio: "16 / 9",
+                objectFit: "contain",
+                backgroundColor: "gray",
+                marginBottom: 4,
+              }}
             />
           )}
           <input

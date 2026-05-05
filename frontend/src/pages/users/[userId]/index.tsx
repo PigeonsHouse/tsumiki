@@ -1,6 +1,6 @@
+import { useMemo } from "react";
 import { useParams } from "react-router";
 import { useGetUser } from "../../../api";
-import { useMemo } from "react";
 import NotFound from "../../../components/NotFound";
 
 const UserPage = () => {
@@ -10,12 +10,12 @@ const UserPage = () => {
       userIdRaw !== "" &&
       userIdRaw !== undefined &&
       !Number.isNaN(Number(userIdRaw)),
-    [userIdRaw],
+    [userIdRaw]
   );
   const userId = useMemo(() => Number(userIdRaw), [userIdRaw]);
   const { data, isError } = useGetUser(userId, isValidId);
 
-  return (!isValidId || isError) ? (
+  return !isValidId || isError ? (
     <NotFound />
   ) : (
     <div>

@@ -10,12 +10,12 @@ const UserTsumikis = () => {
       userIdRaw !== "" &&
       userIdRaw !== undefined &&
       !Number.isNaN(Number(userIdRaw)),
-    [userIdRaw],
+    [userIdRaw]
   );
   const userId = useMemo(() => Number(userIdRaw), [userIdRaw]);
   const { data, isError } = useGetUserTsumikis(userId, isValidId);
 
-  return (!isValidId || isError) ? (
+  return !isValidId || isError ? (
     <NotFound />
   ) : (
     <div>

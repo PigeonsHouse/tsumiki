@@ -8,7 +8,7 @@ const MyWorks = () => {
       userIdRaw !== "" &&
       userIdRaw !== undefined &&
       !Number.isNaN(Number(userIdRaw)),
-    [userIdRaw],
+    [userIdRaw]
   );
   const userId = useMemo(() => Number(userIdRaw), [userIdRaw]);
 

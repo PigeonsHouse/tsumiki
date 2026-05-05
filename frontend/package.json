@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "format": "prettier --write src",
     "lint": "eslint .",
     "preview": "vite preview",
     "generate": "openapi-generator-cli generate -i ../docs/openapi/openapi.yaml -g typescript-fetch -o src/generated/api --additional-properties=typescriptThreePlus=true,supportsES6=true,withInterfaces=true"
@@ -21,6 +22,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.4",
     "@openapitools/openapi-generator-cli": "^2.31.1",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.2",
     "@types/node": "^24.12.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -29,6 +31,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.4.0",
+    "prettier": "^3.8.3",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.57.0",
     "vite": "^8.0.1"

@@ -30,7 +30,7 @@ export const useGetMyTsumikis = (params: GetMyTsumikisRequest = {}) => {
 export const useGetUserTsumikis = (
   userID: number,
   enabled: boolean,
-  params: Omit<GetUserTsumikisRequest, "userID"> = {},
+  params: Omit<GetUserTsumikisRequest, "userID"> = {}
 ) => {
   return useQuery({
     queryKey: ["users", userID, "tsumikis", params],

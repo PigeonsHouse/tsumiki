@@ -49,7 +49,7 @@ export const useDeleteTsumiki = () => {
 export const useUpdateTsumikiThumbnail = (tsumikiID: number) => {
   return useMutation({
     mutationFn: (
-      updateTsumikiThumbnailRequest: UpdateTsumikiThumbnailRequest,
+      updateTsumikiThumbnailRequest: UpdateTsumikiThumbnailRequest
     ) =>
       tsumikisApi.updateTsumikiThumbnail({
         tsumikiID,
