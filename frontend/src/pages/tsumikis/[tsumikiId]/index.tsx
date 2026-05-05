@@ -10,6 +10,7 @@ import {
   useSetFavorite,
 } from "../../../api";
 import NotFound from "../../../components/NotFound";
+import { useAuth } from "../../../contexts";
 
 const MAX_FAVORITE_COUNT = 10;
 
@@ -41,6 +42,7 @@ const TsumikiDetail = () => {
     useAddBlock(tsumikiId);
   const { mutateAsync: uploadMedia } = useUploadTsumikiMedia(tsumikiId);
   const { mutateAsync: setFavorite } = useSetFavorite(tsumikiId);
+  const { me } = useAuth();
 
   const [localFavoriteCount, setLocalFavoriteCount] = useState(0);
   const pendingCountRef = useRef(0);
@@ -142,9 +144,11 @@ const TsumikiDetail = () => {
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <h2>{tsumiki.title}</h2>
             <div style={{ display: "flex" }}>
-              <button onClick={handleFavorite}>
-                いいね: {localFavoriteCount}
-              </button>
+              {me && (
+                <button onClick={handleFavorite}>
+                  いいね: {localFavoriteCount}
+                </button>
+              )}
             </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>

@@ -1,11 +1,12 @@
 import { Outlet } from "react-router";
 import { useGetMe } from "../api";
+import { AuthContext } from "../contexts";
 
 const Layout = () => {
   const { data, isSuccess } = useGetMe();
 
   return (
-    <>
+    <AuthContext.Provider value={{ me: data }}>
       <div
         style={{
           height: 64,
@@ -75,7 +76,7 @@ const Layout = () => {
         )}
       </div>
       <Outlet />
-    </>
+    </AuthContext.Provider>
   );
 };
 
