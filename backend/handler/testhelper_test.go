@@ -81,6 +81,13 @@ func sampleThumbnail() *schema.ThumbnailUpload {
 	}
 }
 
+func sampleFavorite() *schema.Favorite {
+	return &schema.Favorite{
+		TotalFavoriteCount: 7,
+		MyFavoriteCount:    3,
+	}
+}
+
 func sampleBlockMedia() *schema.TsumikiBlockMedia {
 	return &schema.TsumikiBlockMedia{
 		ID:        7,

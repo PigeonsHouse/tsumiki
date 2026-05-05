@@ -704,3 +704,118 @@ func TestOmitBlock_NotBelong(t *testing.T) {
 		t.Fatalf("status: want %d, got %d", http.StatusBadRequest, w.Code)
 	}
 }
+
+func TestSetFavorite(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	userID := sampleUser().ID
+	tsumiki := sampleTsumiki()
+	tsumiki.User.ID = userID
+	favorite := sampleFavorite()
+
+	mockTsumiki := repomock.NewMockTsumikiRepository(ctrl)
+	mockTsumiki.EXPECT().GetTsumiki(gomock.Any(), tsumiki.ID).Return(tsumiki, nil)
+
+	mockFavorite := repomock.NewMockTsumikiFavoriteRepository(ctrl)
+	mockFavorite.EXPECT().SetFavoriteCount(tsumiki.ID, userID, favorite.MyFavoriteCount).Return(favorite, nil)
+
+	repos := &repository.Repositories{Tsumiki: mockTsumiki, TsumikiFavorite: mockFavorite}
+	h := handler.NewTsumikiHandler(repos, mediamock.NewMockMediaService(ctrl))
+
+	body := map[string]any{"count": favorite.MyFavoriteCount}
+	req := jsonRequest(t, http.MethodPut, "/tsumikis/3/favorite", body)
+	req = withUserID(req, userID)
+	req = withChiParam(req, "tsumikiID", "3")
+	w := httptest.NewRecorder()
+
+	h.SetFavorite(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("status: want %d, got %d", http.StatusOK, w.Code)
+	}
+
+	var resp schema.Favorite
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if resp.TotalFavoriteCount != favorite.TotalFavoriteCount {
+		t.Errorf("TotalFavoriteCount: want %d, got %d", favorite.TotalFavoriteCount, resp.TotalFavoriteCount)
+	}
+	if resp.MyFavoriteCount != favorite.MyFavoriteCount {
+		t.Errorf("MyFavoriteCount: want %d, got %d", favorite.MyFavoriteCount, resp.MyFavoriteCount)
+	}
+}
+
+func TestSetFavorite_Unauthorized(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	h := handler.NewTsumikiHandler(&repository.Repositories{}, mediamock.NewMockMediaService(ctrl))
+
+	body := map[string]any{"count": 3}
+	req := jsonRequest(t, http.MethodPut, "/tsumikis/3/favorite", body)
+	req = withChiParam(req, "tsumikiID", "3")
+	w := httptest.NewRecorder()
+
+	h.SetFavorite(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Fatalf("status: want %d, got %d", http.StatusUnauthorized, w.Code)
+	}
+}
+
+func TestSetFavorite_InvalidCount_Negative(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	h := handler.NewTsumikiHandler(&repository.Repositories{}, mediamock.NewMockMediaService(ctrl))
+
+	body := map[string]any{"count": -1}
+	req := jsonRequest(t, http.MethodPut, "/tsumikis/3/favorite", body)
+	req = withUserID(req, sampleUser().ID)
+	req = withChiParam(req, "tsumikiID", "3")
+	w := httptest.NewRecorder()
+
+	h.SetFavorite(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("status: want %d, got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestSetFavorite_InvalidCount_TooMany(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	h := handler.NewTsumikiHandler(&repository.Repositories{}, mediamock.NewMockMediaService(ctrl))
+
+	body := map[string]any{"count": 11}
+	req := jsonRequest(t, http.MethodPut, "/tsumikis/3/favorite", body)
+	req = withUserID(req, sampleUser().ID)
+	req = withChiParam(req, "tsumikiID", "3")
+	w := httptest.NewRecorder()
+
+	h.SetFavorite(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("status: want %d, got %d", http.StatusBadRequest, w.Code)
+	}
+}
+
+func TestSetFavorite_TsumikiNotFound(t *testing.T) {
+	ctrl := gomock.NewController(t)
+
+	mockTsumiki := repomock.NewMockTsumikiRepository(ctrl)
+	mockTsumiki.EXPECT().GetTsumiki(gomock.Any(), 999).Return(nil, nil)
+
+	repos := &repository.Repositories{Tsumiki: mockTsumiki}
+	h := handler.NewTsumikiHandler(repos, mediamock.NewMockMediaService(ctrl))
+
+	body := map[string]any{"count": 3}
+	req := jsonRequest(t, http.MethodPut, "/tsumikis/999/favorite", body)
+	req = withUserID(req, sampleUser().ID)
+	req = withChiParam(req, "tsumikiID", "999")
+	w := httptest.NewRecorder()
+
+	h.SetFavorite(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("status: want %d, got %d", http.StatusNotFound, w.Code)
+	}
+}
