@@ -6,7 +6,7 @@ import {
   useAddBlock,
   useUploadTsumikiMedia,
 } from "../../../api";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import NotFound from "../../../components/NotFound";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -29,9 +29,13 @@ const TsumikiDetail = () => {
   );
   const tsumikiId = useMemo(() => Number(tsumikiIdRaw), [tsumikiIdRaw]);
   const { data: tsumiki, isError } = useGetTsumiki(tsumikiId, isValidId);
-  const { data: blocks, refetch: refetchBlocks } = useGetBlocks(tsumikiId, isValidId);
+  const { data: blocks, refetch: refetchBlocks } = useGetBlocks(
+    tsumikiId,
+    isValidId,
+  );
   const { mutateAsync: deleteTsumiki } = useDeleteTsumiki();
-  const { mutateAsync: addBlock, isPending: isAddingBlock } = useAddBlock(tsumikiId);
+  const { mutateAsync: addBlock, isPending: isAddingBlock } =
+    useAddBlock(tsumikiId);
   const { mutateAsync: uploadMedia } = useUploadTsumikiMedia(tsumikiId);
 
   const [form, setForm] = useState<BlockFormValues>({
@@ -41,6 +45,13 @@ const TsumikiDetail = () => {
   });
   const [mediaFiles, setMediaFiles] = useState<FileList | null>(null);
   const [showAddBlock, setShowAddBlock] = useState(false);
+
+  useEffect(() => {
+    if (tsumiki && typeof tsumiki.percentage === "number") {
+      const percentage = tsumiki.percentage; // tsの型推論のため一度変数に代入
+      setForm((v) => ({ ...v, percentage }));
+    }
+  }, [tsumiki, setForm]);
 
   const latestBlockId = useMemo(() => {
     if (!blocks || blocks.length === 0) return null;
@@ -81,7 +92,7 @@ const TsumikiDetail = () => {
     queryClient.invalidateQueries({ queryKey: ["tsumikis", tsumikiId] });
   };
 
-  return (!isValidId || isError) ? (
+  return !isValidId || isError ? (
     <NotFound />
   ) : (
     <div>
@@ -142,7 +153,9 @@ const TsumikiDetail = () => {
               <a href={`/tsumikis/${tsumikiId}/edit`}>
                 <button type="button">編集</button>
               </a>
-              <button type="button" onClick={handleDelete}>削除</button>
+              <button type="button" onClick={handleDelete}>
+                削除
+              </button>
             </div>
           )}
           {blocks.map((block) => (
@@ -201,7 +214,10 @@ const TsumikiDetail = () => {
                       style={{ width: "100%" }}
                       value={form.percentage}
                       onChange={(e) =>
-                        setForm((v) => ({ ...v, percentage: Number(e.target.value) }))
+                        setForm((v) => ({
+                          ...v,
+                          percentage: Number(e.target.value),
+                        }))
                       }
                     />
                   </div>
@@ -216,7 +232,10 @@ const TsumikiDetail = () => {
                       style={{ width: "100%" }}
                       value={form.condition}
                       onChange={(e) =>
-                        setForm((v) => ({ ...v, condition: Number(e.target.value) }))
+                        setForm((v) => ({
+                          ...v,
+                          condition: Number(e.target.value),
+                        }))
                       }
                     />
                   </div>
@@ -247,7 +266,10 @@ const TsumikiDetail = () => {
                     <button type="submit" disabled={isAddingBlock}>
                       {isAddingBlock ? "追加中..." : "追加する"}
                     </button>
-                    <button type="button" onClick={() => setShowAddBlock(false)}>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddBlock(false)}
+                    >
                       キャンセル
                     </button>
                   </div>
