@@ -82,6 +82,29 @@ callback:
       "500":
         $ref: "../components/responses.yaml#/InternalServerError"
 
+logout:
+  post:
+    tags:
+      - Auth
+    summary: ログアウト
+    description: |
+      Redisに保存されている全リフレッシュトークンを削除し、Cookieのトークンをクリアしてログアウトする。
+    operationId: logout
+    security:
+      - cookieAuth: []
+    responses:
+      "200":
+        description: ログアウト成功
+        content:
+          application/json:
+            schema:
+              nullable: true
+              example: null
+      "401":
+        $ref: "../components/responses.yaml#/Unauthorized"
+      "500":
+        $ref: "../components/responses.yaml#/InternalServerError"
+
 tokenRefresh:
   get:
     tags:

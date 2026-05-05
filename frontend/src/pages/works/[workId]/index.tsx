@@ -29,7 +29,7 @@ const WorkDetail = () => {
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>作品詳細</h1>
       {work && (
-        <div style={{ width: 1024, margin: "auto" }}>
+        <div style={{ maxWidth: 1024, margin: "auto" }}>
           <img
             style={{
               aspectRatio: "16 / 9",

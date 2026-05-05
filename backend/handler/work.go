@@ -164,11 +164,11 @@ func (wh *workHandlerImpl) CreateWork(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
 	}
-	if len(req.Title) > maxTitleLength {
+	if helper.UTF16Len(req.Title) > maxTitleLength {
 		helper.ResponseBadRequest(w, "タイトルは200文字以内にしてください")
 		return
 	}
-	if req.Description != nil && len(*req.Description) > maxDescriptionLength {
+	if req.Description != nil && helper.UTF16Len(*req.Description) > maxDescriptionLength {
 		helper.ResponseBadRequest(w, "説明は4000文字以内にしてください")
 		return
 	}
@@ -206,11 +206,11 @@ func (wh *workHandlerImpl) EditWork(w http.ResponseWriter, r *http.Request) {
 		helper.ResponseBadRequest(w, "リクエストボディが不正です")
 		return
 	}
-	if len(req.Title) > maxTitleLength {
+	if helper.UTF16Len(req.Title) > maxTitleLength {
 		helper.ResponseBadRequest(w, "タイトルは200文字以内にしてください")
 		return
 	}
-	if req.Description != nil && len(*req.Description) > maxDescriptionLength {
+	if req.Description != nil && helper.UTF16Len(*req.Description) > maxDescriptionLength {
 		helper.ResponseBadRequest(w, "説明は4000文字以内にしてください")
 		return
 	}

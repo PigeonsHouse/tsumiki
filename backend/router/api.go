@@ -16,6 +16,7 @@ func SetApiRouter(mux *chi.Mux, handlers *handler.Handlers) {
 			r.Get("/discord", handlers.Auth.RedirectDiscord)
 			r.Get("/discord/callback", handlers.Auth.CallbackDiscord)
 			r.Get("/token-refresh", handlers.Auth.RefreshToken)
+			r.With(middleware.RequireAuth).Post("/logout", handlers.Auth.Logout)
 		})
 		r.Route("/users", func(r chi.Router) {
 			r.Route("/me", func(r chi.Router) {

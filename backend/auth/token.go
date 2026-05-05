@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	// AccessTokenLiveTime  = 15 * time.Minute
-	AccessTokenLiveTime  = 150000 * time.Minute // 動作確認用
+	AccessTokenLiveTime  = 15 * time.Minute
 	RefreshTokenLiveTime = 30 * 24 * time.Hour
 )
 

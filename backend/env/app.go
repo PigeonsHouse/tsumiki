@@ -11,6 +11,7 @@ var (
 	FrontendUrl string
 	AppPort     int
 	JwtSecret   []byte
+	TLSEnabled  bool
 )
 
 func LoadAppEnv() error {
@@ -36,5 +37,7 @@ func LoadAppEnv() error {
 		return fmt.Errorf("loading env error: JWT_SECRET")
 	}
 	JwtSecret = []byte(jwtSecret)
+	// TLS_ENABLEDが"true"の場合のみTLSを有効化、それ以外はfalse
+	TLSEnabled = os.Getenv("TLS_ENABLED") == "true"
 	return nil
 }

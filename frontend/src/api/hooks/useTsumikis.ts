@@ -30,9 +30,13 @@ export const useCreateTsumiki = () => {
 };
 
 export const useEditTsumiki = (tsumikiID: number) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (editTsumikiRequest: EditTsumikiRequest) =>
       tsumikisApi.editTsumiki({ tsumikiID, editTsumikiRequest }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tsumikis", tsumikiID] });
+    },
   });
 };
 

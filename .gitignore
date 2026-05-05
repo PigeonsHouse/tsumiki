@@ -2,3 +2,5 @@
 .env.dev
 backend/tmp/
 local/
+backend/cert/*.key
+backend/cert/*.crt

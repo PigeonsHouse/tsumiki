@@ -92,11 +92,11 @@ table "works" {
     auto_increment = true
   }
   column "title" {
-    type = varchar(255)
+    type = text
     null = false
   }
   column "description" {
-    type = varchar(4095)
+    type = text
     null = true
   }
   column "visibility" {
@@ -154,7 +154,7 @@ table "tsumikis" {
     auto_increment = true
   }
   column "title" {
-    type = varchar(255)
+    type = text
     null = false
   }
   column "thumbnail_id" {
@@ -229,7 +229,7 @@ table "tsumiki_blocks" {
     auto_increment = true
   }
   column "message" {
-    type = varchar(255)
+    type = text
     null = true
   }
   column "percentage" {
@@ -401,7 +401,7 @@ table "tsumiki_comments" {
     null = false
   }
   column "message" {
-    type = varchar(255)
+    type = text
     null = false
   }
   column "created_at" {

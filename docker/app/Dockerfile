@@ -29,5 +29,7 @@ FROM alpine:latest
 WORKDIR /app
 COPY --from=backend /app/backend/api-server /app
 COPY --from=build /app/frontend/dist /app/view
+# TLS_ENABLED=trueの場合に使用する証明書（backend/cert/に配置してビルド）
+COPY ./backend/cert/ /app/cert/
 
 CMD ["/app/api-server"]

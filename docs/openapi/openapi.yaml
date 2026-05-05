@@ -43,6 +43,8 @@ paths:
     $ref: "./paths/auth.yaml#/callback"
   /auth/token-refresh:
     $ref: "./paths/auth.yaml#/tokenRefresh"
+  /auth/logout:
+    $ref: "./paths/auth.yaml#/logout"
 
   /users/me:
     $ref: "./paths/users.yaml#/me"

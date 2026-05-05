@@ -129,7 +129,7 @@ const TsumikiDetail = () => {
     <div>
       <h1 style={{ marginTop: 0, textAlign: "center" }}>積み木詳細</h1>
       {tsumiki && blocks && (
-        <div style={{ width: 1024, margin: "auto" }}>
+        <div style={{ maxWidth: 1024, margin: "auto" }}>
           <img
             style={{
               aspectRatio: "16 / 9",
@@ -142,7 +142,9 @@ const TsumikiDetail = () => {
           <div style={{ display: "flex", justifyContent: "space-between" }}>
             <h2>{tsumiki.title}</h2>
             <div style={{ display: "flex" }}>
-              <button onClick={handleFavorite}>いいね: {localFavoriteCount}</button>
+              <button onClick={handleFavorite}>
+                いいね: {localFavoriteCount}
+              </button>
             </div>
           </div>
           <div style={{ display: "flex", gap: 8 }}>

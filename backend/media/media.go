@@ -24,16 +24,14 @@ type MediaService interface {
 }
 
 type mediaServiceImpl struct {
-	s3Client  *s3.Client
-	bucket    string
-	publicURL string
+	s3Client *s3.Client
+	bucket   string
 }
 
 func NewMediaService(ctx context.Context, s3Client *s3.Client) (MediaService, error) {
 	svc := &mediaServiceImpl{
-		s3Client:  s3Client,
-		bucket:    env.S3Bucket,
-		publicURL: env.S3PublicURL,
+		s3Client: s3Client,
+		bucket:   env.S3Bucket,
 	}
 	if err := svc.ensureBucket(ctx); err != nil {
 		return nil, err
@@ -123,5 +121,5 @@ func (ms *mediaServiceImpl) UploadThumbnail(ctx context.Context, userID int, r i
 }
 
 func (ms *mediaServiceImpl) ResolveURL(path string) string {
-	return fmt.Sprintf("%s/%s/%s", ms.publicURL, ms.bucket, path)
+	return "/medias/" + path
 }
