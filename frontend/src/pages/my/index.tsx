@@ -31,7 +31,9 @@ const MyPage = () => {
             <a href="/my/tsumikis">積み木を見る</a>
             <a href="/my/works">関わった作品を見る</a>
           </div>
-          <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+          <div
+            style={{ display: "flex", justifyContent: "center", marginTop: 24 }}
+          >
             <button onClick={handleLogout}>ログアウト</button>
           </div>
         </>
