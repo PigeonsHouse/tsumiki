@@ -3,3 +3,4 @@ export * from "./useWorks";
 export * from "./useTsumikis";
 export * from "./useBlocks";
 export * from "./useThumbnails";
+export * from "./useFavorites";

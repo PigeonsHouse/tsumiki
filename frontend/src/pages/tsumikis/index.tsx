@@ -49,6 +49,12 @@ const TsumikiList = () => {
                   作品：{tsumiki.work.title}
                 </a>
               )}
+              <small style={{ display: "flex", gap: 8 }}>
+                {tsumiki.percentage !== null && (
+                  <span>進捗度: {tsumiki.percentage}%</span>
+                )}
+                <span>いいね: {tsumiki.favorite.totalFavoriteCount}</span>
+              </small>
               <small>{tsumiki.createdAt.toISOString()}</small>
             </a>
           ))}

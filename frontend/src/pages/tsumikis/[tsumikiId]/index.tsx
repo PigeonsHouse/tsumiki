@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -7,8 +7,11 @@ import {
   useDeleteTsumiki,
   useAddBlock,
   useUploadTsumikiMedia,
+  useSetFavorite,
 } from "../../../api";
 import NotFound from "../../../components/NotFound";
+
+const MAX_FAVORITE_COUNT = 10;
 
 type BlockFormValues = {
   message: string;
@@ -37,6 +40,34 @@ const TsumikiDetail = () => {
   const { mutateAsync: addBlock, isPending: isAddingBlock } =
     useAddBlock(tsumikiId);
   const { mutateAsync: uploadMedia } = useUploadTsumikiMedia(tsumikiId);
+  const { mutateAsync: setFavorite } = useSetFavorite(tsumikiId);
+
+  const [localFavoriteCount, setLocalFavoriteCount] = useState(0);
+  const pendingCountRef = useRef(0);
+  const favoriteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (tsumiki) {
+      setLocalFavoriteCount(tsumiki.favorite.myFavoriteCount);
+      pendingCountRef.current = tsumiki.favorite.myFavoriteCount;
+    }
+  }, [tsumiki?.favorite.myFavoriteCount]);
+
+  useEffect(() => {
+    return () => {
+      if (favoriteTimerRef.current) clearTimeout(favoriteTimerRef.current);
+    };
+  }, []);
+
+  const handleFavorite = () => {
+    if (pendingCountRef.current >= MAX_FAVORITE_COUNT) return;
+    pendingCountRef.current += 1;
+    setLocalFavoriteCount(pendingCountRef.current);
+    if (favoriteTimerRef.current) clearTimeout(favoriteTimerRef.current);
+    favoriteTimerRef.current = setTimeout(() => {
+      setFavorite(pendingCountRef.current);
+    }, 1000);
+  };
 
   const [form, setForm] = useState<BlockFormValues>({
     message: "",
@@ -108,10 +139,18 @@ const TsumikiDetail = () => {
             }}
             src={tsumiki.thumbnailUrl || ""}
           />
-          <h2>{tsumiki.title}</h2>
-          {tsumiki.percentage != null && (
-            <div>進捗度: {tsumiki.percentage}%</div>
-          )}
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <h2>{tsumiki.title}</h2>
+            <div style={{ display: "flex" }}>
+              <button onClick={handleFavorite}>いいね: {localFavoriteCount}</button>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {tsumiki.percentage != null && (
+              <span>進捗度: {tsumiki.percentage}%</span>
+            )}
+            <span>いいね: {tsumiki.favorite.totalFavoriteCount}</span>
+          </div>
           {tsumiki.work && (
             <a href={`/works/${tsumiki.work.id}`}>
               <div
