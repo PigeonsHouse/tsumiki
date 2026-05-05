@@ -80,9 +80,23 @@ Work:
       type: string
       format: date-time
 
+Favorite:
+  type: object
+  required: [total_favorite_count, my_favorite_count]
+  properties:
+    total_favorite_count:
+      type: integer
+      minimum: 0
+      description: 積み木に対するいいねの合計数
+    my_favorite_count:
+      type: integer
+      minimum: 0
+      maximum: 10
+      description: "ログイン中ユーザーのいいね数。未認証・データなしの場合は 0"
+
 Tsumiki:
   type: object
-  required: [id, title, visibility, user, created_at, updated_at]
+  required: [id, title, visibility, user, favorite, created_at, updated_at]
   properties:
     id:
       type: integer
@@ -114,6 +128,8 @@ Tsumiki:
       maximum: 100
       nullable: true
       description: "最新ブロックの進捗度。ブロックが存在しない場合は null"
+    favorite:
+      $ref: "#/Favorite"
     created_at:
       type: string
       format: date-time

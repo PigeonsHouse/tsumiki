@@ -68,6 +68,8 @@ paths:
     $ref: "./paths/tsumikis.yaml#/blocks"
   /tsumikis/{tsumikiID}/blocks/{blockID}:
     $ref: "./paths/tsumikis.yaml#/blockByID"
+  /tsumikis/{tsumikiID}/favorite:
+    $ref: "./paths/tsumikis.yaml#/favorite"
 
   /works:
     $ref: "./paths/works.yaml#/list"
@@ -100,6 +102,8 @@ components:
       $ref: "./components/schemas.yaml#/ThumbnailUpload"
     Work:
       $ref: "./components/schemas.yaml#/Work"
+    Favorite:
+      $ref: "./components/schemas.yaml#/Favorite"
     Tsumiki:
       $ref: "./components/schemas.yaml#/Tsumiki"
     TsumikiBlockMedia:
