@@ -22,7 +22,7 @@ func (tfr *tsumikiFavoriteRepositoryImpl) SetFavoriteCount(tsumikiID int, userID
 	var f schema.Favorite
 	_, err := tfr.db.Exec(
 		"INSERT INTO tsumiki_favorites (tsumiki_id, user_id, counts) VALUES (?, ?, ?) AS new_data"+
-			"ON DUPLICATE KEY UPDATE counts = new_data.counts",
+			" ON DUPLICATE KEY UPDATE counts = new_data.counts",
 		tsumikiID, userID, count,
 	)
 	if err != nil {

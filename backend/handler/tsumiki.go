@@ -772,6 +772,11 @@ func (th *tsumikiHandlerImpl) SetFavorite(w http.ResponseWriter, r *http.Request
 	}
 
 	updatedFavorite, err := th.repositories.TsumikiFavorite.SetFavoriteCount(tsumikiID, userID, req.Count)
+	if err != nil {
+		fmt.Println("DBエラー: ", err)
+		helper.ResponseInternalServerError(w, "DBエラー")
+		return
+	}
 
 	helper.ResponseOk(w, updatedFavorite)
 }

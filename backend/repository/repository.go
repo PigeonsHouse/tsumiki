@@ -43,6 +43,7 @@ func NewRepositories(db *sql.DB) *Repositories {
 		TsumikiBlockMedia: NewTsumikiBlockMediaRepository(adapted),
 		Work:              NewWorkRepository(adapted),
 		Thumbnail:         NewThumbnailRepository(adapted),
+		TsumikiFavorite:   NewTsumikiFavoriteRepository(adapted),
 	}
 }
 
