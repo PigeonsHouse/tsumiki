@@ -21,8 +21,8 @@ func NewTsumikiFavoriteRepository(db DBTX) TsumikiFavoriteRepository {
 func (tfr *tsumikiFavoriteRepositoryImpl) SetFavoriteCount(tsumikiID int, userID int, count int) (*schema.Favorite, error) {
 	var f schema.Favorite
 	_, err := tfr.db.Exec(
-		"INSERT INTO tsumiki_favorites (tsumiki_id, user_id, count) VALUES (?, ?, ?) AS new_data"+
-			"ON DUPLICATE KEY UPDATE count = new_data.count",
+		"INSERT INTO tsumiki_favorites (tsumiki_id, user_id, counts) VALUES (?, ?, ?) AS new_data"+
+			"ON DUPLICATE KEY UPDATE counts = new_data.counts",
 		tsumikiID, userID, count,
 	)
 	if err != nil {
@@ -30,7 +30,7 @@ func (tfr *tsumikiFavoriteRepositoryImpl) SetFavoriteCount(tsumikiID int, userID
 	}
 	f.MyFavoriteCount = count
 
-	err = tfr.db.QueryRow("SELECT count FROM tsumiki_favorites WHERE tsumiki_id = ? AND user_id = ? LIMIT 1", tsumikiID, userID).Scan(&f.TotalFavoriteCount)
+	err = tfr.db.QueryRow("SELECT counts FROM tsumiki_favorites WHERE tsumiki_id = ? AND user_id = ? LIMIT 1", tsumikiID, userID).Scan(&f.TotalFavoriteCount)
 	if err != nil {
 		return nil, err
 	}

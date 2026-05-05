@@ -23,6 +23,7 @@ type Tsumiki struct {
 	Work         *Work     `json:"work"`
 	IsOwner      *bool     `json:"is_owner,omitempty"`
 	Percentage   *int      `json:"percentage"`
+	Favorite     Favorite  `json:"favorite"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }

@@ -137,8 +137,12 @@ func sampleTsumiki() *schema.Tsumiki {
 		Title:      "Test Tsumiki",
 		Visibility: "public",
 		User:       *sampleUser(),
-		CreatedAt:  time.Now().Truncate(time.Second),
-		UpdatedAt:  time.Now().Truncate(time.Second),
+		Favorite: schema.Favorite{
+			TotalFavoriteCount: 5,
+			MyFavoriteCount:    2,
+		},
+		CreatedAt: time.Now().Truncate(time.Second),
+		UpdatedAt: time.Now().Truncate(time.Second),
 	}
 }
 
@@ -223,13 +227,14 @@ func makeMediaScanFn(m *schema.TsumikiBlockMedia) func(dest ...any) error {
 	}
 }
 
-// scanTsumiki: 31 fields (work=nil のケース)
+// scanTsumiki: 34 fields (work=nil のケース)
 // t.ID, Title, Visibility, CreatedAt, UpdatedAt,
 // User.ID, DiscordUserID, Name, AvatarUrl, CreatedAt, UpdatedAt,
 // workID...(NullInt64/NullString/NullTime ×6),
 // ownerID...(NullInt64/NullString/NullTime ×6),
 // wthID...(NullInt64/NullString/NullTime ×4),
-// tthID...(NullInt64/NullString/NullTime ×4)
+// tthID...(NullInt64/NullString/NullTime ×4),
+// percentage(NullInt64), total_favorite_count(int), my_favorite_count(int)
 func makeTsumikiScanFn(t *schema.Tsumiki) func(dest ...any) error {
 	return func(dest ...any) error {
 		*dest[0].(*int) = t.ID
@@ -267,6 +272,11 @@ func makeTsumikiScanFn(t *schema.Tsumiki) func(dest ...any) error {
 		*dest[28].(*sql.NullString) = sql.NullString{}
 		*dest[29].(*sql.NullTime) = sql.NullTime{}
 		*dest[30].(*sql.NullTime) = sql.NullTime{}
+		// percentage = nil
+		*dest[31].(*sql.NullInt64) = sql.NullInt64{}
+		// favorite counts
+		*dest[32].(*int) = t.Favorite.TotalFavoriteCount
+		*dest[33].(*int) = t.Favorite.MyFavoriteCount
 		return nil
 	}
 }
@@ -305,7 +315,7 @@ func setupMediaRow(ctrl *gomock.Controller, m *schema.TsumikiBlockMedia) *mock.M
 
 func setupTsumikiRow(ctrl *gomock.Controller, t *schema.Tsumiki) *mock.MockRowScanner {
 	row := mock.NewMockRowScanner(ctrl)
-	row.EXPECT().Scan(makeAnyArgs(31)...).DoAndReturn(makeTsumikiScanFn(t))
+	row.EXPECT().Scan(makeAnyArgs(34)...).DoAndReturn(makeTsumikiScanFn(t))
 	return row
 }
 

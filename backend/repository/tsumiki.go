@@ -26,19 +26,33 @@ func NewTsumikiRepository(db DBTX) TsumikiRepository {
 	return &tsumikiRepositoryImpl{db: db}
 }
 
-const tsumikiSelectQuery = "SELECT t.id, t.title, t.visibility, t.created_at, t.updated_at, " +
+const tsumikiBaseColumns = "SELECT t.id, t.title, t.visibility, t.created_at, t.updated_at, " +
 	"u.id, u.discord_user_id, u.name, u.avatar_url, u.created_at, u.updated_at, " +
 	"w.id, w.title, w.description, w.visibility, w.created_at, w.updated_at, " +
 	"wu.id, wu.discord_user_id, wu.name, wu.avatar_url, wu.created_at, wu.updated_at, " +
 	"wth.id, wth.path, wth.created_at, wth.updated_at, " +
 	"tth.id, tth.path, tth.created_at, tth.updated_at, " +
-	"(SELECT percentage FROM tsumiki_blocks WHERE tsumiki_id = t.id AND deleted_at IS NULL ORDER BY id DESC LIMIT 1) AS percentage " +
-	"FROM tsumikis t " +
+	"(SELECT percentage FROM tsumiki_blocks WHERE tsumiki_id = t.id AND deleted_at IS NULL ORDER BY id DESC LIMIT 1) AS percentage, " +
+	"(SELECT COALESCE(SUM(counts), 0) FROM tsumiki_favorites WHERE tsumiki_id = t.id) AS total_favorite_count"
+
+const tsumikiFromClause = " FROM tsumikis t " +
 	"JOIN users u ON t.user_id = u.id " +
 	"LEFT JOIN works w ON t.work_id = w.id " +
 	"LEFT JOIN users wu ON w.owner_user_id = wu.id " +
 	"LEFT JOIN thumbnails wth ON w.thumbnail_id = wth.id " +
 	"LEFT JOIN thumbnails tth ON t.thumbnail_id = tth.id"
+
+// buildTsumikiSelect は SELECT 句と FROM 句を返す。watchUserID が非 nil の場合は
+// my_favorite_count サブクエリを含め、そのバインド引数も返す。
+func buildTsumikiSelect(watchUserID *int) (string, []any) {
+	if watchUserID != nil {
+		q := tsumikiBaseColumns +
+			", IFNULL((SELECT counts FROM tsumiki_favorites WHERE tsumiki_id = t.id AND user_id = ?), 0) AS my_favorite_count" +
+			tsumikiFromClause
+		return q, []any{*watchUserID}
+	}
+	return tsumikiBaseColumns + ", 0 AS my_favorite_count" + tsumikiFromClause, nil
+}
 
 func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 	var t schema.Tsumiki
@@ -64,6 +78,7 @@ func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 		&wthID, &wthPath, &wthCreatedAt, &wthUpdatedAt,
 		&tthID, &tthPath, &tthCreatedAt, &tthUpdatedAt,
 		&percentage,
+		&t.Favorite.TotalFavoriteCount, &t.Favorite.MyFavoriteCount,
 	)
 	if err != nil {
 		return nil, err
@@ -111,7 +126,9 @@ func scanTsumikiRow(scan func(...any) error) (*schema.Tsumiki, error) {
 }
 
 func (tr *tsumikiRepositoryImpl) fetchTsumikiByID(tsumikiID int) (*schema.Tsumiki, error) {
-	row := tr.db.QueryRow(tsumikiSelectQuery+" WHERE t.id = ?", tsumikiID)
+	selectClause, selectArgs := buildTsumikiSelect(nil)
+	args := append(selectArgs, tsumikiID)
+	row := tr.db.QueryRow(selectClause+" WHERE t.id = ?", args...)
 	t, err := scanTsumikiRow(row.Scan)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -120,8 +137,9 @@ func (tr *tsumikiRepositoryImpl) fetchTsumikiByID(tsumikiID int) (*schema.Tsumik
 }
 
 func (tr *tsumikiRepositoryImpl) GetTsumiki(watchUserID *int, tsumikiID int) (*schema.Tsumiki, error) {
-	query := tsumikiSelectQuery + " WHERE t.id = ?"
-	args := []any{tsumikiID}
+	selectClause, args := buildTsumikiSelect(watchUserID)
+	query := selectClause + " WHERE t.id = ?"
+	args = append(args, tsumikiID)
 
 	if watchUserID != nil {
 		query += " AND (t.visibility = 'public' OR t.user_id = ? OR (u.guild_id IS NOT NULL AND u.guild_id = (SELECT guild_id FROM users WHERE id = ?)))"
@@ -223,15 +241,16 @@ func (tr *tsumikiRepositoryImpl) GetTsumikis(watchUserID *int, pageSize, page in
 	var query string
 	var args []any
 
+	selectClause, selectArgs := buildTsumikiSelect(watchUserID)
 	if watchUserID != nil {
-		query = tsumikiSelectQuery + " WHERE (t.visibility = 'public' OR t.user_id = ? OR (u.guild_id IS NOT NULL AND u.guild_id = (SELECT guild_id FROM users WHERE id = ?)))"
-		args = []any{*watchUserID, *watchUserID}
+		query = selectClause + " WHERE (t.visibility = 'public' OR t.user_id = ? OR (u.guild_id IS NOT NULL AND u.guild_id = (SELECT guild_id FROM users WHERE id = ?)))"
+		args = append(selectArgs, *watchUserID, *watchUserID)
 		query += " AND (t.work_id IS NULL OR w.visibility = 'public' OR (wu.guild_id IS NOT NULL AND wu.guild_id = (SELECT guild_id FROM users WHERE id = ?)))"
 		args = append(args, *watchUserID)
 	} else {
-		query = tsumikiSelectQuery + " WHERE t.visibility = 'public'"
+		query = selectClause + " WHERE t.visibility = 'public'"
 		query += " AND (t.work_id IS NULL OR w.visibility = 'public')"
-		args = []any{}
+		args = selectArgs
 	}
 
 	if authorID != nil {

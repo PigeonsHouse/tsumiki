@@ -33,6 +33,12 @@ func TestTsumikiRepository_GetTsumiki(t *testing.T) {
 	if tsumiki.Title != expected.Title {
 		t.Errorf("Title: want %s, got %s", expected.Title, tsumiki.Title)
 	}
+	if tsumiki.Favorite.TotalFavoriteCount != expected.Favorite.TotalFavoriteCount {
+		t.Errorf("TotalFavoriteCount: want %d, got %d", expected.Favorite.TotalFavoriteCount, tsumiki.Favorite.TotalFavoriteCount)
+	}
+	if tsumiki.Favorite.MyFavoriteCount != expected.Favorite.MyFavoriteCount {
+		t.Errorf("MyFavoriteCount: want %d, got %d", expected.Favorite.MyFavoriteCount, tsumiki.Favorite.MyFavoriteCount)
+	}
 }
 
 func TestTsumikiRepository_GetTsumiki_NotFound(t *testing.T) {
@@ -41,7 +47,7 @@ func TestTsumikiRepository_GetTsumiki_NotFound(t *testing.T) {
 	db := mock.NewMockDBTX(ctrl)
 	db.EXPECT().
 		QueryRow(gomock.Any(), 999).
-		Return(newNotFoundRowScanner(ctrl, 31))
+		Return(newNotFoundRowScanner(ctrl, 34))
 
 	tsumiki, err := repository.NewTsumikiRepository(db).GetTsumiki(nil, 999)
 
@@ -57,7 +63,7 @@ func TestTsumikiRepository_GetTsumikis(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	expected := sampleTsumiki()
 
-	rows := newSingleRowsScanner(ctrl, 31, makeTsumikiScanFn(expected))
+	rows := newSingleRowsScanner(ctrl, 34, makeTsumikiScanFn(expected))
 	db := mock.NewMockDBTX(ctrl)
 	db.EXPECT().
 		Query(gomock.Any(), gomock.Any(), gomock.Any()).
