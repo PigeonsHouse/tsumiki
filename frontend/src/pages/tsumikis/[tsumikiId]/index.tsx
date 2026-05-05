@@ -215,19 +215,80 @@ const TsumikiDetail = () => {
                       コンディション: {block.condition}/5 完成度:{" "}
                       {block.percentage}%
                     </small>
-                    {block.medias &&
-                      block.medias.map((media) => (
-                        <img
-                          key={media.id}
-                          style={{
-                            aspectRatio: "16 / 9",
-                            width: "100%",
-                            objectFit: "contain",
-                            backgroundColor: "gray",
-                          }}
-                          src={media.url}
-                        />
-                      ))}
+                    {block.medias && block.medias.length > 0 && (
+                      <div
+                        style={{
+                          maxWidth: 800,
+                          margin: "auto",
+                          borderRadius: 16,
+                          overflow: "hidden",
+                          aspectRatio: "16 / 9",
+                          display: "grid",
+                          gap: 2,
+                          gridTemplateColumns:
+                            block.medias.length === 1 ? "1fr" : "1fr 1fr",
+                          gridTemplateRows:
+                            block.medias.length <= 2 ? "1fr" : "1fr 1fr",
+                        }}
+                      >
+                        {block.medias.map((media, index) => (
+                          <div
+                            key={media.id}
+                            style={{
+                              overflow: "hidden",
+                              gridColumn:
+                                block.medias!.length === 4
+                                  ? index < 2
+                                    ? 1
+                                    : 2
+                                  : undefined,
+                              gridRow:
+                                block.medias!.length === 3 && index === 0
+                                  ? "1 / 3"
+                                  : block.medias!.length === 4
+                                    ? (index % 2) + 1
+                                    : undefined,
+                            }}
+                          >
+                            {media.type === "image" ? (
+                              <img
+                                style={{
+                                  display: "block",
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "contain",
+                                  backgroundColor: "gray",
+                                }}
+                                src={media.url}
+                              />
+                            ) : media.type === "audio" ? (
+                              <audio
+                                controls
+                                style={{
+                                  display: "block",
+                                  width: "100%",
+                                  height: "100%",
+                                  backgroundColor: "gray",
+                                }}
+                                src={media.url}
+                              />
+                            ) : media.type === "video" ? (
+                              <video
+                                controls
+                                style={{
+                                  display: "block",
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "contain",
+                                  backgroundColor: "gray",
+                                }}
+                                src={media.url}
+                              />
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {block.message && <p>{block.message}</p>}
                     <small>{block.createdAt?.toISOString()}</small>
                   </>
