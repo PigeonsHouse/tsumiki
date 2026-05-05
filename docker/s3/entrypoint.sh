@@ -22,4 +22,10 @@ cat > /tmp/s3.json << EOF
 }
 EOF
 
-exec weed server -dir=/data -s3 -s3.port=8333 -s3.config=/tmp/s3.json
+exec weed server \
+  -dir=/data \
+  -ip=seaweedfs \
+  -volume.max=30 \
+  -s3 \
+  -s3.port=8333 \
+  -s3.config=/tmp/s3.json
