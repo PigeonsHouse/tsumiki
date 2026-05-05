@@ -23,6 +23,7 @@ import (
 
 const (
 	mediaMaxBytes5MB   int64 = 5 << 20
+	mediaMaxBytes50MB  int64 = 50 << 20
 	mediaMaxBytes100MB int64 = 100 << 20
 
 	maxTitleLength        = 200
@@ -478,10 +479,10 @@ var mediaContentTypes = map[string]struct {
 	"image/jpeg":      {"image", mediaMaxBytes5MB, ".jpg"},
 	"image/png":       {"image", mediaMaxBytes5MB, ".png"},
 	"image/gif":       {"image", mediaMaxBytes5MB, ".gif"},
-	"audio/mpeg":      {"audio", mediaMaxBytes5MB, ".mp3"},
-	"audio/wav":       {"audio", mediaMaxBytes5MB, ".wav"},
-	"audio/ogg":       {"audio", mediaMaxBytes5MB, ".ogg"},
-	"audio/aac":       {"audio", mediaMaxBytes5MB, ".aac"},
+	"audio/mpeg":      {"audio", mediaMaxBytes50MB, ".mp3"},
+	"audio/wav":       {"audio", mediaMaxBytes50MB, ".wav"},
+	"audio/ogg":       {"audio", mediaMaxBytes50MB, ".ogg"},
+	"audio/aac":       {"audio", mediaMaxBytes50MB, ".aac"},
 	"video/mp4":       {"video", mediaMaxBytes100MB, ".mp4"},
 	"video/webm":      {"video", mediaMaxBytes100MB, ".webm"},
 	"video/quicktime": {"video", mediaMaxBytes100MB, ".mov"},

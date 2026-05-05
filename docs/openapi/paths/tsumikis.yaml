@@ -236,7 +236,7 @@ medias:
     description: |
       積み木に紐づくメディアファイルをアップロードする。作成者のみ実行できる。
       - 画像 (JPEG/PNG/GIF): 最大5MB、最大4096×4096px
-      - 音声 (MP3/WAV/OGG/AAC): 最大5MB
+      - 音声 (MP3/WAV/OGG/AAC): 最大50MB
       - 動画 (MP4/WebM/MOV): 最大100MB
 
       返されたメディアIDをブロック作成・編集時の `media_ids` に使用する。
