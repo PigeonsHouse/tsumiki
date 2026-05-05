@@ -76,7 +76,8 @@ const TsumikiDetail = () => {
     percentage: 0,
     condition: 3,
   });
-  const [mediaFiles, setMediaFiles] = useState<FileList | null>(null);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
   const [showAddBlock, setShowAddBlock] = useState(false);
 
   useEffect(() => {
@@ -99,12 +100,11 @@ const TsumikiDetail = () => {
 
   const handleAddBlock = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.message && (!mediaFiles || mediaFiles.length === 0)) return;
+    if (!form.message && mediaFiles.length === 0) return;
 
     const mediaIds: number[] = [];
-    if (mediaFiles && mediaFiles.length > 0) {
-      const files = Array.from(mediaFiles).slice(0, 4);
-      for (const file of files) {
+    if (mediaFiles.length > 0) {
+      for (const file of mediaFiles) {
         const media = await uploadMedia(file);
         mediaIds.push(media.id);
       }
@@ -119,7 +119,7 @@ const TsumikiDetail = () => {
     });
 
     setForm({ message: "", percentage: 0, condition: 3 });
-    setMediaFiles(null);
+    setMediaFiles([]);
     setShowAddBlock(false);
     await refetchBlocks();
     queryClient.invalidateQueries({ queryKey: ["tsumikis", tsumikiId] });
@@ -359,14 +359,56 @@ const TsumikiDetail = () => {
                     />
                   </div>
                   <div>
-                    <label>メディア（最大4件）</label>
+                    <label>メディア（{mediaFiles.length} / 4件）</label>
                     <br />
+                    {mediaFiles.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
+                        {mediaFiles.map((file, i) => (
+                          <div key={i} style={{ position: "relative" }}>
+                            {file.type.startsWith("image/") ? (
+                              <img
+                                src={URL.createObjectURL(file)}
+                                style={{ width: 64, height: 64, objectFit: "contain", borderRadius: 4, backgroundColor: "gray", display: "block" }}
+                              />
+                            ) : (
+                              <div style={{ width: 64, height: 64, borderRadius: 4, background: "#eee", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, textAlign: "center", padding: 4, wordBreak: "break-all" }}>
+                                {file.name}
+                              </div>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setMediaFiles((prev) => prev.filter((_, j) => j !== i))}
+                              style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", background: "rgba(0,0,0,0.6)", color: "white", border: "none", cursor: "pointer", fontSize: 11, lineHeight: 1, padding: 0 }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     <input
+                      ref={mediaInputRef}
                       type="file"
                       multiple
                       accept="image/jpeg,image/png,image/gif,audio/mpeg,audio/wav,audio/ogg,audio/aac,video/mp4,video/webm,video/quicktime"
-                      onChange={(e) => setMediaFiles(e.target.files)}
+                      style={{ display: "none" }}
+                      onChange={(e) => {
+                        if (!e.target.files) return;
+                        const added = Array.from(e.target.files);
+                        setMediaFiles((prev) => {
+                          const merged = [...prev, ...added];
+                          return merged.slice(0, 4);
+                        });
+                        e.target.value = "";
+                      }}
                     />
+                    <button
+                      type="button"
+                      disabled={mediaFiles.length >= 4}
+                      onClick={() => mediaInputRef.current?.click()}
+                    >
+                      ファイルを追加
+                    </button>
                   </div>
                   <div style={{ display: "flex", gap: 8 }}>
                     <button type="submit" disabled={isAddingBlock}>

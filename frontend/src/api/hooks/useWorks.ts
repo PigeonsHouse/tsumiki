@@ -48,11 +48,15 @@ export const useDeleteWork = (workID: number) => {
 };
 
 export const useUpdateWorkThumbnail = (workID: number) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (
       updateTsumikiThumbnailRequest: UpdateTsumikiThumbnailRequest
     ) =>
       worksApi.updateWorkThumbnail({ workID, updateTsumikiThumbnailRequest }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["works", workID] });
+    },
   });
 };
 

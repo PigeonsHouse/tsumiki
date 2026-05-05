@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { useCreateWork } from "../../api";
@@ -19,6 +20,9 @@ const NewWork = () => {
   } = useForm<FormValues>({
     defaultValues: { visibility: "public" },
   });
+
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const thumbnailReg = register("thumbnail");
 
   const { mutateAsync: createWork } = useCreateWork();
 
@@ -113,8 +117,16 @@ const NewWork = () => {
             id="thumbnail"
             type="file"
             accept="image/jpeg,image/png,image/gif"
-            {...register("thumbnail")}
+            {...thumbnailReg}
+            onChange={(e) => {
+              thumbnailReg.onChange(e);
+              const file = e.target.files?.[0];
+              setThumbnailPreview(file ? URL.createObjectURL(file) : null);
+            }}
           />
+          {thumbnailPreview && (
+            <img src={thumbnailPreview} style={{ marginTop: 4, width: "50%", aspectRatio: "16/9", objectFit: "contain", borderRadius: 4, backgroundColor: "gray", display: "block" }} />
+          )}
         </div>
 
         <button type="submit" disabled={isSubmitting}>

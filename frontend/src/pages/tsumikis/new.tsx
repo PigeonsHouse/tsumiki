@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useSearchParams } from "react-router";
 import {
@@ -23,7 +23,6 @@ type FormValues = {
   message: string;
   percentage: number;
   condition: number;
-  medias: FileList;
 };
 
 const NewTsumiki = () => {
@@ -33,7 +32,6 @@ const NewTsumiki = () => {
     register,
     handleSubmit,
     watch,
-    getValues,
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
@@ -60,6 +58,13 @@ const NewTsumiki = () => {
       setValue("workId", workId);
     }
   }, [works, searchParams, setValue]);
+  const [mediaFiles, setMediaFiles] = useState<File[]>([]);
+  const mediaInputRef = useRef<HTMLInputElement>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+  const [newWorkThumbnailPreview, setNewWorkThumbnailPreview] = useState<string | null>(null);
+  const thumbnailReg = register("thumbnail", { required: "サムネイルは必須です" });
+  const newWorkThumbnailReg = register("newWorkThumbnail");
+
   const { mutateAsync: uploadThumbnail } = useUploadThumbnail();
   const { mutateAsync: createTsumiki } = useCreateTsumiki();
   const { mutateAsync: createWork } = useCreateWork();
@@ -100,12 +105,9 @@ const NewTsumiki = () => {
 
     // 4. メディアアップロード（選択されていれば最大4件）
     const mediaIds: number[] = [];
-    if (data.medias && data.medias.length > 0) {
-      const files = Array.from(data.medias).slice(0, 4);
-      for (const file of files) {
-        const media = await tsumikisApi.postMedia({ tsumikiID, file });
-        mediaIds.push(media.id);
-      }
+    for (const file of mediaFiles) {
+      const media = await tsumikisApi.postMedia({ tsumikiID, file });
+      mediaIds.push(media.id);
     }
 
     // 5. 最初のブロック追加
@@ -177,8 +179,16 @@ const NewTsumiki = () => {
               id="thumbnail"
               type="file"
               accept="image/jpeg,image/png,image/gif"
-              {...register("thumbnail", { required: "サムネイルは必須です" })}
+              {...thumbnailReg}
+              onChange={(e) => {
+                thumbnailReg.onChange(e);
+                const file = e.target.files?.[0];
+                setThumbnailPreview(file ? URL.createObjectURL(file) : null);
+              }}
             />
+            {thumbnailPreview && (
+              <img src={thumbnailPreview} style={{ marginTop: 4, width: "50%", aspectRatio: "16/9", objectFit: "contain", borderRadius: 4, backgroundColor: "gray", display: "block" }} />
+            )}
             {errors.thumbnail && (
               <p style={{ color: "red", margin: "4px 0 0" }}>
                 {errors.thumbnail.message}
@@ -291,8 +301,16 @@ const NewTsumiki = () => {
                   id="newWorkThumbnail"
                   type="file"
                   accept="image/jpeg,image/png,image/gif"
-                  {...register("newWorkThumbnail")}
+                  {...newWorkThumbnailReg}
+                  onChange={(e) => {
+                    newWorkThumbnailReg.onChange(e);
+                    const file = e.target.files?.[0];
+                    setNewWorkThumbnailPreview(file ? URL.createObjectURL(file) : null);
+                  }}
                 />
+                {newWorkThumbnailPreview && (
+                  <img src={newWorkThumbnailPreview} style={{ marginTop: 4, height: 64, aspectRatio: "16/9", objectFit: "contain", borderRadius: 4, backgroundColor: "gray", display: "block" }} />
+                )}
               </div>
             </fieldset>
           )}
@@ -341,14 +359,10 @@ const NewTsumiki = () => {
                   value: 200,
                   message: "200文字以内で入力してください",
                 },
-                validate: (value) => {
-                  const medias = getValues("medias");
-                  return (
-                    !!value ||
-                    medias?.length > 0 ||
-                    "メッセージかメディアのいずれかは必須です"
-                  );
-                },
+                validate: (value) =>
+                  !!value ||
+                  mediaFiles.length > 0 ||
+                  "メッセージかメディアのいずれかは必須です",
               })}
             />
             {errors.message && (
@@ -359,26 +373,53 @@ const NewTsumiki = () => {
           </div>
 
           <div style={{ marginBottom: 12 }}>
-            <label htmlFor="medias">
-              メディア（最大4件 / 画像・音声・動画）
-            </label>
+            <label>メディア（{mediaFiles.length} / 4件 / 画像・音声・動画）</label>
             <br />
+            {mediaFiles.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
+                {mediaFiles.map((file, i) => (
+                  <div key={i} style={{ position: "relative" }}>
+                    {file.type.startsWith("image/") ? (
+                      <img
+                        src={URL.createObjectURL(file)}
+                        style={{ width: 64, height: 64, objectFit: "contain", borderRadius: 4, backgroundColor: "gray", display: "block" }}
+                      />
+                    ) : (
+                      <div style={{ width: 64, height: 64, borderRadius: 4, background: "#eee", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, textAlign: "center", padding: 4, wordBreak: "break-all" }}>
+                        {file.name}
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setMediaFiles((prev) => prev.filter((_, j) => j !== i))}
+                      style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", background: "rgba(0,0,0,0.6)", color: "white", border: "none", cursor: "pointer", fontSize: 11, lineHeight: 1, padding: 0 }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <input
-              id="medias"
+              ref={mediaInputRef}
               type="file"
               multiple
               accept="image/jpeg,image/png,image/gif,audio/mpeg,audio/wav,audio/ogg,audio/aac,video/mp4,video/webm,video/quicktime"
-              {...register("medias", {
-                validate: (value) => {
-                  const message = getValues("message");
-                  return (
-                    !!message ||
-                    value?.length > 0 ||
-                    "メッセージかメディアのいずれかは必須です"
-                  );
-                },
-              })}
+              style={{ display: "none" }}
+              onChange={(e) => {
+                if (!e.target.files) return;
+                const added = Array.from(e.target.files);
+                setMediaFiles((prev) => [...prev, ...added].slice(0, 4));
+                e.target.value = "";
+              }}
             />
+            <button
+              type="button"
+              disabled={mediaFiles.length >= 4}
+              onClick={() => mediaInputRef.current?.click()}
+            >
+              ファイルを追加
+            </button>
           </div>
         </fieldset>
 

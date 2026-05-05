@@ -51,6 +51,7 @@ export const useDeleteTsumiki = () => {
 };
 
 export const useUpdateTsumikiThumbnail = (tsumikiID: number) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (
       updateTsumikiThumbnailRequest: UpdateTsumikiThumbnailRequest
@@ -59,6 +60,9 @@ export const useUpdateTsumikiThumbnail = (tsumikiID: number) => {
         tsumikiID,
         updateTsumikiThumbnailRequest,
       }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tsumikis", tsumikiID] });
+    },
   });
 };
 

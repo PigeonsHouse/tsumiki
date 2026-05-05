@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type {
   GetBlocksRequest,
   AddBlockRequest,
@@ -26,14 +26,22 @@ export const useAddBlock = (tsumikiID: number) => {
 };
 
 export const useEditBlock = (tsumikiID: number, blockID: number) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (editBlockRequest: EditBlockRequest) =>
       blocksApi.editBlock({ tsumikiID, blockID, editBlockRequest }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tsumikis", tsumikiID, "blocks"] });
+    },
   });
 };
 
 export const useDeleteBlock = (tsumikiID: number, blockID: number) => {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: () => blocksApi.omitBlock({ tsumikiID, blockID }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["tsumikis", tsumikiID, "blocks"] });
+    },
   });
 };

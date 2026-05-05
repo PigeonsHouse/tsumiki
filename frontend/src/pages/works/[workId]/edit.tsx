@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router";
 import {
@@ -26,6 +26,7 @@ const EditWork = () => {
   const { mutateAsync: editWork } = useEditWork(workID);
   const { mutateAsync: uploadThumbnail } = useUploadThumbnail();
   const { mutateAsync: updateThumbnail } = useUpdateWorkThumbnail(workID);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
   const {
     register,
@@ -33,6 +34,7 @@ const EditWork = () => {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>();
+  const thumbnailReg = register("thumbnail");
 
   useEffect(() => {
     if (!work) return;
@@ -150,8 +152,16 @@ const EditWork = () => {
             id="thumbnail"
             type="file"
             accept="image/jpeg,image/png,image/gif"
-            {...register("thumbnail")}
+            {...thumbnailReg}
+            onChange={(e) => {
+              thumbnailReg.onChange(e);
+              const file = e.target.files?.[0];
+              setThumbnailPreview(file ? URL.createObjectURL(file) : null);
+            }}
           />
+          {thumbnailPreview && (
+            <img src={thumbnailPreview} style={{ marginTop: 4, width:"50%", aspectRatio: "16/9", objectFit: "contain", borderRadius: 4, backgroundColor: "gray", display: "block" }} />
+          )}
         </div>
 
         <button type="submit" disabled={isSubmitting || !work}>
