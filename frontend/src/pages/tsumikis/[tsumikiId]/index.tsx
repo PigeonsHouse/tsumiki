@@ -289,7 +289,9 @@ const TsumikiDetail = () => {
                         ))}
                       </div>
                     )}
-                    {block.message && <p>{block.message}</p>}
+                    {block.message && (
+                      <p style={{ whiteSpace: "pre-wrap" }}>{block.message}</p>
+                    )}
                     <small>{block.createdAt?.toISOString()}</small>
                   </>
                 )}

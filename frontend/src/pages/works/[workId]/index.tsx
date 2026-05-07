@@ -40,7 +40,9 @@ const WorkDetail = () => {
             src={work.thumbnailUrl || ""}
           />
           <h2>{work.title}</h2>
-          {work.description && <p>{work.description}</p>}
+          {work.description && (
+            <p style={{ whiteSpace: "pre-wrap" }}>{work.description}</p>
+          )}
           <a
             style={{ display: "flex", alignItems: "center", gap: 8 }}
             href={`/users/${work.owner.id}`}
