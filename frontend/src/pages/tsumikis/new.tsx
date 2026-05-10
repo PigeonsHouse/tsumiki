@@ -61,8 +61,12 @@ const NewTsumiki = () => {
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const mediaInputRef = useRef<HTMLInputElement>(null);
   const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
-  const [newWorkThumbnailPreview, setNewWorkThumbnailPreview] = useState<string | null>(null);
-  const thumbnailReg = register("thumbnail", { required: "サムネイルは必須です" });
+  const [newWorkThumbnailPreview, setNewWorkThumbnailPreview] = useState<
+    string | null
+  >(null);
+  const thumbnailReg = register("thumbnail", {
+    required: "サムネイルは必須です",
+  });
   const newWorkThumbnailReg = register("newWorkThumbnail");
 
   const { mutateAsync: uploadThumbnail } = useUploadThumbnail();
@@ -172,7 +176,7 @@ const NewTsumiki = () => {
 
           <div style={{ marginBottom: 12 }}>
             <label htmlFor="thumbnail">
-              サムネイル画像（必須 / JPEG・PNG・GIF・最大5MB）
+              サムネイル画像（必須 / JPEG・PNG・GIF・最大10MB）
             </label>
             <br />
             <input
@@ -187,7 +191,18 @@ const NewTsumiki = () => {
               }}
             />
             {thumbnailPreview && (
-              <img src={thumbnailPreview} style={{ marginTop: 4, width: "50%", aspectRatio: "16/9", objectFit: "contain", borderRadius: 4, backgroundColor: "gray", display: "block" }} />
+              <img
+                src={thumbnailPreview}
+                style={{
+                  marginTop: 4,
+                  width: "50%",
+                  aspectRatio: "16/9",
+                  objectFit: "contain",
+                  borderRadius: 4,
+                  backgroundColor: "gray",
+                  display: "block",
+                }}
+              />
             )}
             {errors.thumbnail && (
               <p style={{ color: "red", margin: "4px 0 0" }}>
@@ -305,11 +320,24 @@ const NewTsumiki = () => {
                   onChange={(e) => {
                     newWorkThumbnailReg.onChange(e);
                     const file = e.target.files?.[0];
-                    setNewWorkThumbnailPreview(file ? URL.createObjectURL(file) : null);
+                    setNewWorkThumbnailPreview(
+                      file ? URL.createObjectURL(file) : null
+                    );
                   }}
                 />
                 {newWorkThumbnailPreview && (
-                  <img src={newWorkThumbnailPreview} style={{ marginTop: 4, height: 64, aspectRatio: "16/9", objectFit: "contain", borderRadius: 4, backgroundColor: "gray", display: "block" }} />
+                  <img
+                    src={newWorkThumbnailPreview}
+                    style={{
+                      marginTop: 4,
+                      height: 64,
+                      aspectRatio: "16/9",
+                      objectFit: "contain",
+                      borderRadius: 4,
+                      backgroundColor: "gray",
+                      display: "block",
+                    }}
+                  />
                 )}
               </div>
             </fieldset>
@@ -373,26 +401,72 @@ const NewTsumiki = () => {
           </div>
 
           <div style={{ marginBottom: 12 }}>
-            <label>メディア（{mediaFiles.length} / 4件 / 画像・音声・動画）</label>
+            <label>
+              メディア（{mediaFiles.length} / 4件 / 画像・音声・動画）
+            </label>
             <br />
             {mediaFiles.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 6,
+                  marginBottom: 6,
+                }}
+              >
                 {mediaFiles.map((file, i) => (
                   <div key={i} style={{ position: "relative" }}>
                     {file.type.startsWith("image/") ? (
                       <img
                         src={URL.createObjectURL(file)}
-                        style={{ width: 64, height: 64, objectFit: "contain", borderRadius: 4, backgroundColor: "gray", display: "block" }}
+                        style={{
+                          width: 64,
+                          height: 64,
+                          objectFit: "contain",
+                          borderRadius: 4,
+                          backgroundColor: "gray",
+                          display: "block",
+                        }}
                       />
                     ) : (
-                      <div style={{ width: 64, height: 64, borderRadius: 4, background: "#eee", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, textAlign: "center", padding: 4, wordBreak: "break-all" }}>
+                      <div
+                        style={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: 4,
+                          background: "#eee",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 11,
+                          textAlign: "center",
+                          padding: 4,
+                          wordBreak: "break-all",
+                        }}
+                      >
                         {file.name}
                       </div>
                     )}
                     <button
                       type="button"
-                      onClick={() => setMediaFiles((prev) => prev.filter((_, j) => j !== i))}
-                      style={{ position: "absolute", top: -6, right: -6, width: 18, height: 18, borderRadius: "50%", background: "rgba(0,0,0,0.6)", color: "white", border: "none", cursor: "pointer", fontSize: 11, lineHeight: 1, padding: 0 }}
+                      onClick={() =>
+                        setMediaFiles((prev) => prev.filter((_, j) => j !== i))
+                      }
+                      style={{
+                        position: "absolute",
+                        top: -6,
+                        right: -6,
+                        width: 18,
+                        height: 18,
+                        borderRadius: "50%",
+                        background: "rgba(0,0,0,0.6)",
+                        color: "white",
+                        border: "none",
+                        cursor: "pointer",
+                        fontSize: 11,
+                        lineHeight: 1,
+                        padding: 0,
+                      }}
                     >
                       ×
                     </button>

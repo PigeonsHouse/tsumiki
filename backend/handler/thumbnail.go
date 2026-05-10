@@ -35,7 +35,7 @@ func (th *thumbnailHandlerImpl) PostThumbnail(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if err := r.ParseMultipartForm(mediaMaxBytes5MB); err != nil {
+	if err := r.ParseMultipartForm(mediaMaxBytes10MB); err != nil {
 		helper.ResponseBadRequest(w, "マルチパートフォームの解析に失敗しました")
 		return
 	}

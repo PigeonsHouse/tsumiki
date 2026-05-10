@@ -127,7 +127,7 @@ const EditTsumiki = () => {
 
         <div style={{ marginBottom: 12 }}>
           <label htmlFor="thumbnail">
-            サムネイル画像を差し替える（JPEG・PNG・GIF・最大5MB）
+            サムネイル画像を差し替える（JPEG・PNG・GIF・最大10MB）
           </label>
           <br />
           {tsumiki?.thumbnailUrl && (
@@ -154,7 +154,18 @@ const EditTsumiki = () => {
             }}
           />
           {thumbnailPreview && (
-            <img src={thumbnailPreview} style={{ marginTop: 4, width: "50%", aspectRatio: "16/9", objectFit: "contain", borderRadius: 4, backgroundColor: "gray", display: "block" }} />
+            <img
+              src={thumbnailPreview}
+              style={{
+                marginTop: 4,
+                width: "50%",
+                aspectRatio: "16/9",
+                objectFit: "contain",
+                borderRadius: 4,
+                backgroundColor: "gray",
+                display: "block",
+              }}
+            />
           )}
         </div>
 

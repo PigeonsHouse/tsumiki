@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	mediaMaxBytes5MB   int64 = 5 << 20
+	mediaMaxBytes10MB  int64 = 10 << 20
 	mediaMaxBytes50MB  int64 = 50 << 20
 	mediaMaxBytes100MB int64 = 100 << 20
 
@@ -476,9 +476,9 @@ var mediaContentTypes = map[string]struct {
 	maxBytes  int64
 	ext       string
 }{
-	"image/jpeg":      {"image", mediaMaxBytes5MB, ".jpg"},
-	"image/png":       {"image", mediaMaxBytes5MB, ".png"},
-	"image/gif":       {"image", mediaMaxBytes5MB, ".gif"},
+	"image/jpeg":      {"image", mediaMaxBytes10MB, ".jpg"},
+	"image/png":       {"image", mediaMaxBytes10MB, ".png"},
+	"image/gif":       {"image", mediaMaxBytes10MB, ".gif"},
 	"audio/mpeg":      {"audio", mediaMaxBytes50MB, ".mp3"},
 	"audio/wav":       {"audio", mediaMaxBytes50MB, ".wav"},
 	"audio/ogg":       {"audio", mediaMaxBytes50MB, ".ogg"},
